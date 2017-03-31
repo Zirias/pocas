@@ -1,0 +1,16 @@
+.*.swp
+.*.cfg
+*.cfg
+*.o
+*.d
+*.exe
+defaults.mk
+*.files
+*.config
+*.includes
+*.creator
+*.user
+/bin/
+/lib/
+/obj/
+/dist/
