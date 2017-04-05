@@ -32,6 +32,8 @@ DECLEXPORT void Event_registerWithLoop(const Event *self, const PlatformEvent *p
 DECLEXPORT void Event_unregisterWithLoop(const Event *self);
 DECLEXPORT void Event_destroy(Event *self);
 
+DECLEXPORT EventArgs *Event_await(int timeout);
+
 DECLEXPORT EventArgs *EventArgs_create(const Event *event, void *sender, void *data);
 DECLEXPORT const Event *EventArgs_event(const EventArgs *self);
 DECLEXPORT void *EventArgs_sender(const EventArgs *self);

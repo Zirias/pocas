@@ -3,7 +3,9 @@
 #include <string.h>
 
 #include <pocas/core/list.h>
+#include <pocas/core/mtwaitqueue.h>
 #include "eventloop_internal.h"
+#include "c11threads.h"
 
 #include <pocas/core/event.h>
 
@@ -33,8 +35,17 @@ struct EventHandler
     EventHandlerCallback callback;
 };
 
+static once_flag initflag = ONCE_FLAG_INIT;
+static MtWaitQueue *eventQueue = 0;
+
+static void init(void)
+{
+    eventQueue = MtWaitQueue_create(0);
+}
+
 SOEXPORT Event *Event_create(const char *name)
 {
+    call_once(&initflag, init);
     Event *self = malloc(sizeof(Event));
     self->name = name;
     self->handlers = List_create(0, 0, 0);
@@ -94,6 +105,11 @@ SOEXPORT void Event_destroy(Event *self)
 {
     List_destroy(self->handlers);
     free(self);
+}
+
+SOEXPORT EventArgs *Event_await(int timeout)
+{
+    return MtWaitQueue_dequeue(eventQueue, timeout);
 }
 
 SOEXPORT EventArgs *EventArgs_create(
