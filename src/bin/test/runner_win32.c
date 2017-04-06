@@ -113,7 +113,8 @@ SOLOCAL void Runner_launchTest(const char *runnerExe,
     {
         if (!result)
         {
-            fprintf(stderr, "[%s] FAILRUN: failed to run\n", testMethodName);
+            fprintf(stderr, "[%s] FAILRUN: failed to run (exit code was %d)\n",
+                    testMethodName, (int)exitCode);
             return;
         }
     }

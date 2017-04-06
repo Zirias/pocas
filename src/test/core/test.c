@@ -1,4 +1,3 @@
-#include <stdlib.h>
 #include <pocas/test/test.h>
 
 TEST("pocascore", 0, 0, \
@@ -19,9 +18,11 @@ TESTMETHOD(dummyfail)
 
 TESTMETHOD(dummyunknown)
 {
+    // doing nothing is inconclusive
 }
 
 TESTMETHOD(dummycrash)
 {
-    exit(EXIT_FAILURE);
+    // crash intentionally
+    int c = *((int *)0);
 }
