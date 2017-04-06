@@ -1,5 +1,5 @@
-#ifndef POCAS_CORE_DECL_H
-#define POCAS_CORE_DECL_H
+#ifndef POCAS_TEST_DECL_H
+#define POCAS_TEST_DECL_H
 
 #ifdef __cplusplus
 #define pocaslibs___cdecl extern "C"
@@ -26,14 +26,9 @@
 
 #ifdef WIN32
 #undef DECLEXPORT
-#ifdef BUILDING_POCAS_CORE
+#ifdef BUILDING_POCAS_TEST
 #define DECLEXPORT __declspec(dllexport)
-#else
-#ifdef STATIC_POCAS_CORE
-#define DECLEXPORT pocaslibs___cdecl
 #else
 #define DECLEXPORT pocaslibs___cdecl __declspec(dllimport)
 #endif
 #endif
-#endif
-

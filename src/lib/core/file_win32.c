@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <pocas/core/list.h>
 #include <pocas/core/event_win32.h>
 #include <pocas/core/file_win32.h>
 
@@ -108,4 +109,52 @@ SOEXPORT void File_close(File *self)
     CloseHandle(self->handle);
     CloseHandle(self->ovwr.hEvent);
     free(self);
+}
+
+SOEXPORT List *File_findInDir(const char *path, const char *pattern)
+{
+    size_t pathlen = strlen(path);
+    char *pat;
+    if (path[pathlen - 1] == '\\')
+    {
+        pat = malloc(pathlen + strlen(pattern) + 1);
+        strcpy(pat, path);
+    }
+    else
+    {
+        pat = malloc(pathlen + strlen(pattern) + 2);
+        strcpy(pat, path);
+        strcat(pat, "\\");
+    }
+    strcat(pat, pattern);
+
+    WIN32_FIND_DATA findData;
+    HANDLE findHdl = FindFirstFile(pat, &findData);
+    if (findHdl == INVALID_HANDLE_VALUE)
+    {
+        free(pat);
+        return 0;
+    }
+
+    List *found = List_createStr(0);
+    do
+    {
+        char *f;
+        if (path[pathlen - 1] == '\\')
+        {
+            f = malloc(pathlen + strlen(findData.cFileName) + 1);
+            strcpy(f, path);
+        }
+        else
+        {
+            f = malloc(pathlen + strlen(findData.cFileName) + 2);
+            strcpy(f, path);
+            strcat(f, "\\");
+        }
+        strcat(f, findData.cFileName);
+        List_append(found, f);
+    } while (FindNextFile(findHdl, &findData));
+    FindClose(findHdl);
+    free(pat);
+    return found;
 }

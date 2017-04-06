@@ -5,6 +5,8 @@
 
 #include <pocas/core/event.h>
 
+typedef struct List List;
+
 typedef struct File File;
 
 typedef enum FileMode
@@ -23,5 +25,7 @@ DECLEXPORT int File_write(File *self, void *buffer, size_t n, size_t *written);
 DECLEXPORT void File_close(File *self);
 
 DECLEXPORT EVENT(File, dataRead);
+
+DECLEXPORT List *File_findInDir(const char *path, const char *pattern);
 
 #endif

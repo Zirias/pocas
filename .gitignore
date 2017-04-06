@@ -13,4 +13,5 @@ defaults.mk
 /bin/
 /lib/
 /obj/
+/test/
 /dist/
