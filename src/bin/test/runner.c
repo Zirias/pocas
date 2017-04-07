@@ -50,7 +50,7 @@ SOLOCAL void Runner_evaluateTest(const char *testMethodName,
     {
         if (!result)
         {
-            TextColor_use(TextColor_RED, ConsoleStream_ERROR);
+            TextColor_use(TextColor_LIGHTRED, ConsoleStream_ERROR);
             fprintf(stderr, "   [CRSH] %s: failed to run (exit code was %d)\n",
                     testMethodName, exitCode);
             TextColor_use(TextColor_NORMAL, ConsoleStream_ERROR);
@@ -62,7 +62,9 @@ SOLOCAL void Runner_evaluateTest(const char *testMethodName,
     if (!result)
     {
         TextColor_use(TextColor_YELLOW, ConsoleStream_ERROR);
-        fprintf(stderr, "   [UNKN] %s: no test result\n", testMethodName);
+        fputs("   [UNKN] ", stderr);
+        TextColor_use(TextColor_BROWN, ConsoleStream_ERROR);
+        fprintf(stderr, "%s: no test result\n", testMethodName);
         TextColor_use(TextColor_NORMAL, ConsoleStream_ERROR);
     }
     else
@@ -71,29 +73,31 @@ SOLOCAL void Runner_evaluateTest(const char *testMethodName,
         {
             ++npassed;
             TextColor_use(TextColor_LIGHTGREEN, ConsoleStream_ERROR);
+            fputs("   [PASS] ", stderr);
+            TextColor_use(TextColor_NORMAL, ConsoleStream_ERROR);
             if (result[1] && result[1] != '\n')
             {
-                fprintf(stderr, "   [PASS] %s: %s", testMethodName, result+1);
+                fprintf(stderr, "%s: %s", testMethodName, result+1);
             }
             else
             {
-                fprintf(stderr, "   [PASS] %s\n", testMethodName);
+                fprintf(stderr, "%s\n", testMethodName);
             }
-            TextColor_use(TextColor_NORMAL, ConsoleStream_ERROR);
         }
         else
         {
             ++nfailed;
             TextColor_use(TextColor_LIGHTRED, ConsoleStream_ERROR);
+            fputs("   [FAIL] ", stderr);
+            TextColor_use(TextColor_NORMAL, ConsoleStream_ERROR);
             if (result[1] && result[1] != '\n')
             {
-                fprintf(stderr, "   [FAIL] %s: %s", testMethodName, result+1);
+                fprintf(stderr, "%s: %s", testMethodName, result+1);
             }
             else
             {
-                fprintf(stderr, "   [FAIL] %s\n", testMethodName);
+                fprintf(stderr, "%s\n", testMethodName);
             }
-            TextColor_use(TextColor_NORMAL, ConsoleStream_ERROR);
         }
     }
 }
@@ -114,7 +118,7 @@ SOLOCAL int Runner_evaluateFinal(void)
     {
         fputs(", ", stderr);
         TextColor_use(TextColor_LIGHTRED, ConsoleStream_ERROR);
-        fprintf(stderr, "failed: %d", nfailed);
+        fprintf(stderr, "failed/crashed: %d", nfailed);
         TextColor_use(TextColor_NORMAL, ConsoleStream_ERROR);
     }
     if (ntestMethods - npassed - nfailed)

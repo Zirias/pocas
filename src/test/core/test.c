@@ -1,3 +1,5 @@
+#include <stdio.h>
+
 #include <pocas/test/test.h>
 
 TEST("pocascore", 0, 0, \
@@ -27,7 +29,7 @@ TESTMETHOD(dummycrash)
 {
     // crash intentionally
     int c = *((int *)0);
-    (void)c;
+    printf("%d", c); // to prevent optimizing away the crash
 }
 
 TESTMETHOD(dummynull)
