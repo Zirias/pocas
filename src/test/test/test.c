@@ -2,7 +2,7 @@
 
 #include <pocas/test/test.h>
 
-TEST("pocascore", 0, 0, \
+TEST("POCAS test::Test", 0, 0, \
      "dummypass",
      "dummyfail",
      "dummyunknown",

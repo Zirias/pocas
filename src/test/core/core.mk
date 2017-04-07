@@ -1,5 +1,5 @@
-pocascoretests_MODULES:= test
-pocascoretests_LIBTYPE:= test
-pocascoretests_DEPS:= pocastest pocascore
-pocascoretests_win32_LIBS:= pocastest
-$(call librules, pocascoretests)
+pocascore-listtests_MODULES:= list
+pocascore-listtests_LIBTYPE:= test
+pocascore-listtests_DEPS:= pocastest pocascore
+pocascore-listtests_win32_LIBS:= pocastest
+$(call librules, pocascore-listtests)
