@@ -16,6 +16,12 @@ SOLOCAL void Runner_runMain(int argc, char **argv)
 {
     if (strcmp("__pocastest__run", argv[1])) return;
 
+    if (gdb)
+    {
+        int i = 50;
+        while (--i && !IsDebuggerPresent()) Sleep(10);
+    }
+
     if (argc != 5) exit(EXIT_FAILURE);
 
     uintptr_t testPipeHandleValue;
@@ -37,6 +43,7 @@ SOLOCAL void Runner_runMain(int argc, char **argv)
         exit(EXIT_FAILURE);
     }
 
+    SetErrorMode(SEM_FAILCRITICALERRORS|SEM_NOGPFAULTERRORBOX);
     Runner_runTest(argv[4]);
 }
 
@@ -71,11 +78,16 @@ SOLOCAL void Runner_launchTest(const char *runnerExe,
     si.hStdError = GetStdHandle(STD_ERROR_HANDLE);
     si.dwFlags |= STARTF_USESTDHANDLES;
 
-    snprintf(buf, 1024, "%"PRIxPTR, (uintptr_t)pout);
+    snprintf(buf, 1024, "%" PRIxPTR, (uintptr_t)pout);
 
     StringBuilder *cmdLineBuilder = StringBuilder_create(0);
     StringBuilder_appendChar(cmdLineBuilder, '"');
     StringBuilder_appendStr(cmdLineBuilder, runnerExe);
+    if (gdb)
+    {
+        StringBuilder_appendStr(cmdLineBuilder, "\" -g \"");
+        StringBuilder_appendStr(cmdLineBuilder, gdb);
+    }
     StringBuilder_appendStr(cmdLineBuilder, "\" __pocastest__run ");
     StringBuilder_appendStr(cmdLineBuilder, buf);
     StringBuilder_appendStr(cmdLineBuilder, " \"");
@@ -94,7 +106,42 @@ SOLOCAL void Runner_launchTest(const char *runnerExe,
                 GetLastError());
         return;
     }
+    free(cmdline);
     CloseHandle(pout);
+
+    if (gdb)
+    {
+        STARTUPINFO gsi;
+        PROCESS_INFORMATION gpi;
+
+        memset(&gsi, 0, sizeof(gsi));
+        gsi.cb = sizeof(gsi);
+        gsi.dwFlags |= STARTF_USESTDHANDLES;
+
+        cmdLineBuilder = StringBuilder_create(0);
+        StringBuilder_appendChar(cmdLineBuilder, '"');
+        StringBuilder_appendStr(cmdLineBuilder, gdb);
+        StringBuilder_appendStr(cmdLineBuilder, "\" -p ");
+        StringBuilder_appendUInt(cmdLineBuilder, GetProcessId(pi.hProcess));
+        StringBuilder_appendStr(cmdLineBuilder, " -ex \"set breakpoint pending on\" -ex \"break pocastest__method_");
+        StringBuilder_appendStr(cmdLineBuilder, testMethodName);
+        StringBuilder_appendStr(cmdLineBuilder, "\" -ex c");
+        cmdline = StringBuilder_toString(cmdLineBuilder);
+        StringBuilder_destroy(cmdLineBuilder);
+        if (CreateProcess(0, cmdline, 0, 0, 1, CREATE_NEW_CONSOLE, 0, 0, &gsi, &gpi))
+        {
+            CloseHandle(gpi.hThread);
+            CloseHandle(gpi.hProcess);
+        }
+        else
+        {
+            fprintf(stderr, "Error launching gdb: %lu\n",
+                    GetLastError());
+            fputs("Proceeding without debugging.\n", stderr);
+        }
+        free(cmdline);
+    }
+
     CloseHandle(pi.hThread);
 
     char *result = fgets(buf, 1024, runnerPipe);
@@ -109,43 +156,6 @@ SOLOCAL void Runner_launchTest(const char *runnerExe,
     CloseHandle(pi.hProcess);
     CloseHandle(pin);
 
-    if ((int)exitCode != EXIT_SUCCESS)
-    {
-        if (!result)
-        {
-            fprintf(stderr, "[%s] FAILRUN: failed to run (exit code was %d)\n",
-                    testMethodName, (int)exitCode);
-            return;
-        }
-    }
+    Runner_evaluateTest(testMethodName, (int)exitCode, result);
 
-    if (!result)
-    {
-        fprintf(stderr, "[%s] UNKNOWN\n", testMethodName);
-    }
-    else
-    {
-        if (result[0] == '1')
-        {
-            if (result[1] && result[1] != '\n')
-            {
-                fprintf(stderr, "[%s] PASS: %s", testMethodName, result+1);
-            }
-            else
-            {
-                fprintf(stderr, "[%s] PASS\n", testMethodName);
-            }
-        }
-        else
-        {
-            if (result[1] && result[1] != '\n')
-            {
-                fprintf(stderr, "[%s] FAIL: %s", testMethodName, result+1);
-            }
-            else
-            {
-                fprintf(stderr, "[%s] FAIL\n", testMethodName);
-            }
-        }
-    }
 }

@@ -7,7 +7,7 @@
 #define pocaslibs___cdecl
 #endif
 
-#ifdef WIN32
+#ifdef _WIN32
 #define SOEXPORT pocaslibs___cdecl __declspec(dllexport)
 #define SOLOCAL
 #else
@@ -24,7 +24,7 @@
 
 #endif
 
-#ifdef WIN32
+#ifdef _WIN32
 #undef DECLEXPORT
 #ifdef BUILDING_POCAS_TEST
 #define DECLEXPORT __declspec(dllexport)

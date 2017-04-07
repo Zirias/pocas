@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -50,6 +51,20 @@ SOEXPORT void StringBuilder_appendStr(StringBuilder *self, const char *string)
     {
         StringBuilder_appendChar(self, c);
     }
+}
+
+SOEXPORT void StringBuilder_appendInt(StringBuilder *self, long value)
+{
+    char buf[64];
+    snprintf(buf, 64, "%ld", value);
+    StringBuilder_appendStr(self, buf);
+}
+
+SOEXPORT void StringBuilder_appendUInt(StringBuilder *self, unsigned long value)
+{
+    char buf[64];
+    snprintf(buf, 64, "%lu", value);
+    StringBuilder_appendStr(self, buf);
 }
 
 SOEXPORT void StringBuilder_clear(StringBuilder *self)

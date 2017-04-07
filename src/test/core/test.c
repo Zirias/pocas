@@ -4,7 +4,9 @@ TEST("pocascore", 0, 0, \
      "dummypass",
      "dummyfail",
      "dummyunknown",
-     "dummycrash");
+     "dummycrash",
+     "dummynull",
+     "dummynotequal");
 
 TESTMETHOD(dummypass)
 {
@@ -25,4 +27,17 @@ TESTMETHOD(dummycrash)
 {
     // crash intentionally
     int c = *((int *)0);
+    (void)c;
+}
+
+TESTMETHOD(dummynull)
+{
+    void *testpointer = 0;
+    Test_assertNotNull(testpointer, 0);
+}
+
+TESTMETHOD(dummynotequal)
+{
+    int answer = 23;
+    Test_assertIntEqual(42, answer, "just wrong!");
 }

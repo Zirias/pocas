@@ -12,12 +12,22 @@
 #define TESTMETHOD(name) \
     SOEXPORT void pocastest__method_##name(void)
 
-DECLEXPORT void Test_assertNotNull(void *pointer, const char *message);
-DECLEXPORT void Test_assertRefEqual(void *expected, void *actual, const char *message);
-DECLEXPORT void Test_assertIntEqual(int expected, int actual, const char *message);
-DECLEXPORT void Test_assertRefNotEqual(void *expected, void *actual, const char *message);
-DECLEXPORT void Test_assertIntNotEqual(int expected, int actual, const char *message);
-DECLEXPORT void Test_fail(const char *message);
+DECLEXPORT void Test__assertNotNull(const char *file, unsigned line, const char *pointerName,
+                                   void *pointer, const char *message);
+DECLEXPORT void Test__assertRefEqual(const char *file, unsigned line, const char *actualName,
+                                    void *expected, void *actual, const char *message);
+DECLEXPORT void Test__assertIntEqual(const char *file, unsigned line, const char *actualName,
+                                    long expected, long actual, const char *message);
+DECLEXPORT void Test__fail(const char *file, unsigned line, const char *message);
 DECLEXPORT void Test_pass(void);
+
+#define Test_assertNotNull(pointer, message) \
+    Test__assertNotNull(__FILE__, __LINE__, #pointer, pointer, message)
+#define Test_assertRefEqual(expected, actual, message) \
+    Test__assertRefEqual(__FILE__, __LINE__, #actual, expected, actual, message)
+#define Test_assertIntEqual(expected, actual, message) \
+    Test__assertIntEqual(__FILE__, __LINE__, #actual, expected, actual, message)
+#define Test_fail(message) \
+    Test__fail(__FILE__, __LINE__, message)
 
 #endif

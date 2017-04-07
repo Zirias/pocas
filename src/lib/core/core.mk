@@ -1,5 +1,5 @@
 pocascore_MODULES:= string stringbuilder list plugin mtwaitqueue event eventloop
-pocascore_PLATFORMMODULES := dso plugin event eventloop file processhost
+pocascore_PLATFORMMODULES := textcolor dso plugin event eventloop file processhost
 pocascore_DEFINES:= -DBUILDING_POCAS_CORE
 pocascore_posix_LDFLAGS:= -pthread
 pocascore_win32_STATICLIBS:= pthread
