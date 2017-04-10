@@ -12,7 +12,6 @@ extern const char *gdb;
 
 void Runner_runMain(int argc, char **argv);
 void Runner_runTest(const char *testMethodName);
-void Runner_stopTest();
 void Runner_launchTest(const char *runnerExe,
                        Plugin *test, const char *testMethodName);
 void Runner_evaluateTest(const char *testMethodName, int exitCode, List *result);

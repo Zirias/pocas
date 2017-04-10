@@ -2,7 +2,7 @@
 
 #include <pocas/test/test.h>
 
-TESTCLASS("POCAS test::Test", 0, 0, \
+TESTCLASS("POCAS test::Test",
      "dummypass",
      "dummyfail",
      "dummyunknown",

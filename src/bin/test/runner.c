@@ -29,17 +29,24 @@ SOLOCAL void Runner_runTest(const char *testMethodName)
     {
         fprintf(testPipe, "0Error in test `%s': test method `%s' not found.\n",
                 Plugin_id(runningTest), testMethodName);
-        Runner_stopTest();
+        goto done;
     }
 
-    Test *t = Test_create();
-    testMethod(t);
-    Test_destroy(t);
-    Runner_stopTest();
-}
+    void (*testInit)(Test *) = (void (*)(Test *))
+            (uintptr_t)Plugin_symbol(runningTest, "pocastest__init");
+    void (*testDone)(Test *) = (void (*)(Test *))
+            (uintptr_t)Plugin_symbol(runningTest, "pocastest__done");
 
-SOLOCAL void Runner_stopTest(void)
-{
+    Test *t = Test_create();
+    if (!setjmp(*Test_jmp(t)))
+    {
+        if (testInit) testInit(t);
+        testMethod(t);
+    }
+    if (testDone) testDone(t);
+    Test_destroy(t);
+
+done:
     Plugin_close(runningTest);
     fclose(testPipe);
     exit(EXIT_SUCCESS);

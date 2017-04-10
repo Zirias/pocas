@@ -26,14 +26,18 @@ DECLEXPORT void Test__default(Test *self, TestResult result);
 DECLEXPORT void Test__ignore(Test *self, int num);
 DECLEXPORT void Test__expectCrash(Test *self);
 
-#define TESTCLASS(name, init, done, ...) \
+#define TESTCLASS(name, ...) \
     SOEXPORT const char *pocastest__id = name; \
-    SOEXPORT void (*pocastest__init)(void) = init; \
-    SOEXPORT void (*pocastest__done)(void) = done; \
     SOEXPORT const char *pocastest__methods[] = { __VA_ARGS__ , 0}
 
+#define TESTINIT() \
+    SOEXPORT void pocastest__init(__attribute__((unused)) Test *pocastest__self)
+
 #define TESTMETHOD(name) \
-    SOEXPORT void pocastest__method_##name(Test *pocastest__self)
+    SOEXPORT void pocastest__method_##name(__attribute__((unused)) Test *pocastest__self)
+
+#define TESTDONE() \
+    SOEXPORT void pocastest__done(__attribute__((unused)) Test *pocastest__self)
 
 #define Test_assertNotNull(pointer, message) \
     Test__assertNotNull(pocastest__self, __FILE__, __LINE__, #pointer, pointer, message)

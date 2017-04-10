@@ -6,6 +6,13 @@
 #include "runner_internal.h"
 #include "test_internal.h"
 
+struct Test
+{
+    jmp_buf jmp;
+    int ignore;
+    int expectCrash;
+};
+
 SOLOCAL Test *Test_create(void)
 {
     Test* self = malloc(sizeof(Test));
@@ -19,6 +26,11 @@ SOLOCAL void Test_destroy(Test *self)
     free(self);
 }
 
+SOLOCAL jmp_buf *Test_jmp(Test *self)
+{
+    return &(self->jmp);
+}
+
 static void Test__stopIfNotIgnored(Test *self)
 {
     if (self->ignore)
@@ -27,8 +39,7 @@ static void Test__stopIfNotIgnored(Test *self)
     }
     else
     {
-        Test_destroy(self);
-        Runner_stopTest();
+        longjmp(self->jmp, 1);
     }
 }
 
@@ -122,8 +133,7 @@ SOEXPORT void Test__fail(Test *self, const char *file, unsigned line, const char
 SOEXPORT void Test__pass(Test *self)
 {
     fputs("1\n", testPipe);
-    Test_destroy(self);
-    Runner_stopTest();
+    longjmp(self->jmp, 1);
 }
 
 SOEXPORT void Test__default(Test *self, TestResult result)
