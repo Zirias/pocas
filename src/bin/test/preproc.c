@@ -75,13 +75,12 @@ SOLOCAL int preprocess(const char *inFileName, const char *outFileName)
     List *testMethods = List_createStr(0);
     while (fgets(buf, 1024, in))
     {
-        fputs(buf, out);
         char *method = findTestMethod(buf);
         if (method) List_append(testMethods, String_copy(method));
     }
 
     ListIterator *i = List_iterator(testMethods);
-    fputs("\n\n// pocastest -p generated:\n\n"
+    fputs("\n\n// pocastest -p generated:\n\n#include <pocas/test/test.h>\n\n"
           "SOEXPORT const char *pocastest__methods[] = {", out);
     while (ListIterator_moveNext(i))
     {
