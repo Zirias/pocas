@@ -81,7 +81,8 @@ SOEXPORT void List_insert(List *self, size_t index, void *item)
     else
     {
         checkAndgrow(self, self->length);
-        memmove(self->items + index, self->items + index + 1, self->length - index);
+        memmove(self->items + index + 1, self->items + index,
+                (self->length - index) * sizeof(void *));
         self->items[index] = item;
         ++self->length;
     }
@@ -101,7 +102,8 @@ SOEXPORT void List_removeAt(List *self, size_t index)
     {
         self->deleter(self->items[index]);
     }
-    memmove(self->items + index + 1, self->items + index, self->length - index - 1);
+    memmove(self->items + index, self->items + index + 1,
+            (self->length - index - 1) * sizeof(void *));
     --self->length;
 }
 
