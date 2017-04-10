@@ -21,7 +21,7 @@ SOLOCAL void Runner_runTest(const char *testMethodName)
     char *testMethodSymbol = malloc(19 + strlen(testMethodName));
     strcpy(testMethodSymbol, "pocastest__method_");
     strcpy(testMethodSymbol + 18, testMethodName);
-    void (*testMethod)(void) = (void (*)(void))
+    void (*testMethod)(Test *) = (void (*)(Test *))
             (uintptr_t)Plugin_symbol(runningTest, testMethodSymbol);
     free(testMethodSymbol);
 
@@ -32,7 +32,9 @@ SOLOCAL void Runner_runTest(const char *testMethodName)
         Runner_stopTest();
     }
 
-    testMethod();
+    Test *t = Test_create();
+    testMethod(t);
+    Test_destroy(t);
     Runner_stopTest();
 }
 
@@ -100,7 +102,7 @@ SOLOCAL void Runner_evaluateTest(const char *testMethodName,
                     TextColor_use(TextColor_LIGHTRED, ConsoleStream_ERROR);
                     fputs("   [FAIL] ", stderr);
                     TextColor_use(TextColor_NORMAL, ConsoleStream_ERROR);
-                    fprintf(stderr, "%s: expected crash, but passed instead.",
+                    fprintf(stderr, "%s: expected crash, but passed instead.\n",
                             testMethodName);
                 }
                 else

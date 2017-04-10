@@ -2,7 +2,7 @@
 
 #include <pocas/test/test.h>
 
-TEST("POCAS core::List", 0, 0, \
+TESTCLASS("POCAS core::List", 0, 0, \
      "dummypass");
 
 TESTMETHOD(dummypass)
