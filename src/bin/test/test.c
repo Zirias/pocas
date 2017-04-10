@@ -1,6 +1,7 @@
 #include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "runner_internal.h"
 #include "test_internal.h"
@@ -32,7 +33,7 @@ static void Test__stopIfNotIgnored(Test *self)
 }
 
 SOEXPORT void Test__assertNotNull(Test *self, const char *file, unsigned line, const char *pointerName,
-                                  void *pointer, const char *message)
+                                  const void *pointer, const char *message)
 {
     if (!pointer)
     {
@@ -49,19 +50,38 @@ SOEXPORT void Test__assertNotNull(Test *self, const char *file, unsigned line, c
 }
 
 SOEXPORT void Test__assertRefEqual(Test *self, const char *file, unsigned line, const char *actualName,
-                                   void *expected, void *actual, const char *message)
+                                   const void *expected, const void *actual, const char *message)
 {
     if (expected != actual)
     {
         if (message)
         {
-            fprintf(testPipe, "0%s (%s expected: %"PRIxPTR", actual: %"PRIxPTR") at %s:%u\n",
+            fprintf(testPipe, "0%s (%s expected: 0x%"PRIxPTR", actual: 0x%"PRIxPTR") at %s:%u\n",
                     message, actualName, (uintptr_t)expected, (uintptr_t)actual, file, line);
         }
         else
         {
-            fprintf(testPipe, "0%s expected: %"PRIxPTR", actual: %"PRIxPTR" at %s:%u\n",
+            fprintf(testPipe, "0%s expected: 0x%"PRIxPTR", actual: 0x%"PRIxPTR" at %s:%u\n",
                     actualName, (uintptr_t)expected, (uintptr_t)actual, file, line);
+        }
+        Test__stopIfNotIgnored(self);
+    }
+}
+
+SOEXPORT void Test__assertStrEqual(Test *self, const char *file, unsigned line, const char *actualName,
+                                   const char *expected, const char *actual, const char *message)
+{
+    if (strcmp(expected,actual))
+    {
+        if (message)
+        {
+            fprintf(testPipe, "0%s (%s expected: \"%s\", actual: \"%s\") at %s:%u\n",
+                    message, actualName, expected, actual, file, line);
+        }
+        else
+        {
+            fprintf(testPipe, "0%s expected: \"%s\", actual: \"%s\" at %s:%u\n",
+                    actualName, expected, actual, file, line);
         }
         Test__stopIfNotIgnored(self);
     }

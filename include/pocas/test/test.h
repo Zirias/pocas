@@ -13,9 +13,11 @@ typedef enum TestResult
 } TestResult;
 
 DECLEXPORT void Test__assertNotNull(Test *self, const char *file, unsigned line, const char *pointerName,
-                                   void *pointer, const char *message);
+                                   const void *pointer, const char *message);
 DECLEXPORT void Test__assertRefEqual(Test *self, const char *file, unsigned line, const char *actualName,
-                                    void *expected, void *actual, const char *message);
+                                    const void *expected, const void *actual, const char *message);
+DECLEXPORT void Test__assertStrEqual(Test *self, const char *file, unsigned line, const char *actualName,
+                                    const char *expected, const char *actual, const char *message);
 DECLEXPORT void Test__assertIntEqual(Test *self, const char *file, unsigned line, const char *actualName,
                                     long expected, long actual, const char *message);
 DECLEXPORT void Test__fail(Test *self, const char *file, unsigned line, const char *message);
@@ -37,6 +39,8 @@ DECLEXPORT void Test__expectCrash(Test *self);
     Test__assertNotNull(pocastest__self, __FILE__, __LINE__, #pointer, pointer, message)
 #define Test_assertRefEqual(expected, actual, message) \
     Test__assertRefEqual(pocastest__self, __FILE__, __LINE__, #actual, expected, actual, message)
+#define Test_assertStrEqual(expected, actual, message) \
+    Test__assertStrEqual(pocastest__self, __FILE__, __LINE__, #actual, expected, actual, message)
 #define Test_assertIntEqual(expected, actual, message) \
     Test__assertIntEqual(pocastest__self, __FILE__, __LINE__, #actual, expected, actual, message)
 #define Test_fail(message) \
