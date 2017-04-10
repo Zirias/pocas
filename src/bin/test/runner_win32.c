@@ -6,7 +6,9 @@
 #include <string.h>
 #include <windows.h>
 
+#include <pocas/core/list.h>
 #include <pocas/core/plugin.h>
+#include <pocas/core/string.h>
 #include <pocas/core/stringbuilder.h>
 
 #include "test_internal.h"
@@ -144,7 +146,13 @@ SOLOCAL void Runner_launchTest(const char *runnerExe,
 
     CloseHandle(pi.hThread);
 
-    char *result = fgets(buf, 1024, runnerPipe);
+    char *line;
+    List *result = List_createStr(0);
+    while ((line = fgets(buf, 1024, runnerPipe)))
+    {
+        List_append(result, String_copy(line));
+    }
+
     if (WaitForSingleObject(pi.hProcess, 1000) == WAIT_TIMEOUT)
     {
         TerminateProcess(pi.hProcess, EXIT_FAILURE);
@@ -157,5 +165,4 @@ SOLOCAL void Runner_launchTest(const char *runnerExe,
     CloseHandle(pin);
 
     Runner_evaluateTest(testMethodName, (int)exitCode, result);
-
 }

@@ -17,16 +17,23 @@ TESTMETHOD(dummypass)
 
 TESTMETHOD(dummyfail)
 {
+    Test_ignore(1);
+
     Test_fail("failed intentionally");
+    Test_pass();
 }
 
 TESTMETHOD(dummyunknown)
 {
+    Test_default(TestResult_PASS);
+
     // doing nothing is inconclusive
 }
 
 TESTMETHOD(dummycrash)
 {
+    Test_expectCrash();
+
     // crash intentionally
     int c = *((int *)0);
     printf("%d", c); // to prevent optimizing away the crash
@@ -34,12 +41,18 @@ TESTMETHOD(dummycrash)
 
 TESTMETHOD(dummynull)
 {
+    Test_ignore(1);
+
     void *testpointer = 0;
     Test_assertNotNull(testpointer, 0);
+    Test_pass();
 }
 
 TESTMETHOD(dummynotequal)
 {
+    Test_ignore(1);
+
     int answer = 23;
     Test_assertIntEqual(42, answer, "just wrong!");
+    Test_pass();
 }

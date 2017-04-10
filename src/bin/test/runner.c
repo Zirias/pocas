@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <pocas/core/list.h>
 #include <pocas/core/plugin.h>
 #include <pocas/core/textcolor.h>
 
@@ -43,63 +44,146 @@ SOLOCAL void Runner_stopTest(void)
 }
 
 SOLOCAL void Runner_evaluateTest(const char *testMethodName,
-                                 int exitCode, const char *result)
+                                 int exitCode, List *result)
 {
+    int expectCrash = 0;
+    int ignore = 0;
+    TestResult defaultResult = TestResult_UNKN;
+
     ++ntestMethods;
-    if (exitCode != EXIT_SUCCESS)
+
+    ListIterator *i = List_iterator(result);
+    while (ListIterator_moveNext(i))
     {
-        if (!result)
+        const char *line = ListIterator_current(i);
+        switch (line[0])
         {
-            TextColor_use(TextColor_LIGHTRED, ConsoleStream_ERROR);
-            fprintf(stderr, "   [CRSH] %s: failed to run (exit code was %d)\n",
-                    testMethodName, exitCode);
-            TextColor_use(TextColor_NORMAL, ConsoleStream_ERROR);
-            ++nfailed;
-            return;
+            case '0':
+                if (ignore)
+                {
+                    if (ignore > 0) --ignore;
+                    TextColor_use(TextColor_YELLOW, ConsoleStream_ERROR);
+                    fputs("   [FAIL] ", stderr);
+                    TextColor_use(TextColor_BROWN, ConsoleStream_ERROR);
+                    if (line[1] && line[1] != '\n')
+                    {
+                        fprintf(stderr, "%s: [ignored] %s", testMethodName, line+1);
+                    }
+                    else
+                    {
+                        fprintf(stderr, "%s [ignored]\n", testMethodName);
+                    }
+                    TextColor_use(TextColor_NORMAL, ConsoleStream_ERROR);
+                    break;
+                }
+                else
+                {
+                    ++nfailed;
+                    TextColor_use(TextColor_LIGHTRED, ConsoleStream_ERROR);
+                    fputs("   [FAIL] ", stderr);
+                    TextColor_use(TextColor_NORMAL, ConsoleStream_ERROR);
+                    if (line[1] && line[1] != '\n')
+                    {
+                        fprintf(stderr, "%s: %s", testMethodName, line+1);
+                    }
+                    else
+                    {
+                        fprintf(stderr, "%s\n", testMethodName);
+                    }
+                    goto done;
+                }
+
+            case '1':
+                if (expectCrash)
+                {
+                    ++nfailed;
+                    TextColor_use(TextColor_LIGHTRED, ConsoleStream_ERROR);
+                    fputs("   [FAIL] ", stderr);
+                    TextColor_use(TextColor_NORMAL, ConsoleStream_ERROR);
+                    fprintf(stderr, "%s: expected crash, but passed instead.",
+                            testMethodName);
+                }
+                else
+                {
+                    ++npassed;
+                    TextColor_use(TextColor_LIGHTGREEN, ConsoleStream_ERROR);
+                    fputs("   [PASS] ", stderr);
+                    TextColor_use(TextColor_NORMAL, ConsoleStream_ERROR);
+                    if (line[1] && line[1] != '\n')
+                    {
+                        fprintf(stderr, "%s: %s", testMethodName, line+1);
+                    }
+                    else
+                    {
+                        fprintf(stderr, "%s\n", testMethodName);
+                    }
+                }
+                goto done;
+
+            case '2':
+                defaultResult = atoi(line+1);
+                break;
+
+            case '3':
+                ignore = atoi(line+1);
+                break;
+
+            case '4':
+                expectCrash = 1;
         }
     }
 
-    if (!result)
+    if (exitCode != EXIT_SUCCESS)
     {
-        TextColor_use(TextColor_YELLOW, ConsoleStream_ERROR);
-        fputs("   [UNKN] ", stderr);
-        TextColor_use(TextColor_BROWN, ConsoleStream_ERROR);
-        fprintf(stderr, "%s: no test result\n", testMethodName);
-        TextColor_use(TextColor_NORMAL, ConsoleStream_ERROR);
-    }
-    else
-    {
-        if (result[0] == '1')
+        if (expectCrash)
         {
             ++npassed;
             TextColor_use(TextColor_LIGHTGREEN, ConsoleStream_ERROR);
             fputs("   [PASS] ", stderr);
             TextColor_use(TextColor_NORMAL, ConsoleStream_ERROR);
-            if (result[1] && result[1] != '\n')
-            {
-                fprintf(stderr, "%s: %s", testMethodName, result+1);
-            }
-            else
-            {
-                fprintf(stderr, "%s\n", testMethodName);
-            }
+            fprintf(stderr, "%s: expectedly failed to run (exit code was %d)\n",
+                    testMethodName, exitCode);
         }
         else
         {
             ++nfailed;
             TextColor_use(TextColor_LIGHTRED, ConsoleStream_ERROR);
-            fputs("   [FAIL] ", stderr);
+            fprintf(stderr, "   [CRSH] %s: failed to run (exit code was %d)\n",
+                    testMethodName, exitCode);
             TextColor_use(TextColor_NORMAL, ConsoleStream_ERROR);
-            if (result[1] && result[1] != '\n')
-            {
-                fprintf(stderr, "%s: %s", testMethodName, result+1);
-            }
-            else
-            {
-                fprintf(stderr, "%s\n", testMethodName);
-            }
         }
+        goto done;
     }
+
+    switch (defaultResult)
+    {
+        case TestResult_UNKN:
+            TextColor_use(TextColor_YELLOW, ConsoleStream_ERROR);
+            fputs("   [UNKN] ", stderr);
+            TextColor_use(TextColor_BROWN, ConsoleStream_ERROR);
+            fprintf(stderr, "%s: no test result\n", testMethodName);
+            TextColor_use(TextColor_NORMAL, ConsoleStream_ERROR);
+            break;
+        case TestResult_FAIL:
+            ++nfailed;
+            TextColor_use(TextColor_LIGHTRED, ConsoleStream_ERROR);
+            fputs("   [FAIL] ", stderr);
+            TextColor_use(TextColor_BROWN, ConsoleStream_ERROR);
+            fprintf(stderr, "%s: no test result, defaulted to FAIL\n", testMethodName);
+            TextColor_use(TextColor_NORMAL, ConsoleStream_ERROR);
+            break;
+        case TestResult_PASS:
+            ++npassed;
+            TextColor_use(TextColor_LIGHTGREEN, ConsoleStream_ERROR);
+            fputs("   [PASS] ", stderr);
+            TextColor_use(TextColor_BROWN, ConsoleStream_ERROR);
+            fprintf(stderr, "%s: no test result, defaulted to PASS\n", testMethodName);
+            TextColor_use(TextColor_NORMAL, ConsoleStream_ERROR);
+            break;
+    }
+
+done:
+    List_destroy(result);
 }
 
 SOLOCAL int Runner_evaluateFinal(void)

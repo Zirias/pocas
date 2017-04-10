@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 
+typedef struct List List;
 typedef struct Plugin Plugin;
 
 extern FILE *testPipe;
@@ -14,7 +15,7 @@ void Runner_runTest(const char *testMethodName);
 void Runner_stopTest();
 void Runner_launchTest(const char *runnerExe,
                        Plugin *test, const char *testMethodName);
-void Runner_evaluateTest(const char *testMethodName, int exitCode, const char *result);
+void Runner_evaluateTest(const char *testMethodName, int exitCode, List *result);
 int Runner_evaluateFinal(void);
 
 #endif

@@ -17,7 +17,6 @@ SOEXPORT void Test__assertNotNull(const char *file, unsigned line, const char *p
         {
             fprintf(testPipe, "0%s was NULL at %s:%u\n", pointerName, file, line);
         }
-        Runner_stopTest();
     }
 }
 
@@ -36,7 +35,6 @@ SOEXPORT void Test__assertRefEqual(const char *file, unsigned line, const char *
             fprintf(testPipe, "0%s expected: %"PRIxPTR", actual: %"PRIxPTR" at %s:%u\n",
                     actualName, (uintptr_t)expected, (uintptr_t)actual, file, line);
         }
-        Runner_stopTest();
     }
 }
 
@@ -55,7 +53,6 @@ SOEXPORT void Test__assertIntEqual(const char *file, unsigned line, const char *
             fprintf(testPipe, "0%s expected: %ld, actual: %ld at %s:%u\n",
                     actualName, expected, actual, file, line);
         }
-        Runner_stopTest();
     }
 }
 
@@ -69,11 +66,24 @@ SOEXPORT void Test__fail(const char *file, unsigned line, const char *message)
     {
         fprintf(testPipe, "0at %s:%u\n", file, line);
     }
-    Runner_stopTest();
 }
 
 SOEXPORT void Test_pass()
 {
     fputs("1\n", testPipe);
-    Runner_stopTest();
+}
+
+SOEXPORT void Test_default(TestResult result)
+{
+    fprintf(testPipe, "2%d\n", result);
+}
+
+SOEXPORT void Test_ignore(int num)
+{
+    fprintf(testPipe, "3%d\n", num);
+}
+
+SOEXPORT void Test_expectCrash(void)
+{
+    fputs("4\n", testPipe);
 }
