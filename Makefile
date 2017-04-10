@@ -1,3 +1,6 @@
+SINGLECONFVARS := POCASTEST
+DEFAULT_POCASTEST = $(BINDIR)$(PSEP)pocastest$(EXE) -p
+
 include zimk/zimk.mk
 
 INCLUDES += -I.$(PSEP)include
@@ -12,4 +15,3 @@ check:: tests
 
 checkdebug:: tests
 	$(VR)$(pocastest_EXE) -ggdb $(TESTDIR)
-

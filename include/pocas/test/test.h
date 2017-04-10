@@ -26,9 +26,8 @@ DECLEXPORT void Test__default(Test *self, TestResult result);
 DECLEXPORT void Test__ignore(Test *self, int num);
 DECLEXPORT void Test__expectCrash(Test *self);
 
-#define TESTCLASS(name, ...) \
-    SOEXPORT const char *pocastest__id = name; \
-    SOEXPORT const char *pocastest__methods[] = { __VA_ARGS__ , 0}
+#define TESTCLASS(name) \
+    SOEXPORT const char *pocastest__id = #name
 
 #define TESTINIT() \
     SOEXPORT void pocastest__init(__attribute__((unused)) Test *pocastest__self)

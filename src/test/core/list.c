@@ -3,8 +3,7 @@
 #include <pocas/core/list.h>
 #include <pocas/test/test.h>
 
-TESTCLASS("POCAS core::List",
-     "append_three_items");
+TESTCLASS(pocascore::List);
 
 static List *notOwningList;
 

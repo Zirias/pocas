@@ -2,20 +2,14 @@
 
 #include <pocas/test/test.h>
 
-TESTCLASS("POCAS test::Test",
-     "dummypass",
-     "dummyfail",
-     "dummyunknown",
-     "dummycrash",
-     "dummynull",
-     "dummynotequal");
+TESTCLASS(pocastest::Test);
 
-TESTMETHOD(dummypass)
+TESTMETHOD(test_pass_passes)
 {
     Test_pass();
 }
 
-TESTMETHOD(dummyfail)
+TESTMETHOD(test_fail_fails)
 {
     Test_ignore(1);
 
@@ -23,14 +17,14 @@ TESTMETHOD(dummyfail)
     Test_pass();
 }
 
-TESTMETHOD(dummyunknown)
+TESTMETHOD(test_default_is_used)
 {
     Test_default(TestResult_PASS);
 
     // doing nothing is inconclusive
 }
 
-TESTMETHOD(dummycrash)
+TESTMETHOD(test_expected_crash)
 {
     Test_expectCrash();
 
@@ -39,7 +33,7 @@ TESTMETHOD(dummycrash)
     printf("%d", c); // to prevent optimizing away the crash
 }
 
-TESTMETHOD(dummynull)
+TESTMETHOD(test_assert_not_null)
 {
     Test_ignore(1);
 
@@ -48,7 +42,7 @@ TESTMETHOD(dummynull)
     Test_pass();
 }
 
-TESTMETHOD(dummynotequal)
+TESTMETHOD(test_assert_not_equal)
 {
     Test_ignore(1);
 
