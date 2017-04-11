@@ -1,7 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <pocas/core/list.h>
+#include <pocas/core/string.h>
 #include <pocas/test/test.h>
 
 TESTCLASS(pocascore::List);
@@ -55,7 +57,7 @@ TESTMETHOD(clone_list)
 
     tmpList1 = List_clone(stringList1);
 
-    Test_assertIntEqual(3, List_length(tmpList1), "wrong item cont");
+    Test_assertIntEqual(3, List_length(tmpList1), "wrong item count");
     Test_assertStrEqual("bar", List_get(tmpList1, 1), "unexpected item");
     if (List_get(tmpList1, 1) == List_get(stringList1, 1))
     {
@@ -89,6 +91,72 @@ TESTMETHOD(insert_item)
     Test_assertStrEqual("A", List_get(notOwningList, 0), "unexpected item");
     Test_assertStrEqual("or", List_get(notOwningList, 1), "unexpected item");
     Test_assertStrEqual("B", List_get(notOwningList, 2), "unexpected item");
+
+    Test_pass();
+}
+
+TESTMETHOD(set_items)
+{
+    List_append(notOwningList, "A");
+    List_append(notOwningList, "B");
+    List_append(notOwningList, "C");
+
+    List_set(notOwningList, 63, "X");
+    List_set(notOwningList, 1, "Y");
+
+    Test_assertIntEqual(64, List_length(notOwningList), "wrong item count");
+
+    Test_assertStrEqual("A", List_get(notOwningList, 0), "unexpected item");
+    Test_assertStrEqual("Y", List_get(notOwningList, 1), "unexpected item");
+    Test_assertStrEqual("C", List_get(notOwningList, 2), "unexpected item");
+    Test_assertStrEqual("X", List_get(notOwningList, 63), "unexpected item");
+
+    Test_assertRefEqual(0, List_get(notOwningList, 3), "unset item not null");
+    Test_assertRefEqual(0, List_get(notOwningList, 62), "unset item not null");
+
+    Test_pass();
+}
+
+TESTMETHOD(remove_item)
+{
+    static char *items[] = {"A", "B", "C"};
+    List_append(notOwningList, items[0]);
+    List_append(notOwningList, items[1]);
+    List_append(notOwningList, items[2]);
+
+    List_remove(notOwningList, items[1]);
+
+    Test_assertIntEqual(2, List_length(notOwningList), "wrong item count");
+    Test_assertStrEqual("A", List_get(notOwningList, 0), "unexpected item");
+    Test_assertStrEqual("C", List_get(notOwningList, 1), "unexpected item");
+
+    Test_pass();
+}
+
+TESTMETHOD(invalid_index_gives_0)
+{
+    Test_assertRefEqual(0, List_get(notOwningList, -1), "invalid index did not return 0");
+    Test_assertRefEqual(0, List_get(notOwningList, 0), "invalid index did not return 0");
+
+    Test_pass();
+}
+
+static int selector(const void *value, void *arg)
+{
+    (void)arg;
+    return !strncmp("y_", (const char *)value, 2);
+}
+
+TESTMETHOD(select_items)
+{
+    List_append(stringList1, String_copy("y_FOO"));
+    List_append(stringList1, String_copy("n_BAR"));
+    List_append(stringList1, String_copy("y_BAZ"));
+
+    tmpList1 = List_select(stringList1, selector, 0);
+
+    Test_assertIntEqual(2, List_length(tmpList1), "wrong item count");
+    Test_assertStrEqual("y_BAZ", List_get(tmpList1, 1), "unexpected item");
 
     Test_pass();
 }

@@ -20,7 +20,7 @@ SOLOCAL void Runner_runMain(int argc, char **argv)
 
     if (gdb)
     {
-        int i = 50;
+        int i = 500;
         while (--i && !IsDebuggerPresent()) Sleep(10);
     }
 

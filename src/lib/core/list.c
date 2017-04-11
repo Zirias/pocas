@@ -61,7 +61,6 @@ SOEXPORT void List_append(List *self, void *item)
 SOEXPORT void List_set(List *self, size_t index, void *item)
 {
     checkAndgrow(self, index);
-    self->items[index] = item;
     if (index >= self->length)
     {
         for (size_t i = self->length; i < index; ++i)
@@ -70,6 +69,11 @@ SOEXPORT void List_set(List *self, size_t index, void *item)
         }
         self->length = index + 1;
     }
+    else if (self->deleter)
+    {
+        self->deleter(self->items[index]);
+    }
+    self->items[index] = item;
 }
 
 SOEXPORT void List_insert(List *self, size_t index, void *item)
@@ -288,6 +292,7 @@ SOEXPORT void ListIterator_destroy(ListIterator *self)
 
 SOEXPORT void List_destroy(List *self)
 {
+    if (!self) return;
     if (self->itercount)
     {
         self->disposed = 1;
