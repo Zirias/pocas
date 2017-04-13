@@ -82,6 +82,8 @@ SOEXPORT void Test__assertRefEqual(Test *self, const char *file, unsigned line, 
 SOEXPORT void Test__assertStrEqual(Test *self, const char *file, unsigned line, const char *actualName,
                                    const char *expected, const char *actual, const char *message)
 {
+    if (!expected) expected = "(null)";
+    if (!actual) actual = "(null)";
     if (strcmp(expected,actual))
     {
         if (message)
