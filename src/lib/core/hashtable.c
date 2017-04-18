@@ -35,10 +35,11 @@ struct KeyValPair
 
 struct HashTable
 {
+    const HashTableSizeParams *sizeParams;
     HashKeyProvider keyProvider;
     HashTableEntryCloner entryCloner;
     HashTableEntryDeleter entryDeleter;
-    const HashTableSizeParams *sizeParams;
+    size_t count;
     HashTableEntry* buckets[];
 };
 
@@ -102,10 +103,11 @@ SOEXPORT HashTable *HashTable_create(HashTableSize size,
     const HashTableSizeParams *sizeParams = sizes + size;
     HashTable *self = calloc(1, sizeof(HashTable)
             + sizeParams->buckets * sizeof(HashTableEntry *));
+    self->sizeParams = sizeParams;
     self->keyProvider = keyProvider;
     self->entryCloner = cloner;
     self->entryDeleter = deleter;
-    self->sizeParams = sizeParams;
+    self->count = 0;
     return self;
 }
 
@@ -119,6 +121,11 @@ SOEXPORT HashTable *HashTable_createStrKeyVal(HashTableSize size)
 {
     return HashTable_createStrKey(size,
             (HashTableEntryCloner)String_copy, free);
+}
+
+SOEXPORT size_t HashTable_count(const HashTable *self)
+{
+    return self->count;
 }
 
 SOEXPORT void HashTable_set(HashTable *self, const void *key, void *val)
@@ -149,6 +156,7 @@ SOEXPORT void HashTable_set(HashTable *self, const void *key, void *val)
                 self->entryCloner ? self->entryCloner(val) : val);
         if (prev) prev->next = entry;
         else self->buckets[bucket] = entry;
+        ++self->count;
     }
 }
 
@@ -187,6 +195,7 @@ SOEXPORT int HashTable_remove(HashTable *self, const void *key)
             else self->buckets[bucket] = entry->next;
             if (self->entryDeleter) self->entryDeleter(entry->valObject);
             free(entry);
+            --self->count;
             return 1;
         }
     }

@@ -37,6 +37,7 @@ DECLEXPORT HashTable *HashTable_createStrKey(HashTableSize size,
         HashTableEntryCloner cloner, HashTableEntryDeleter deleter);
 DECLEXPORT HashTable *HashTable_createStrKeyVal(HashTableSize size);
 
+DECLEXPORT size_t HashTable_count(const HashTable *self);
 DECLEXPORT void HashTable_set(HashTable *self, const void *key, void *val);
 DECLEXPORT const void *HashTable_get(const HashTable *self, const void *key);
 DECLEXPORT int HashTable_remove(HashTable *self, const void *key);
