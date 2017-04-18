@@ -38,3 +38,27 @@ TESTMETHOD(set_64_items)
 
     Test_pass();
 }
+
+TESTMETHOD(set_64_items_and_remove_two)
+{
+    char key[6], val[6];
+
+    for (unsigned i = 64; i; --i)
+    {
+        sprintf(key, "key%u", i);
+        sprintf(val, "val%u", i);
+        HashTable_set(stringTable1, key, val);
+    }
+
+    HashTable_remove(stringTable1, "key23");
+    HashTable_remove(stringTable1, "key42");
+
+    Test_assertIntEqual(62, HashTable_count(stringTable1), "wrong item count");
+    Test_assertStrEqual("val1", HashTable_get(stringTable1, "key1"), "wrong hashtable entry");
+    Test_assertStrEqual("val7", HashTable_get(stringTable1, "key7"), "wrong hashtable entry");
+    Test_assertStrEqual("val51", HashTable_get(stringTable1, "key51"), "wrong hashtable entry");
+    Test_assertRefEqual(0, HashTable_get(stringTable1, "key23"), "found invalid entry");
+    Test_assertRefEqual(0, HashTable_get(stringTable1, "key42"), "found invalid entry");
+
+    Test_pass();
+}

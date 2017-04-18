@@ -185,10 +185,9 @@ SOEXPORT int HashTable_remove(HashTable *self, const void *key)
     size_t bucket = hash(&hkey, self->sizeParams->hashmask);
 
     HashTableEntry *entry = self->buckets[bucket];
-    HashTableEntry *prev;
+    HashTableEntry *prev = 0;
     while (entry)
     {
-        prev = entry;
         if (keysAreEqual(&hkey, &entry->key))
         {
             if (prev) prev->next = entry->next;
@@ -198,6 +197,8 @@ SOEXPORT int HashTable_remove(HashTable *self, const void *key)
             --self->count;
             return 1;
         }
+        prev = entry;
+        entry = prev->next;
     }
 
     return 0;
