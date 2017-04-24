@@ -1,3 +1,5 @@
+#include "c11threads.h"
+
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -5,7 +7,6 @@
 #include <pocas/core/list.h>
 #include <pocas/core/mtwaitqueue.h>
 #include "eventloop_internal.h"
-#include "c11threads.h"
 
 #include <pocas/core/event.h>
 

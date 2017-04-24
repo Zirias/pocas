@@ -1,9 +1,10 @@
+#include "c11threads.h"
+
 #include <stdlib.h>
 #include <string.h>
 #include <pocas/core/list.h>
 #include <pocas/core/event.h>
 #include "eventloop_internal.h"
-#include "c11threads.h"
 
 typedef struct EventLoopEntry
 {

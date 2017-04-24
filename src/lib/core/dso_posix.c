@@ -1,3 +1,4 @@
+#include <stdint.h>
 #include <stdlib.h>
 #include <dlfcn.h>
 
@@ -10,7 +11,7 @@ struct Dso
 
 SOEXPORT Dso *Dso_load(const char *path)
 {
-    return (Dso *)dlopen(name, RTLD_NOW);
+    return (Dso *)dlopen(path, RTLD_NOW);
 }
 
 SOEXPORT void *Dso_symbol(Dso *self, const char *name)

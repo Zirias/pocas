@@ -1,7 +1,7 @@
+#include "c11threads.h"
+
 #include <stdio.h>
 #include <windows.h>
-
-#include "c11threads.h"
 
 #include <pocas/core/textcolor.h>
 

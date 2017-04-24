@@ -10,6 +10,8 @@ Main project site: https://github.com/jtsiomb/c11threads
 
 #ifndef C11THREADS_H_
 #define C11THREADS_H_
+#define _XOPEN_SOURCE 700
+#define _POSIX_C_SOURCE 199309L
 
 #include <time.h>
 #include <errno.h>

@@ -1,6 +1,11 @@
 #ifndef POCAS_TEST_DECL_H
 #define POCAS_TEST_DECL_H
 
+#undef pocaslibs___cdecl
+#undef SOEXPORT
+#undef SOLOCAL
+#undef DECLEXPORT
+
 #ifdef __cplusplus
 #  define pocaslibs___cdecl extern "C"
 #else

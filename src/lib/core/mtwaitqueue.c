@@ -1,7 +1,7 @@
+#include "c11threads.h"
+
 #include <stdlib.h>
 #include <time.h>
-
-#include "c11threads.h"
 
 #include <pocas/core/mtwaitqueue.h>
 
