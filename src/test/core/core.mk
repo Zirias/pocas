@@ -15,3 +15,12 @@ pocascore-hashtabletests_win32_LIBS:= pocastest
 pocascore-hashtabletests_PREPROC:= POCASTEST
 pocascore-hashtabletests_PREPROC_ADD:= 1
 $(call librules, pocascore-hashtabletests)
+
+pocascore-cmdlinetests_MODULES:= cmdline
+pocascore-cmdlinetests_LIBTYPE:= test
+pocascore-cmdlinetests_DEPS:= pocastest pocascore
+pocascore-cmdlinetests_LIBS:= pocascore
+pocascore-cmdlinetests_win32_LIBS:= pocastest
+pocascore-cmdlinetests_PREPROC:= POCASTEST
+pocascore-cmdlinetests_PREPROC_ADD:= 1
+$(call librules, pocascore-cmdlinetests)
