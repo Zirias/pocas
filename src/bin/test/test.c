@@ -4,34 +4,34 @@
 #include <string.h>
 
 #include "runner_internal.h"
-#include "test_internal.h"
+#include "testmethod_internal.h"
 
-struct Test
+struct TestMethod
 {
     jmp_buf jmp;
     int ignore;
     int expectCrash;
 };
 
-SOLOCAL Test *Test_create(void)
+SOLOCAL TestMethod *TestMethod_create(void)
 {
-    Test* self = malloc(sizeof(Test));
+    TestMethod* self = malloc(sizeof(TestMethod));
     self->ignore = 0;
     self->expectCrash = 0;
     return self;
 }
 
-SOLOCAL void Test_destroy(Test *self)
+SOLOCAL void TestMethod_destroy(TestMethod *self)
 {
     free(self);
 }
 
-SOLOCAL jmp_buf *Test_jmp(Test *self)
+SOLOCAL jmp_buf *TestMethod_jmp(TestMethod *self)
 {
     return &(self->jmp);
 }
 
-static void Test__stopIfNotIgnored(Test *self)
+static void i_Test__stopIfNotIgnored(TestMethod *self)
 {
     if (self->ignore)
     {
@@ -43,7 +43,7 @@ static void Test__stopIfNotIgnored(Test *self)
     }
 }
 
-SOEXPORT void Test__assertNotNull(Test *self, const char *file, unsigned line, const char *pointerName,
+SOEXPORT void i_Test__assertNotNull(TestMethod *self, const char *file, unsigned line, const char *pointerName,
                                   const void *pointer, const char *message)
 {
     if (!pointer)
@@ -56,11 +56,11 @@ SOEXPORT void Test__assertNotNull(Test *self, const char *file, unsigned line, c
         {
             fprintf(testPipe, "0%s was NULL at %s:%u\n", pointerName, file, line);
         }
-        Test__stopIfNotIgnored(self);
+        i_Test__stopIfNotIgnored(self);
     }
 }
 
-SOEXPORT void Test__assertRefEqual(Test *self, const char *file, unsigned line, const char *actualName,
+SOEXPORT void i_Test__assertRefEqual(TestMethod *self, const char *file, unsigned line, const char *actualName,
                                    const void *expected, const void *actual, const char *message)
 {
     if (expected != actual)
@@ -75,11 +75,11 @@ SOEXPORT void Test__assertRefEqual(Test *self, const char *file, unsigned line, 
             fprintf(testPipe, "0%s expected: 0x%"PRIxPTR", actual: 0x%"PRIxPTR" at %s:%u\n",
                     actualName, (uintptr_t)expected, (uintptr_t)actual, file, line);
         }
-        Test__stopIfNotIgnored(self);
+        i_Test__stopIfNotIgnored(self);
     }
 }
 
-SOEXPORT void Test__assertStrEqual(Test *self, const char *file, unsigned line, const char *actualName,
+SOEXPORT void i_Test__assertStrEqual(TestMethod *self, const char *file, unsigned line, const char *actualName,
                                    const char *expected, const char *actual, const char *message)
 {
     if (!expected) expected = "(null)";
@@ -96,11 +96,11 @@ SOEXPORT void Test__assertStrEqual(Test *self, const char *file, unsigned line, 
             fprintf(testPipe, "0%s expected: \"%s\", actual: \"%s\" at %s:%u\n",
                     actualName, expected, actual, file, line);
         }
-        Test__stopIfNotIgnored(self);
+        i_Test__stopIfNotIgnored(self);
     }
 }
 
-SOEXPORT void Test__assertIntEqual(Test *self, const char *file, unsigned line, const char *actualName,
+SOEXPORT void i_Test__assertIntEqual(TestMethod *self, const char *file, unsigned line, const char *actualName,
                                    long expected, long actual, const char *message)
 {
     if (expected != actual)
@@ -115,11 +115,11 @@ SOEXPORT void Test__assertIntEqual(Test *self, const char *file, unsigned line, 
             fprintf(testPipe, "0%s expected: %ld, actual: %ld at %s:%u\n",
                     actualName, expected, actual, file, line);
         }
-        Test__stopIfNotIgnored(self);
+        i_Test__stopIfNotIgnored(self);
     }
 }
 
-SOEXPORT void Test__fail(Test *self, const char *file, unsigned line, const char *message)
+SOEXPORT void i_Test__fail(TestMethod *self, const char *file, unsigned line, const char *message)
 {
     if (message)
     {
@@ -129,28 +129,28 @@ SOEXPORT void Test__fail(Test *self, const char *file, unsigned line, const char
     {
         fprintf(testPipe, "0at %s:%u\n", file, line);
     }
-    Test__stopIfNotIgnored(self);
+    i_Test__stopIfNotIgnored(self);
 }
 
-SOEXPORT void Test__pass(Test *self)
+SOEXPORT void i_Test__pass(TestMethod *self)
 {
     fputs("1\n", testPipe);
     longjmp(self->jmp, 1);
 }
 
-SOEXPORT void Test__default(Test *self, TestResult result)
+SOEXPORT void i_Test__default(TestMethod *self, TestResultCode result)
 {
     (void)self;
     fprintf(testPipe, "2%d\n", result);
 }
 
-SOEXPORT void Test__ignore(Test *self, int num)
+SOEXPORT void i_Test__ignore(TestMethod *self, int num)
 {
     self->ignore = num;
     fprintf(testPipe, "3%d\n", num);
 }
 
-SOEXPORT void Test__expectCrash(Test *self)
+SOEXPORT void i_Test__expectCrash(TestMethod *self)
 {
     self->expectCrash = 1;
     fputs("4\n", testPipe);

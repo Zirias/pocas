@@ -2,118 +2,268 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <pocas/core/cmdline.h>
 #include <pocas/core/list.h>
 #include <pocas/core/plugin.h>
+#include <pocas/core/string.h>
 #include <pocas/core/textcolor.h>
 
+#include "testclass_internal.h"
+#include "testcase_internal.h"
 #include "preproc_internal.h"
 #include "runner_internal.h"
-#include "test_internal.h"
+#include "testmethod_internal.h"
+
+#define OPTID_PREPROCESS 0x101
+#define OPTID_OUTPUT 0x102
+#define OPTID_GDB 0x103
+
+struct result
+{
+    int run;
+    int failed;
+    int passed;
+    int unknown;
+};
+
+static void *pluginToTestClass(const void *plugin, void *args)
+{
+    (void)args;
+    return TestClass_create((Plugin *)plugin);
+}
+
+static void deleteTestClass(void *testclass)
+{
+    TestClass_destroy(testclass);
+}
+
+static void consoleResultHandler(const TestCase *testCase,
+        const TestResult *result, void *args)
+{
+    (void)args;
+    const char *testname = TestCase_method(testCase);
+    const char *classname = Plugin_id(TestClass_plugin(TestCase_class(testCase)));
+    const char *message = TestResult_message(result);
+
+    ListIterator *igni = TestResult_ignoredMessages(result);
+    if (igni) while (ListIterator_moveNext(igni))
+    {
+        TextColor_use(TextColor_YELLOW, ConsoleStream_ERROR);
+        fputs("   [IGN]  ", stderr);
+        TextColor_use(TextColor_BROWN, ConsoleStream_ERROR);
+        fprintf(stderr, "%s::%s %s\n", classname, testname,
+                (const char *)ListIterator_current(igni));
+        TextColor_use(TextColor_NORMAL, ConsoleStream_ERROR);
+    }
+    ListIterator_destroy(igni);
+
+    switch (TestResult_code(result))
+    {
+    case TRC_NONE:
+        break;
+    case TRC_CRSH:
+        TextColor_use(TextColor_LIGHTRED, ConsoleStream_ERROR);
+        fprintf(stderr, "   [CRSH] %s::%s %s\n", classname, testname, message);
+        TextColor_use(TextColor_NORMAL, ConsoleStream_ERROR);
+        break;
+    case TRC_FAIL:
+        TextColor_use(TextColor_LIGHTRED, ConsoleStream_ERROR);
+        fputs("   [FAIL] ", stderr);
+        TextColor_use(TextColor_NORMAL, ConsoleStream_ERROR);
+        fprintf(stderr, "%s::%s %s\n", classname, testname, message);
+        break;
+    case TRC_PASS:
+        TextColor_use(TextColor_LIGHTGREEN, ConsoleStream_ERROR);
+        fputs("   [PASS] ", stderr);
+        TextColor_use(TextColor_NORMAL, ConsoleStream_ERROR);
+        fprintf(stderr, "%s::%s %s\n", classname, testname, message);
+        break;
+    case TRC_UNKN:
+        TextColor_use(TextColor_YELLOW, ConsoleStream_ERROR);
+        fputs("   [UNKN] ", stderr);
+        TextColor_use(TextColor_NORMAL, ConsoleStream_ERROR);
+        fprintf(stderr, "%s::%s %s\n", classname, testname, message);
+        break;
+    }
+}
+
+static int aggregateResult(int run, int passed, int failed, int unknown)
+{
+    if (passed)
+    {
+        fputs(", ", stderr);
+        TextColor_use(TextColor_LIGHTGREEN, ConsoleStream_ERROR);
+        fprintf(stderr, "passed: %d", passed);
+        TextColor_use(TextColor_NORMAL, ConsoleStream_ERROR);
+    }
+    if (failed)
+    {
+        fputs(", ", stderr);
+        TextColor_use(TextColor_LIGHTRED, ConsoleStream_ERROR);
+        fprintf(stderr, "failed/crashed: %d", failed);
+        TextColor_use(TextColor_NORMAL, ConsoleStream_ERROR);
+    }
+    if (unknown)
+    {
+        fputs(", ", stderr);
+        TextColor_use(TextColor_YELLOW, ConsoleStream_ERROR);
+        fprintf(stderr, "unknown: %d", unknown);
+        TextColor_use(TextColor_NORMAL, ConsoleStream_ERROR);
+    }
+    fputc('\n', stderr);
+    return (passed == run) ? EXIT_SUCCESS : EXIT_FAILURE;
+}
+
+static void consoleClassResultHandler(const TestClass *testClass, void *args)
+{
+    struct result *result = args;
+    int run = TestClass_testsRun(testClass);
+    int passed = TestClass_testsPassed(testClass);
+    int failed = TestClass_testsFailed(testClass);
+    int unknown = TestClass_testsUnknown(testClass);
+
+    TextColor_use(TextColor_LIGHTCYAN, ConsoleStream_ERROR);
+    fprintf(stderr, "   [TEST] %s run: %d",
+            Plugin_id(TestClass_plugin(testClass)), run);
+    TextColor_use(TextColor_NORMAL, ConsoleStream_ERROR);
+
+    aggregateResult(run, passed, failed, unknown);
+
+    result->run += run;
+    result->failed += failed;
+    result->passed += passed;
+    result->unknown += unknown;
+}
 
 int main(int argc, char **argv)
 {
-    int i = 0;
+    int preprocess = 0;
+    char *outFilename = 0;
+    char *gdbPath = 0;
+    List *positionalArgs = List_createStr(0);
 
-    if (argc < 2) goto usage;
+    Cmdline *cmdline = Cmdline_create(CLS_Unix);
+    Cmdline_addFromArgv(cmdline, argc, argv);
 
-    if (!strncmp("-p", argv[1], 2))
+    CmdlineParser *parser = CmdlineParser_create();
+    CmdlineParser_register(parser, OPTID_PREPROCESS, 'p', 0, COM_Switch);
+    CmdlineParser_register(parser, OPTID_OUTPUT, 'o', 0, COM_ArgRequired);
+    CmdlineParser_register(parser, OPTID_GDB, 'g', 0, COM_ArgRequired);
+
+    const CmdlineItem *item;
+
+    while ((item = CmdlineParser_next(parser, cmdline)))
     {
-        const char *inFilename = 0;
-        const char *outFilename = 0;
-        if (strlen(argv[1]) > 2)
+        switch (CmdlineItem_id(item))
         {
-            if (argv[1][2] != 'o') goto usage;
-            if (strlen(argv[1]) > 3) outFilename = argv[1] + 3;
-        }
-        else
-        {
-            if (argc < 3) goto usage;
-            i = 2;
-            if (!strncmp("-o", argv[2], 2))
-            {
-                if (strlen(argv[2]) > 2)
-                {
-                    if (argc < 4) goto usage;
-                    i = 3;
-                    outFilename = argv[2] + 2;
-                }
-                else
-                {
-                    if (argc < 5) goto usage;
-                    i = 4;
-                    outFilename = argv[3];
-                }
-            }
-        }
-        inFilename = argv[i];
-        return preprocess(inFilename, outFilename) ? EXIT_SUCCESS : EXIT_FAILURE;
-    }
+            case OPTID_POSITIONALARG:
+                List_append(positionalArgs,
+                        String_copy(CmdlineItem_arg(item)));
+                break;
 
-    if (!strncmp("-g", argv[1], 2))
-    {
-        if (strlen(argv[1]) > 2)
-        {
-            if (argc < 3) goto usage;
-            i = 1;
-            gdb = argv[1] + 2;
-        }
-        else
-        {
-            if (argc < 4) goto usage;
-            i = 2;
-            gdb = argv[i];
+            case OPTID_PREPROCESS:
+                preprocess = 1;
+                break;
+
+            case OPTID_OUTPUT:
+                free(outFilename);
+                outFilename = String_copy(CmdlineItem_arg(item));
+                break;
+
+            case OPTID_GDB:
+                free(gdbPath);
+                gdbPath = String_copy(CmdlineItem_arg(item));
+                break;
         }
     }
-    else
+
+    CmdlineParser_destroy(parser);
+    Cmdline_destroy(cmdline);
+
+    exeName = argv[0];
+
+    if (preprocess)
     {
-        gdb = 0;
+        if (gdbPath) goto usage;
+        if (List_length(positionalArgs) != 1) goto usage;
+        int success = preproc(List_getStr(positionalArgs, 0), outFilename);
+        free(outFilename);
+        List_destroy(positionalArgs);
+        return success ? EXIT_SUCCESS : EXIT_FAILURE;
     }
 
-    Runner_runMain(argc - i, argv + i);
+    if (outFilename) goto usage;
+    Runner_mainHook(positionalArgs, gdbPath);
 
-    List *tests = Plugin_loadDir(argv[++i], TEST_PLUGIN_ID);
-    while (++i < argc)
+    ListIterator *pai = List_iterator(positionalArgs);
+    if (!ListIterator_moveNext(pai))
     {
-        List *moreTests = Plugin_loadDir(argv[i], TEST_PLUGIN_ID);
-        if (tests && moreTests)
+        ListIterator_destroy(pai);
+        goto usage;
+    }
+
+    List *testClasses = 0;
+    List *plugins = Plugin_loadDir(ListIterator_current(pai), TEST_PLUGIN_ID);
+    if (plugins)
+    {
+        testClasses = List_transform(plugins, deleteTestClass, 0, pluginToTestClass, 0);
+        List_destroy(plugins);
+    }
+    while (ListIterator_moveNext(pai))
+    {
+        plugins = Plugin_loadDir(ListIterator_current(pai), TEST_PLUGIN_ID);
+        if (testClasses && plugins)
         {
-            List *newTests = List_concat(tests, moreTests);
-            List_destroy(tests);
+            List *moreTests = List_transform(plugins, deleteTestClass, 0, pluginToTestClass, 0);
+            List *newTests = List_concat(testClasses, moreTests);
+            List_destroy(testClasses);
             List_destroy(moreTests);
-            tests = newTests;
+            List_destroy(plugins);
+            testClasses = newTests;
         }
-        else if (moreTests)
+        else if (plugins)
         {
-            tests = moreTests;
+            testClasses = List_transform(plugins, deleteTestClass, 0, pluginToTestClass, 0);
+            List_destroy(plugins);
         }
     }
 
-    if (!tests)
+    if (!testClasses)
     {
         fputs("POCAS Testrunner error: no tests found!\n", stderr);
         return EXIT_FAILURE;
     }
 
-    ListIterator *testIterator = List_iterator(tests);
-    while (ListIterator_moveNext(testIterator))
+    struct result result;
+    memset(&result, 0, sizeof(result));
+
+    ListIterator *tci = List_iterator(testClasses);
+    while (ListIterator_moveNext(tci))
     {
-        Plugin *test = ListIterator_current(testIterator);
-        TextColor_use(TextColor_LIGHTCYAN, ConsoleStream_ERROR);
-        fprintf(stderr, "   [TEST] %s\n", Plugin_id(test));
-        TextColor_use(TextColor_NORMAL, ConsoleStream_ERROR);
-        const char **testmethods = Plugin_symbol(test, TEST_METHODS);
-        if (testmethods) do
+        TestClass *tc = ListIterator_current(tci);
+        ListIterator *ti = List_iterator(TestClass_testCases(tc));
+        while (ListIterator_moveNext(ti))
         {
-            Runner_launchTest(argv[0], test, *testmethods);
-        } while (*++testmethods);
-        Plugin_close(test);
+            TestCase *t = ListIterator_current(ti);
+            TestCase_setResultHandler(t, consoleResultHandler, 0);
+        }
+        ListIterator_destroy(ti);
+        TestClass_setResultHandler(tc, consoleClassResultHandler, &result);
+        TestClass_run(tc, gdbPath);
     }
 
-    ListIterator_destroy(testIterator);
-    List_destroy(tests);
-    return Runner_evaluateFinal();
+    ListIterator_destroy(tci);
+    List_destroy(testClasses);
+
+    TextColor_use(TextColor_LIGHTCYAN, ConsoleStream_ERROR);
+    fprintf(stderr, "   [TRES] total tests run: %d", result.run);
+    TextColor_use(TextColor_NORMAL, ConsoleStream_ERROR);
+    return aggregateResult(result.run, result.passed, result.failed, result.unknown);
 
 usage:
+    free(outFilename);
+    free(gdbPath);
+    List_destroy(positionalArgs);
     fprintf(stderr, "\nPOCAS Testrunner\n"
                     "\n"
                     "USAGE: %s [-g {gdb path}] path [path ...]\n"

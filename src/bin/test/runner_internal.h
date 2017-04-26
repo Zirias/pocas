@@ -5,16 +5,13 @@
 
 typedef struct List List;
 typedef struct Plugin Plugin;
+typedef struct Runner Runner;
 
+extern char *exeName;
 extern FILE *testPipe;
 extern Plugin *runningTest;
-extern const char *gdb;
 
-void Runner_runMain(int argc, char **argv);
+void Runner_mainHook(List *args, char *gdbPath);
 void Runner_runTest(const char *testMethodName);
-void Runner_launchTest(const char *runnerExe,
-                       Plugin *test, const char *testMethodName);
-void Runner_evaluateTest(const char *testMethodName, int exitCode, List *result);
-int Runner_evaluateFinal(void);
 
 #endif

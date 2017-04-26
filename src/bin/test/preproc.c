@@ -59,7 +59,7 @@ static char *findTestMethod(char *s)
     return 0;
 }
 
-SOLOCAL int preprocess(const char *inFileName, const char *outFileName)
+SOLOCAL int preproc(const char *inFileName, const char *outFileName)
 {
     FILE *in = fopen(inFileName, "r");
     if (!in) return 0;

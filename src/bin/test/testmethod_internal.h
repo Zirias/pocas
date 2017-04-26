@@ -3,13 +3,13 @@
 
 #include <setjmp.h>
 
-#include <pocas/test/test.h>
+#include <pocas/test/method.h>
 
 #define TEST_PLUGIN_ID "pocastest__id"
 #define TEST_METHODS "pocastest__methods"
 
-Test *Test_create(void);
-jmp_buf *Test_jmp(Test *self);
-void Test_destroy(Test *self);
+TestMethod *TestMethod_create(void);
+jmp_buf *TestMethod_jmp(TestMethod *self);
+void TestMethod_destroy(TestMethod *self);
 
 #endif

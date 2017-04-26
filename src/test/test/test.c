@@ -19,7 +19,7 @@ TESTMETHOD(test_fail_fails)
 
 TESTMETHOD(test_default_is_used)
 {
-    Test_default(TestResult_PASS);
+    Test_default(TRC_PASS);
 
     // doing nothing is inconclusive
 }

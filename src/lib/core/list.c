@@ -283,6 +283,7 @@ SOEXPORT char *ListIterator_currentStr(const ListIterator *self)
 
 SOEXPORT void ListIterator_destroy(ListIterator *self)
 {
+    if (!self) return;
     if (!--((List *)self->list)->itercount && self->list->disposed)
     {
         List_destroy((List *)self->list);
