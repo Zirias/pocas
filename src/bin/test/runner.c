@@ -9,33 +9,30 @@
 #include "testmethod_internal.h"
 #include "runner_internal.h"
 
-SOLOCAL FILE *testPipe;
-SOLOCAL Plugin *runningTest;
-SOLOCAL const char *gdb;
 SOLOCAL char *exeName;
 
-SOLOCAL void Runner_runTest(const char *testMethodName)
+SOLOCAL void Runner_runTest(FILE *output, Plugin *testPlugin, const char *methodName)
 {
-    char *testMethodSymbol = malloc(19 + strlen(testMethodName));
-    strcpy(testMethodSymbol, "pocastest__method_");
-    strcpy(testMethodSymbol + 18, testMethodName);
+    char *methodSymbol = malloc(19 + strlen(methodName));
+    strcpy(methodSymbol, "pocastest__method_");
+    strcpy(methodSymbol + 18, methodName);
     void (*testMethod)(TestMethod *) = (void (*)(TestMethod *))
-            (uintptr_t)Plugin_symbol(runningTest, testMethodSymbol);
-    free(testMethodSymbol);
+            (uintptr_t)Plugin_symbol(testPlugin, methodSymbol);
+    free(methodSymbol);
 
     if (!testMethod)
     {
-        fprintf(testPipe, "0Error in test `%s': test method `%s' not found.\n",
-                Plugin_id(runningTest), testMethodName);
+        fprintf(output, "0Error in test `%s': test method `%s' not found.\n",
+                Plugin_id(testPlugin), methodName);
         goto done;
     }
 
     void (*testInit)(TestMethod *) = (void (*)(TestMethod *))
-            (uintptr_t)Plugin_symbol(runningTest, "pocastest__init");
+            (uintptr_t)Plugin_symbol(testPlugin, "pocastest__init");
     void (*testDone)(TestMethod *) = (void (*)(TestMethod *))
-            (uintptr_t)Plugin_symbol(runningTest, "pocastest__done");
+            (uintptr_t)Plugin_symbol(testPlugin, "pocastest__done");
 
-    TestMethod *t = TestMethod_create();
+    TestMethod *t = TestMethod_create(output);
     if (!setjmp(*TestMethod_jmp(t)))
     {
         if (testInit) testInit(t);
@@ -45,7 +42,7 @@ SOLOCAL void Runner_runTest(const char *testMethodName)
     TestMethod_destroy(t);
 
 done:
-    Plugin_close(runningTest);
-    fclose(testPipe);
+    Plugin_close(testPlugin);
+    fclose(output);
     exit(EXIT_SUCCESS);
 }

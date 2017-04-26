@@ -35,10 +35,10 @@ SOLOCAL void Runner_mainHook(List *args, char *gdbPath)
 
     int testPipeFd = _open_osfhandle(
                 (intptr_t)testPipeHandleValue, _O_APPEND | _O_WRONLY);
-    testPipe = _fdopen(testPipeFd, "a");
+    FILE *testPipe = _fdopen(testPipeFd, "a");
     setvbuf(testPipe, 0, _IONBF, 0);
 
-    runningTest = Plugin_load(List_getStr(args, 2), TEST_PLUGIN_ID);
+    Plugin *runningTest = Plugin_load(List_getStr(args, 2), TEST_PLUGIN_ID);
     if (!runningTest)
     {
         fprintf(testPipe, "0Error loading test `%s'.i\n", List_getStr(args, 2));
@@ -47,5 +47,5 @@ SOLOCAL void Runner_mainHook(List *args, char *gdbPath)
     }
 
     SetErrorMode(SEM_FAILCRITICALERRORS|SEM_NOGPFAULTERRORBOX);
-    Runner_runTest(List_getStr(args, 3));
+    Runner_runTest(testPipe, runningTest, List_getStr(args, 3));
 }

@@ -8,10 +8,8 @@ typedef struct Plugin Plugin;
 typedef struct Runner Runner;
 
 extern char *exeName;
-extern FILE *testPipe;
-extern Plugin *runningTest;
 
 void Runner_mainHook(List *args, char *gdbPath);
-void Runner_runTest(const char *testMethodName);
+void Runner_runTest(FILE *output, Plugin *testPlugin, const char *methodName);
 
 #endif
