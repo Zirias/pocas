@@ -53,7 +53,7 @@ SOEXPORT Cmdline *Cmdline_create(CmdlineStyle style)
     return self;
 }
 
-SOEXPORT int Cmdline_addFromArgv(Cmdline *self, int argc, const char **argv)
+SOEXPORT int Cmdline_addFromArgv(Cmdline *self, int argc, char **argv)
 {
     for (int i = 1; i < argc; ++i)
     {

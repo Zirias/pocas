@@ -29,7 +29,7 @@ typedef struct Cmdline Cmdline;
 #define OPTID_POSITIONALARG 0
 
 DECLEXPORT Cmdline *Cmdline_create(CmdlineStyle style);
-DECLEXPORT int Cmdline_addFromArgv(Cmdline *self, int argc, const char **argv);
+DECLEXPORT int Cmdline_addFromArgv(Cmdline *self, int argc, char **argv);
 DECLEXPORT int Cmdline_addFromString(Cmdline *self, const char *args);
 DECLEXPORT void Cmdline_rewind(Cmdline *self);
 DECLEXPORT void Cmdline_destroy(Cmdline *self);
