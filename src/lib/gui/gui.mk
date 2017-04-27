@@ -1,4 +1,4 @@
-pocasgui_MODULES:= backend window
+pocasgui_MODULES:= backend command window menu
 pocasgui_PLATFORMMODULES := backend
 pocasgui_DEFINES:= -DBUILDING_POCAS_GUI
 pocasgui_DEPS:= pocascore

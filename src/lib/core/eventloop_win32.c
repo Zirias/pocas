@@ -8,6 +8,7 @@
 
 struct win32EventLoopData
 {
+    int initialized;
     Win32HndlEvInfo hndlEvInfo;
     Win32MsgEvInfo msgEvInfo;
     Event *win32HndlEvent;
@@ -18,32 +19,33 @@ struct win32EventLoopData
     MSG msg;
 };
 
-static thread_local struct win32EventLoopData data;
-
-static once_flag initFlag = ONCE_FLAG_INIT;
+static thread_local struct win32EventLoopData data = { 0 };
 
 static void init(void)
 {
-    memset(&data, 0, sizeof(data));
-    data.win32HndlEvent = Event_create("win32Hndl");
-    data.win32MsgEvent = Event_create("win32Msg");
+    if (!data.initialized)
+    {
+        data.initialized = 1;
+        data.win32HndlEvent = Event_create("win32Hndl");
+        data.win32MsgEvent = Event_create("win32Msg");
+    }
 }
 
 SOEXPORT Event *Eventloop_win32HndlEvent()
 {
-    call_once(&initFlag, init);
+    init();
     return data.win32HndlEvent;
 }
 
 SOEXPORT Event *Eventloop_win32MsgEvent()
 {
-    call_once(&initFlag, init);
+    init();
     return data.win32MsgEvent;
 }
 
 SOEXPORT int EventLoop_processEvents(int timeout)
 {
-    call_once(&initFlag, init);
+    init();
     DWORD rc = MsgWaitForMultipleObjectsEx(data.numHandles,
             data.handles, (DWORD)timeout, QS_ALLEVENTS, MWMO_INPUTAVAILABLE);
     if (rc == WAIT_FAILED) return -1;
@@ -91,7 +93,7 @@ SOEXPORT int EventLoop_processEvents(int timeout)
 
 SOEXPORT LRESULT CALLBACK Eventloop_win32WndProc(HWND wnd, UINT msg, WPARAM wp, LPARAM lp)
 {
-    call_once(&initFlag, init);
+    init();
     data.msgEvInfo.wnd = wnd;
     data.msgEvInfo.msg = msg;
     data.msgEvInfo.wp = wp;

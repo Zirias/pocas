@@ -3,6 +3,8 @@
 
 #include <pocas/gui/decl.h>
 
+typedef struct Menu Menu;
+
 typedef struct Window Window;
 
 DECLEXPORT Window *Window_create(const char *title, int width, int height);
@@ -11,6 +13,8 @@ DECLEXPORT int Window_width(const Window *self);
 DECLEXPORT int Window_height(const Window *self);
 DECLEXPORT void Window_show(Window *self);
 DECLEXPORT void Window_hide(Window *self);
+DECLEXPORT Menu *Window_menu(const Window *self);
+DECLEXPORT void Window_setMenu(Window *self, Menu *menu);
 DECLEXPORT void Window_destroy(Window *self);
 
 #endif
