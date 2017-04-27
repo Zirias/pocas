@@ -58,6 +58,11 @@ static void handleWin32MessageEvent(void *w, EventArgs *args)
     WORD id;
     switch (mei->msg)
     {
+    case WM_CLOSE:
+        Window_close(self->w);
+        EventArgs_setHandled(args);
+        break;
+
     case WM_COMMAND:
         id = LOWORD(mei->wp);
         const B_Command *c = HashTable_get(commands, &id);
@@ -115,6 +120,11 @@ static void B_Window_setMenu(B_Window *self, B_Menu *menu)
 {
     SetMenu(self->hndl, menu->menu);
     DrawMenuBar(self->hndl);
+}
+
+static void B_Window_close(B_Window *self)
+{
+    DestroyWindow(self->hndl);
 }
 
 static void B_Window_destroy(B_Window *self)
@@ -216,6 +226,78 @@ static void B_Command_destroy(B_Command *self)
     free(self);
 }
 
+static MessageBoxButton B_MessageBox_show(const Window *w, const char *title,
+        const char *text, MessageBoxButton buttons)
+{
+    LPWSTR titlew;
+    LPWSTR textw;
+    HWND hwnd = 0;
+
+    MessageBoxButton b1 = buttons & ~MBB_Help;
+    UINT type;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wswitch"
+    switch (b1)
+    {
+    case MBB_Cancel|MBB_Again|MBB_Continue:
+        type = MB_CANCELTRYCONTINUE;
+        break;
+    case MBB_OK:
+        type = MB_OK;
+        break;
+    case MBB_OK|MBB_Cancel:
+        type = MB_OKCANCEL;
+        break;
+    case MBB_Retry|MBB_Cancel:
+        type = MB_RETRYCANCEL;
+        break;
+    case MBB_Yes|MBB_No:
+        type = MB_YESNO;
+        break;
+    case MBB_Yes|MBB_No|MBB_Cancel:
+        type = MB_YESNOCANCEL;
+        break;
+    default:
+        return MBB_Unsupported;
+    }
+#pragma GCC diagnostic pop
+
+    if (buttons & MBB_Help) type |= MB_HELP;
+
+    size_t titlelen = strlen(title) + 1;
+    size_t textlen = strlen(text) + 1;
+    titlew = malloc(2 * titlelen);
+    textw = malloc(2 * textlen);
+
+    MultiByteToWideChar(CP_UTF8, 0, title, titlelen, titlew, titlelen);
+    MultiByteToWideChar(CP_UTF8, 0, text, textlen, textw, textlen);
+
+    if (w)
+    {
+        B_Window *bw = ((const Frontend *)w)->b;
+        hwnd = bw->hndl;
+    }
+
+    int ret = MessageBoxW(hwnd, textw, titlew, type);
+
+    free(titlew);
+    free(textw);
+
+    switch (ret)
+    {
+    case IDABORT: return MBB_Unsupported;
+    case IDCANCEL: return MBB_Cancel;
+    case IDCONTINUE: return MBB_Continue;
+    case IDIGNORE: return MBB_Unsupported;
+    case IDNO: return MBB_No;
+    case IDOK: return MBB_OK;
+    case IDRETRY: return MBB_Retry;
+    case IDTRYAGAIN: return MBB_Again;
+    case IDYES: return MBB_Yes;
+    default: return MBB_Unsupported;
+    }
+}
+
 static Backend win32Backend = {
     .name = B_name,
 
@@ -223,6 +305,7 @@ static Backend win32Backend = {
     .Window_show = B_Window_show,
     .Window_hide = B_Window_hide,
     .Window_setMenu = B_Window_setMenu,
+    .Window_close = B_Window_close,
     .Window_destroy = B_Window_destroy,
 
     .Menu_create = B_Menu_create,
@@ -233,7 +316,9 @@ static Backend win32Backend = {
     .MenuItem_destroy = B_MenuItem_destroy,
 
     .Command_create = B_Command_create,
-    .Command_destroy = B_Command_destroy
+    .Command_destroy = B_Command_destroy,
+
+    .MessageBox_show = B_MessageBox_show
 };
 
 SOLOCAL const Backend *defaultBackend = &win32Backend;

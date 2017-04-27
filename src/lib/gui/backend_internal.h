@@ -1,6 +1,8 @@
 #ifndef BACKEND_INTERNAL_H
 #define BACKEND_INTERNAL_H
 
+#include <pocas/gui/messagebox.h>
+
 #include <pocas/gui/backend.h>
 
 typedef struct Window Window;
@@ -25,6 +27,7 @@ struct Backend
     void (*Window_show)(B_Window *self);
     void (*Window_hide)(B_Window *self);
     void (*Window_setMenu)(B_Window *self, B_Menu *menu);
+    void (*Window_close)(B_Window *self);
     void (*Window_destroy)(B_Window *self);
 
     B_Menu *(*Menu_create)(Menu *m);
@@ -37,6 +40,9 @@ struct Backend
 
     B_Command *(*Command_create)(Command *c);
     void (*Command_destroy)(B_Command *self);
+
+    MessageBoxButton (*MessageBox_show)(const Window *w, const char *title,
+            const char *text, MessageBoxButton buttons);
 };
 
 #endif // BACKEND_INTERNAL_H

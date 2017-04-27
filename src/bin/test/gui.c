@@ -5,6 +5,7 @@
 
 #include <pocas/gui/command.h>
 #include <pocas/gui/menu.h>
+#include <pocas/gui/messagebox.h>
 #include <pocas/gui/window.h>
 
 #include <pocas/test/decl.h>
@@ -22,8 +23,21 @@ struct Gui
 void handleCloseCommand(void *selfPtr, EventArgs *args)
 {
     Gui *self = selfPtr;
-    Gui_dispose(self);
+    Window_close(self->mainWindow);
     EventArgs_setHandled(args);
+}
+
+void handleWindowClosing(void *selfPtr, EventArgs *args)
+{
+    Gui *self = selfPtr;
+
+    MessageBoxButton result = MessageBox_show(self->mainWindow, "Really quit?",
+            "Are you sure you want to quit?", MBB_Yes|MBB_No);
+
+    if (result == MBB_No)
+    {
+        EventArgs_setHandled(args);
+    }
 }
 
 SOLOCAL Gui *Gui_create(void)
@@ -32,9 +46,6 @@ SOLOCAL Gui *Gui_create(void)
     self->disposed = 0;
 
     self->closeCommand = Command_create();
-    Event_register(Command_invokedEvent(self->closeCommand),
-            self, handleCloseCommand);
-
     self->mainMenu = Menu_create();
     Menu *fileMenu = Menu_create();
 
@@ -48,6 +59,13 @@ SOLOCAL Gui *Gui_create(void)
 
     self->mainWindow = Window_create("POCAS Test", 800, 600);
     Window_setMenu(self->mainWindow, self->mainMenu);
+
+
+    Event_register(Command_invokedEvent(self->closeCommand),
+            self, handleCloseCommand);
+
+    Event_register(Window_closingEvent(self->mainWindow),
+            self, handleWindowClosing);
 
     return self;
 }

@@ -3,6 +3,7 @@
 
 #include <pocas/gui/decl.h>
 
+typedef struct Event Event;
 typedef struct Menu Menu;
 
 typedef struct Window Window;
@@ -15,6 +16,8 @@ DECLEXPORT void Window_show(Window *self);
 DECLEXPORT void Window_hide(Window *self);
 DECLEXPORT Menu *Window_menu(const Window *self);
 DECLEXPORT void Window_setMenu(Window *self, Menu *menu);
+DECLEXPORT void Window_close(Window *self);
+DECLEXPORT Event *Window_closingEvent(const Window *self);
 DECLEXPORT void Window_destroy(Window *self);
 
 #endif
