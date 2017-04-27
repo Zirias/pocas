@@ -21,46 +21,42 @@ struct EventArgs
     const Event *event;
     void *sender;
     int handled;
-    void *data;
+    void *evInfo;
 };
 
-struct DataEventData
-{
-    size_t size;
-    char data[];
-};
-
-struct EventHandler
+struct handlerData
 {
     void *object;
-    EventHandlerCallback callback;
+    EventHandler handler;
 };
-
-static once_flag initflag = ONCE_FLAG_INIT;
-static MtWaitQueue *eventQueue = 0;
-
-static void init(void)
-{
-    eventQueue = MtWaitQueue_create(0);
-}
 
 SOEXPORT Event *Event_create(const char *name)
 {
-    call_once(&initflag, init);
     Event *self = malloc(sizeof(Event));
     self->name = name;
-    self->handlers = List_create(0, 0, 0);
+    self->handlers = List_create(0, free, 0);
     return self;
 }
 
-SOEXPORT void Event_register(Event *self, const EventHandler *handler)
+SOEXPORT void Event_register(Event *self, void *object, EventHandler handler)
 {
-    List_append(self->handlers, (void *)handler);
+    struct handlerData *data = malloc(sizeof(*data));
+    data->object = object;
+    data->handler = handler;
+    List_append(self->handlers, data);
 }
 
-SOEXPORT void Event_unregister(Event *self, const EventHandler *handler)
+int handlerElementSelector(const void *element, void *args)
 {
-    List_remove(self->handlers, (void *)handler);
+    const struct handlerData *data = element;
+    struct handlerData *match = args;
+    return (data->handler == match->handler && data->object == match->object);
+}
+
+SOEXPORT void Event_unregister(Event *self, void *object, EventHandler handler)
+{
+    struct handlerData data = { object, handler };
+    List_removeMatching(self->handlers, handlerElementSelector, &data);
 }
 
 SOEXPORT void Event_clear(Event *self)
@@ -73,8 +69,8 @@ SOEXPORT void Event_raise(const Event *self, EventArgs *args)
     ListIterator *i = List_iterator(self->handlers);
     while (ListIterator_moveNext(i))
     {
-        const EventHandler *handler = ListIterator_current(i);
-        EventHandler_invoke(handler, args);
+        const struct handlerData *data = ListIterator_current(i);
+        data->handler(data->object, args);
         if (EventArgs_handled(args)) break;
     }
     ListIterator_destroy(i);
@@ -85,41 +81,20 @@ SOEXPORT const char *Event_name(const Event *self)
     return self->name;
 }
 
-SOEXPORT void Event_registerWithLoop(const Event *self, const PlatformEvent *pe, void *sender)
-{
-    List_append(EventLoop_entries(), EventLoopEntry_create(self, pe, sender));
-}
-
-static int eventMatchesEntry(const void *item, void *arg)
-{
-    const EventLoopEntry *entry = item;
-    const Event *event = arg;
-    return EventLoopEntry_event(entry) == event;
-}
-
-SOEXPORT void Event_unregisterWithLoop(const Event *self)
-{
-    List_removeMatching(EventLoop_entries(), eventMatchesEntry, (void *)self);
-}
-
 SOEXPORT void Event_destroy(Event *self)
 {
+    if (!self) return;
     List_destroy(self->handlers);
     free(self);
 }
 
-SOEXPORT EventArgs *Event_await(int timeout)
-{
-    return MtWaitQueue_dequeue(eventQueue, timeout);
-}
-
 SOEXPORT EventArgs *EventArgs_create(
-        const Event *event, void *sender, void *data)
+        const Event *event, void *sender, void *evInfo)
 {
     EventArgs *self = malloc(sizeof(EventArgs));
     self->event = event;
     self->sender = sender;
-    self->data = data;
+    self->evInfo = evInfo;
     self->handled = 0;
     return self;
 }
@@ -134,9 +109,9 @@ SOEXPORT void *EventArgs_sender(const EventArgs *self)
     return self->sender;
 }
 
-SOEXPORT void *EventArgs_data(const EventArgs *self)
+SOEXPORT void *EventArgs_evInfo(const EventArgs *self)
 {
-    return self->data;
+    return self->evInfo;
 }
 
 SOEXPORT int EventArgs_handled(const EventArgs *self)
@@ -150,47 +125,6 @@ SOEXPORT void EventArgs_setHandled(EventArgs *self)
 }
 
 SOEXPORT void EventArgs_destroy(EventArgs *self)
-{
-    free(self);
-}
-
-SOEXPORT DataEventData *DataEventData_create(const void *sourceData, size_t dataSize)
-{
-    DataEventData *self = malloc(sizeof(DataEventData) + dataSize);
-    self->size = dataSize;
-    if (sourceData) memcpy(self->data, sourceData, dataSize);
-    return self;
-}
-
-SOEXPORT size_t DataEventData_size(const DataEventData *self)
-{
-    return self->size;
-}
-
-SOEXPORT const void *DataEventData_data(const DataEventData *self)
-{
-    return self->data;
-}
-
-SOEXPORT void DataEventData_destroy(DataEventData *self)
-{
-    free(self);
-}
-
-SOEXPORT EventHandler *EventHandler_create(void *object, EventHandlerCallback callback)
-{
-    EventHandler *self = malloc(sizeof(EventHandler));
-    self->object = object;
-    self->callback = callback;
-    return self;
-}
-
-SOEXPORT void EventHandler_invoke(const EventHandler *self, EventArgs *args)
-{
-    self->callback(self->object, args);
-}
-
-SOEXPORT void EventHandler_destroy(EventHandler *self)
 {
     free(self);
 }

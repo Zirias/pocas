@@ -1,10 +1,104 @@
-#include <pocas/core/list.h>
+#include "c11threads.h"
 
-#include "event_win32_internal.h"
-#include "eventloop_internal.h"
+#include <string.h>
+#include <windows.h>
 
-#define BUFSIZE 4096
+#include <pocas/core/event_win32.h>
+#include <pocas/core/eventloop_win32.h>
 
+struct win32EventLoopData
+{
+    Win32HndlEvInfo hndlEvInfo;
+    Win32MsgEvInfo msgEvInfo;
+    Event *win32HndlEvent;
+    Event *win32MsgEvent;
+    HANDLE *handles;
+    DWORD maxHandles;
+    DWORD numHandles;
+    MSG msg;
+};
+
+static thread_local struct win32EventLoopData data;
+
+static once_flag initFlag = ONCE_FLAG_INIT;
+
+static void init(void)
+{
+    memset(&data, 0, sizeof(data));
+    data.win32HndlEvent = Event_create("win32Hndl");
+    data.win32MsgEvent = Event_create("win32Msg");
+}
+
+SOEXPORT Event *Eventloop_win32HndlEvent()
+{
+    call_once(&initFlag, init);
+    return data.win32HndlEvent;
+}
+
+SOEXPORT Event *Eventloop_win32MsgEvent()
+{
+    call_once(&initFlag, init);
+    return data.win32MsgEvent;
+}
+
+SOEXPORT int EventLoop_processEvents(int timeout)
+{
+    call_once(&initFlag, init);
+    DWORD rc = MsgWaitForMultipleObjectsEx(data.numHandles,
+            data.handles, (DWORD)timeout, QS_ALLEVENTS, MWMO_INPUTAVAILABLE);
+    if (rc == WAIT_FAILED) return -1;
+    if (rc == WAIT_TIMEOUT) return 0;
+    if (rc == WAIT_OBJECT_0 + data.numHandles)
+    {
+        if (GetMessageW(&data.msg, 0, 0, 0) <= 0)
+        {
+            EventLoop_exit((int)data.msg.wParam);
+            return 1;
+        }
+        TranslateMessage(&data.msg);
+        DispatchMessageW(&data.msg);
+        return 1;
+    }
+    else
+    {
+        int idx;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wtype-limits"
+        if (rc >= WAIT_OBJECT_0 && rc < WAIT_OBJECT_0 + data.numHandles)
+        {
+            idx = rc - WAIT_OBJECT_0;
+        }
+        else if (rc >= WAIT_ABANDONED_0
+                 && rc < WAIT_ABANDONED_0 + data.numHandles)
+        {
+            idx = rc - WAIT_ABANDONED_0;
+        }
+        else return -1;
+#pragma GCC diagnostic pop
+
+        data.hndlEvInfo.hndl = data.handles[idx];
+        EventArgs *args = EventArgs_create(data.win32HndlEvent, 0, &data.hndlEvInfo);
+        Event_raise(data.win32HndlEvent, args);
+        EventArgs_destroy(args);
+        return 1;
+    }
+}
+
+SOEXPORT LRESULT CALLBACK Eventloop_win32WndProc(HWND wnd, UINT msg, WPARAM wp, LPARAM lp)
+{
+    call_once(&initFlag, init);
+    data.msgEvInfo.wnd = wnd;
+    data.msgEvInfo.msg = msg;
+    data.msgEvInfo.wp = wp;
+    data.msgEvInfo.lp = lp;
+    EventArgs *args = EventArgs_create(data.win32MsgEvent, 0, &data.msgEvInfo);
+    Event_raise(data.win32MsgEvent, args);
+    int handled = EventArgs_handled(args);
+    EventArgs_destroy(args);
+    return handled ? 0 : DefWindowProcW(wnd, msg, wp, lp);
+}
+
+/*
 typedef struct WaitOvrdRecord
 {
     HANDLE readHandle;
@@ -173,3 +267,4 @@ SOEXPORT int EventLoop_processEvents(int timeout)
 
     return processed;
 }
+*/

@@ -8,6 +8,7 @@
 #include <pocas/core/string.h>
 #include <pocas/core/textcolor.h>
 
+#include "gui_internal.h"
 #include "testclass_internal.h"
 #include "testcase_internal.h"
 #include "preproc_internal.h"
@@ -17,6 +18,7 @@
 #define OPTID_PREPROCESS 0x101
 #define OPTID_OUTPUT 0x102
 #define OPTID_GDB 0x103
+#define OPTID_INTERACTIVE 0x104
 
 struct result
 {
@@ -138,6 +140,7 @@ static void consoleClassResultHandler(const TestClass *testClass, void *args)
 int main(int argc, char **argv)
 {
     int preprocess = 0;
+    int interactive = 0;
     char *outFilename = 0;
     char *gdbPath = 0;
     List *positionalArgs = List_createStr(0);
@@ -149,6 +152,7 @@ int main(int argc, char **argv)
     CmdlineParser_register(parser, OPTID_PREPROCESS, 'p', 0, COM_Switch);
     CmdlineParser_register(parser, OPTID_OUTPUT, 'o', 0, COM_ArgRequired);
     CmdlineParser_register(parser, OPTID_GDB, 'g', 0, COM_ArgRequired);
+    CmdlineParser_register(parser, OPTID_INTERACTIVE, 'i', 0, COM_Switch);
 
     const CmdlineItem *item;
 
@@ -156,24 +160,28 @@ int main(int argc, char **argv)
     {
         switch (CmdlineItem_id(item))
         {
-            case OPTID_POSITIONALARG:
-                List_append(positionalArgs,
-                        String_copy(CmdlineItem_arg(item)));
-                break;
+        case OPTID_POSITIONALARG:
+            List_append(positionalArgs,
+                    String_copy(CmdlineItem_arg(item)));
+            break;
 
-            case OPTID_PREPROCESS:
-                preprocess = 1;
-                break;
+        case OPTID_PREPROCESS:
+            preprocess = 1;
+            break;
 
-            case OPTID_OUTPUT:
-                free(outFilename);
-                outFilename = String_copy(CmdlineItem_arg(item));
-                break;
+        case OPTID_OUTPUT:
+            free(outFilename);
+            outFilename = String_copy(CmdlineItem_arg(item));
+            break;
 
-            case OPTID_GDB:
-                free(gdbPath);
-                gdbPath = String_copy(CmdlineItem_arg(item));
-                break;
+        case OPTID_GDB:
+            free(gdbPath);
+            gdbPath = String_copy(CmdlineItem_arg(item));
+            break;
+
+        case OPTID_INTERACTIVE:
+            interactive = 1;
+            break;
         }
     }
 
@@ -181,6 +189,11 @@ int main(int argc, char **argv)
     Cmdline_destroy(cmdline);
 
     exeName = argv[0];
+
+    if (interactive)
+    {
+        return guiMain();
+    }
 
     if (preprocess)
     {

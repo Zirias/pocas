@@ -5,16 +5,18 @@
 
 #include <pocas/core/event.h>
 
-typedef enum PlatformEventType
+typedef struct Win32HndlEvInfo
 {
-    PET_Handle
-} PlatformEventType;
+    HANDLE hndl;
+    void *owner;
+} Win32HndlEvInfo;
 
-typedef enum PlatformEventHandleAction
+typedef struct Win32MsgEvInfo
 {
-    PEHA_ReadOverlapped
-} PlatformEventHandleAction;
-
-DECLEXPORT PlatformEvent *PlatformEvent_fromHandle(HANDLE handle, PlatformEventHandleAction action);
+    HWND wnd;
+    UINT msg;
+    WPARAM wp;
+    LPARAM lp;
+} Win32MsgEvInfo;
 
 #endif

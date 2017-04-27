@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <windows.h>
+
+#include <pocas/core/event.h>
 #include <pocas/core/string.h>
 #include <pocas/core/list.h>
 #include <pocas/core/file_win32.h>
@@ -17,8 +19,6 @@ struct ProcessHost
     File *err;
     Event *stdoutData;
     Event *stderrData;
-    EventHandler *outData;
-    EventHandler *errData;
 };
 
 static int mkpipe(HANDLE *read, HANDLE *write,
@@ -54,7 +54,7 @@ static void onStdoutData(void *selfptr, EventArgs *args)
 {
     ProcessHost *self = selfptr;
     EventArgs *stdoutArgs = EventArgs_create(
-                self->stdoutData, self, EventArgs_data(args));
+                self->stdoutData, self, EventArgs_evInfo(args));
     Event_raise(self->stdoutData, stdoutArgs);
     EventArgs_destroy(stdoutArgs);
 }
@@ -63,7 +63,7 @@ static void onStderrData(void *selfptr, EventArgs *args)
 {
     ProcessHost *self = selfptr;
     EventArgs *stderrArgs = EventArgs_create(
-                self->stderrData, self, EventArgs_data(args));
+                self->stderrData, self, EventArgs_evInfo(args));
     Event_raise(self->stderrData, stderrArgs);
     EventArgs_destroy(stderrArgs);
 }
@@ -79,8 +79,6 @@ SOEXPORT ProcessHost *ProcessHost_create(const char *executable)
     self->err = 0;
     self->stdoutData = Event_create("Data");
     self->stderrData = Event_create("Data");
-    self->outData = EventHandler_create(self, onStdoutData);
-    self->errData = EventHandler_create(self, onStderrData);
     return self;
 }
 
@@ -144,13 +142,13 @@ SOEXPORT int ProcessHost_startv(ProcessHost *self, ProcessHostFlags flags, const
     if (pout != INVALID_HANDLE_VALUE)
     {
         self->out = File_openHandle(pout);
-        EVENT_REG(File, self->out, dataRead, self->outData);
+        Event_register(File_dataReadEvent(self->out), self, onStdoutData);
         File_startReading(self->out);
     }
     if (perr != INVALID_HANDLE_VALUE)
     {
         self->err = File_openHandle(perr);
-        EVENT_REG(File, self->err, dataRead, self->errData);
+        Event_register(File_dataReadEvent(self->err), self, onStderrData);
         File_startReading(self->err);
     }
 
@@ -189,12 +187,12 @@ SOEXPORT int ProcessHost_start(ProcessHost *self, ProcessHostFlags flags, ...)
     return rc;
 }
 
-SOEXPORT EVENT(ProcessHost, stdoutData)
+SOEXPORT Event *ProcessHost_stdoutDataEvent(const ProcessHost *self)
 {
     return self->stdoutData;
 }
 
-SOEXPORT EVENT(ProcessHost, stderrData)
+SOEXPORT Event *ProcessHost_stderrDataEvent(const ProcessHost *self)
 {
     return self->stderrData;
 }

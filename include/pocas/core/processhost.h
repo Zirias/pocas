@@ -1,8 +1,9 @@
 #ifndef POCAS_CORE_PROCESSHOST_H
 #define POCAS_CORE_PROCESSHOST_H
 
-#include <pocas/core/event.h>
+#include <pocas/core/decl.h>
 
+typedef struct Event Event;
 typedef struct List List;
 
 typedef struct ProcessHost ProcessHost;
@@ -25,8 +26,8 @@ DECLEXPORT ProcessHost *ProcessHost_create(const char *executable);
 DECLEXPORT int ProcessHost_start(ProcessHost *self, ProcessHostFlags flags, ...);
 DECLEXPORT int ProcessHost_startv(ProcessHost *self, ProcessHostFlags flags, const List *args);
 
-DECLEXPORT EVENT(ProcessHost, stdoutData);
-DECLEXPORT EVENT(ProcessHost, stderrData);
+DECLEXPORT Event *ProcessHost_stdoutDataEvent(const ProcessHost *self);
+DECLEXPORT Event *ProcessHost_stderrDataEvent(const ProcessHost *self);
 
 DECLEXPORT void ProcessHost_destroy(ProcessHost *self);
 

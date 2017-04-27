@@ -1,8 +1,8 @@
 #include <windows.h>
 
 #include "eventloop_internal.h"
-#include "event_win32_internal.h"
 
+    /*
 SOEXPORT PlatformEvent *PlatformEvent_fromHandle(HANDLE handle, PlatformEventHandleAction action)
 {
     PlatformEvent *self = malloc(sizeof(PlatformEvent));
@@ -20,8 +20,11 @@ SOEXPORT PlatformEvent *PlatformEvent_fromHandle(HANDLE handle, PlatformEventHan
     return self;
 }
 
+    */
+
 SOEXPORT void PlatformEvent_destroy(PlatformEvent *self)
 {
+    /*
     if (self->type == PET_Handle)
     {
        if (self->peData.petHandle.action == PEHA_ReadOverlapped)
@@ -42,4 +45,5 @@ SOEXPORT void PlatformEvent_destroy(PlatformEvent *self)
        }
     }
     free(self);
+    */
 }

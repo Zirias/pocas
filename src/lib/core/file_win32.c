@@ -9,7 +9,6 @@ struct File
 {
     HANDLE handle;
     Event *dataRead;
-    PlatformEvent *peDataRead;
     OVERLAPPED ovwr;
 };
 
@@ -43,17 +42,12 @@ SOEXPORT File *File_openHandle(HANDLE handle)
 
 SOEXPORT void File_startReading(File *self)
 {
-    if (self->peDataRead) return;
-    self->peDataRead = PlatformEvent_fromHandle(self->handle, PEHA_ReadOverlapped);
-    Event_registerWithLoop(self->dataRead, self->peDataRead, self);
+    (void)self; // TODO
 }
 
 SOEXPORT void File_stopReading(File *self)
 {
-    if (!self->peDataRead) return;
-    Event_unregisterWithLoop(self->dataRead);
-    PlatformEvent_destroy(self->peDataRead);
-    self->peDataRead = 0;
+    (void)self; // TODO
 }
 
 SOEXPORT int File_write(File *self, void *buffer, size_t n, size_t *written)
@@ -96,7 +90,7 @@ SOEXPORT int File_write(File *self, void *buffer, size_t n, size_t *written)
     return 1;
 }
 
-SOEXPORT EVENT(File, dataRead)
+SOEXPORT Event *File_dataReadEvent(const File *self)
 {
     return self->dataRead;
 }
@@ -104,7 +98,6 @@ SOEXPORT EVENT(File, dataRead)
 SOEXPORT void File_close(File *self)
 {
     if (!self) return;
-    if (self->peDataRead) File_stopReading(self);
     Event_destroy(self->dataRead);
     CloseHandle(self->handle);
     CloseHandle(self->ovwr.hEvent);

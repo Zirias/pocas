@@ -3,8 +3,9 @@
 
 #include <stddef.h>
 
-#include <pocas/core/event.h>
+#include <pocas/core/decl.h>
 
+typedef struct Event Event;
 typedef struct List List;
 
 typedef struct File File;
@@ -24,7 +25,7 @@ DECLEXPORT void File_stopReading(File *self);
 DECLEXPORT int File_write(File *self, void *buffer, size_t n, size_t *written);
 DECLEXPORT void File_close(File *self);
 
-DECLEXPORT EVENT(File, dataRead);
+DECLEXPORT Event *File_dataReadEvent(const File *self);
 
 DECLEXPORT List *File_findInDir(const char *path, const char *pattern);
 

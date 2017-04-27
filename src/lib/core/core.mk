@@ -1,5 +1,5 @@
 pocascore_MODULES:= cmdline string stringbuilder list hashtable plugin mtwaitqueue event eventloop
-pocascore_PLATFORMMODULES := textcolor dso plugin event eventloop file processhost
+pocascore_PLATFORMMODULES := textcolor dso plugin eventloop file processhost
 pocascore_DEFINES:= -DBUILDING_POCAS_CORE
 pocascore_posix_LDFLAGS:= -pthread
 pocascore_win32_STATICLIBS:= pthread
