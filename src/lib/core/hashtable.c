@@ -149,6 +149,7 @@ SOEXPORT void HashTable_set(HashTable *self, const void *key, void *val)
         entry->keyObject = key;
         if (self->entryDeleter) self->entryDeleter(entry->valObject);
         entry->valObject = self->entryCloner ? self->entryCloner(val) : val;
+        free(hkey.data);
     }
     else
     {
@@ -166,15 +167,21 @@ SOEXPORT const void *HashTable_get(const HashTable *self, const void *key)
     hkey.data = 0;
     self->keyProvider(&hkey, key);
     size_t bucket = hash(&hkey, self->sizeParams->hashmask);
+    const void *result = 0;
 
     HashTableEntry *entry = self->buckets[bucket];
     while (entry)
     {
-        if (keysAreEqual(&hkey, &entry->key)) return entry->valObject;
+        if (keysAreEqual(&hkey, &entry->key))
+        {
+            result = entry->valObject;
+            break;
+        }
         entry = entry->next;
     }
 
-    return 0;
+    free(hkey.data);
+    return result;
 }
 
 SOEXPORT int HashTable_remove(HashTable *self, const void *key)
@@ -195,12 +202,14 @@ SOEXPORT int HashTable_remove(HashTable *self, const void *key)
             if (self->entryDeleter) self->entryDeleter(entry->valObject);
             free(entry);
             --self->count;
+            free(hkey.data);
             return 1;
         }
         prev = entry;
         entry = prev->next;
     }
 
+    free(hkey.data);
     return 0;
 }
 
