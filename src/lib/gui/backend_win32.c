@@ -227,7 +227,7 @@ static void B_Command_destroy(B_Command *self)
 }
 
 static MessageBoxButton B_MessageBox_show(const Window *w, const char *title,
-        const char *text, MessageBoxButton buttons)
+        const char *text, MessageBoxButton buttons, MessageBoxStyle style)
 {
     LPWSTR titlew;
     LPWSTR textw;
@@ -263,6 +263,25 @@ static MessageBoxButton B_MessageBox_show(const Window *w, const char *title,
 #pragma GCC diagnostic pop
 
     if (buttons & MBB_Help) type |= MB_HELP;
+
+    switch (style)
+    {
+    case MBS_Info:
+        type |= MB_ICONINFORMATION;
+        break;
+    case MBS_Warning:
+        type |= MB_ICONWARNING;
+        break;
+    case MBS_Error:
+        type |= MB_ICONERROR;
+        break;
+    case MBS_Question:
+        type |= MB_ICONQUESTION;
+        break;
+    case MBS_None:
+    default:
+        ;
+    }
 
     size_t titlelen = strlen(title) + 1;
     size_t textlen = strlen(text) + 1;

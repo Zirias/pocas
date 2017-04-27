@@ -20,19 +20,19 @@ struct Gui
     Command *closeCommand;
 };
 
-void handleCloseCommand(void *selfPtr, EventArgs *args)
+static void handleCloseCommand(void *selfPtr, EventArgs *args)
 {
     Gui *self = selfPtr;
     Window_close(self->mainWindow);
     EventArgs_setHandled(args);
 }
 
-void handleWindowClosing(void *selfPtr, EventArgs *args)
+static void handleWindowClosing(void *selfPtr, EventArgs *args)
 {
     Gui *self = selfPtr;
 
     MessageBoxButton result = MessageBox_show(self->mainWindow, "Really quit?",
-            "Are you sure you want to quit?", MBB_Yes|MBB_No);
+            "Are you sure you want to quit?", MBB_Yes|MBB_No, MBS_Warning);
 
     if (result == MBB_No)
     {

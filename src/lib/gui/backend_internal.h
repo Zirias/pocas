@@ -42,7 +42,7 @@ struct Backend
     void (*Command_destroy)(B_Command *self);
 
     MessageBoxButton (*MessageBox_show)(const Window *w, const char *title,
-            const char *text, MessageBoxButton buttons);
+            const char *text, MessageBoxButton buttons, MessageBoxStyle style);
 };
 
 #endif // BACKEND_INTERNAL_H

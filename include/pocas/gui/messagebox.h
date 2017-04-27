@@ -18,7 +18,16 @@ typedef enum MessageBoxButton
     MBB_Help = 1 << 7
 } MessageBoxButton;
 
+typedef enum MessageBoxStyle
+{
+    MBS_None = 0,
+    MBS_Warning,
+    MBS_Info,
+    MBS_Error,
+    MBS_Question
+} MessageBoxStyle;
+
 DECLEXPORT MessageBoxButton MessageBox_show(const Window *w, const char *title,
-        const char *text, MessageBoxButton buttons);
+        const char *text, MessageBoxButton buttons, MessageBoxStyle style);
 
 #endif
