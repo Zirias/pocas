@@ -1,6 +1,8 @@
 #include "c11threads.h"
 
 #include <stdlib.h>
+#include <string.h>
+#include <wchar.h>
 #include <windows.h>
 
 #include <pocas/core/event_win32.h>
@@ -80,6 +82,8 @@ static B_Window *B_Window_create(Window *w)
     size_t titleLen = strlen(title) + 1;
     self->name = calloc(1, 2 * titleLen);
     MultiByteToWideChar(CP_UTF8, 0, title, titleLen, self->name, titleLen);
+    titleLen = 2 * (wcslen(self->name) + 1);
+    self->name = realloc(self->name, titleLen);
     self->w = w;
     self->wc.cbSize = sizeof(WNDCLASSEXW);
     self->wc.hInstance = GetModuleHandleW(0);
@@ -168,6 +172,8 @@ static void B_MenuItem_updateText(B_MenuItem *self)
     size_t textLen = strlen(text) + 1;
     self->text = calloc(1, 2 * textLen);
     MultiByteToWideChar(CP_UTF8, 0, text, textLen, self->text, textLen);
+    textLen = 2 * (wcslen(self->text) + 1);
+    self->text = realloc(self->text, textLen);
 }
 
 static B_MenuItem *B_MenuItem_create(MenuItem *m)
