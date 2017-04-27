@@ -90,6 +90,7 @@ static B_Window *B_Window_create(Window *w)
     self->wc.lpszClassName = self->name;
     self->wc.lpfnWndProc = Eventloop_win32WndProc;
     self->wc.hbrBackground = (HBRUSH) COLOR_WINDOW;
+    self->wc.hCursor = LoadCursorA(0, IDC_ARROW);
     RegisterClassExW(&self->wc);
     self->hndl = CreateWindowExW(0, self->name, self->name,
             WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT,

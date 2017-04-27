@@ -60,7 +60,6 @@ SOLOCAL int Gui_run(Gui *self)
 
 SOLOCAL void Gui_dispose(Gui *self)
 {
-    if (!self) return;
     if (self->disposed) return;
     Window_destroy(self->mainWindow);
     Menu_destroy(self->mainMenu);
@@ -70,6 +69,7 @@ SOLOCAL void Gui_dispose(Gui *self)
 
 SOLOCAL void Gui_destroy(Gui *self)
 {
+    if (!self) return;
     Gui_dispose(self);
     free(self);
 }
