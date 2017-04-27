@@ -192,7 +192,10 @@ int main(int argc, char **argv)
 
     if (interactive)
     {
-        return guiMain();
+        Gui *gui = Gui_create();
+        int rc = Gui_run(gui);
+        Gui_destroy(gui);
+        return rc;
     }
 
     if (preprocess)
