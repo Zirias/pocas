@@ -50,14 +50,19 @@ SOEXPORT int EventLoop_processEvents(int timeout)
     if (rc == WAIT_TIMEOUT) return 0;
     if (rc == WAIT_OBJECT_0 + data.numHandles)
     {
-        if (GetMessageW(&data.msg, 0, 0, 0) <= 0)
+        int nevents = 0;
+        while (PeekMessageW(&data.msg, 0, 0, 0, PM_REMOVE))
         {
-            EventLoop_exit((int)data.msg.wParam);
-            return 1;
+            ++nevents;
+            if (data.msg.message == WM_QUIT)
+            {
+                EventLoop_exit((int)data.msg.wParam);
+                return nevents;
+            }
+            TranslateMessage(&data.msg);
+            DispatchMessageW(&data.msg);
         }
-        TranslateMessage(&data.msg);
-        DispatchMessageW(&data.msg);
-        return 1;
+        return nevents;
     }
     else
     {
