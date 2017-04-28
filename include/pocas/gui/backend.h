@@ -6,6 +6,6 @@
 typedef struct Backend Backend;
 
 DECLEXPORT const Backend *Backend_current(void);
-DECLEXPORT void Backend_setCurrent(const Backend *backend);
+DECLEXPORT void Backend_setCurrent(Backend *backend);
 
 #endif

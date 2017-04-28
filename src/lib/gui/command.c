@@ -2,22 +2,22 @@
 
 #include <pocas/core/event.h>
 
-#include "backend_internal.h"
-
+#include "internal.h"
 #include <pocas/gui/command.h>
 
 struct Command
 {
-    B_Command *b;
+    GuiClass gc;
     Event *invoked;
 };
 
 SOEXPORT Command *Command_create(void)
 {
     Command *self = malloc(sizeof(Command));
+    GCINIT(self);
     self->invoked = Event_create("invoked");
     const Backend *b = Backend_current();
-    self->b = b->Command_create ? b->Command_create(self) : 0;
+    if (b->backendApi.command.create) b->backendApi.command.create(self);
     return self;
 }
 
@@ -38,7 +38,7 @@ SOEXPORT void Command_destroy(Command *self)
 {
     if (!self) return;
     const Backend *b = Backend_current();
-    if (b->Command_destroy) b->Command_destroy(self->b);
+    if (b->backendApi.command.destroy) b->backendApi.command.destroy(self);
     Event_destroy(self->invoked);
     free(self);
 }

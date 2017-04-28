@@ -9,44 +9,67 @@
 #include <pocas/core/eventloop_win32.h>
 #include <pocas/core/hashtable.h>
 
+#include <pocas/gui/private/backend.h>
 #include <pocas/gui/command.h>
+#include <pocas/gui/container.h>
 #include <pocas/gui/window.h>
 #include <pocas/gui/menu.h>
 
-#include "backend_internal.h"
+struct bdata
+{
+    HashTable *commands;
+    WORD nextCommandId;
+    size_t nWindows;
+};
 
-struct B_Window
+typedef struct B_Window
 {
     Window *w;
     WNDCLASSEXW wc;
     HWND hndl;
     LPWSTR name;
-};
+} B_Window;
 
-struct B_Menu
+typedef struct B_Menu
 {
     Menu *m;
     HMENU menu;
-};
+} B_Menu;
 
-struct B_MenuItem
+typedef struct B_MenuItem
 {
     MenuItem *m;
     LPWSTR text;
-};
+} B_MenuItem;
 
-struct B_Command
+typedef struct B_Command
 {
     Command *c;
     WORD id;
-};
+} B_Command;
 
-static thread_local HashTable *commands = 0;
-static thread_local WORD nextCommandId = 0x100;
+static thread_local struct bdata bdata = {0, 0x100, 0};
 
 static const char *B_name(void)
 {
     return "win32";
+}
+
+SOLOCAL Backend *defaultBackend;
+
+static void updateWindowClientSize(B_Window *self)
+{
+    RECT r;
+    GetClientRect(self->hndl, &r);
+
+    const GuiPrivateApi *api = defaultBackend->privateApi;
+    api->container.setHeight(self->w, (unsigned int)r.bottom);
+    api->container.setWidth(self->w, (unsigned int)r.right);
+
+    Event *resized = Container_resizedEvent(self->w);
+    EventArgs *args = EventArgs_create(resized, self->w, 0);
+    Event_raise(resized, args);
+    EventArgs_destroy(args);
 }
 
 static void handleWin32MessageEvent(void *w, EventArgs *args)
@@ -58,6 +81,11 @@ static void handleWin32MessageEvent(void *w, EventArgs *args)
     WORD id;
     switch (mei->msg)
     {
+    case WM_SIZE:
+        updateWindowClientSize(self);
+        EventArgs_setHandled(args);
+        break;
+
     case WM_CLOSE:
         Window_close(self->w);
         EventArgs_setHandled(args);
@@ -65,7 +93,7 @@ static void handleWin32MessageEvent(void *w, EventArgs *args)
 
     case WM_COMMAND:
         id = LOWORD(mei->wp);
-        const B_Command *c = HashTable_get(commands, &id);
+        const B_Command *c = HashTable_get(bdata.commands, &id);
         if (c)
         {
             Command_invoke(c->c);
@@ -74,106 +102,128 @@ static void handleWin32MessageEvent(void *w, EventArgs *args)
         break;
 
     case WM_DESTROY:
-        PostQuitMessage(0);
+        EventLoop_setProcessMessages(--bdata.nWindows);
+        if (!bdata.nWindows)
+        {
+            Event *lwc = Window_lastWindowClosedEvent();
+            EventArgs *lwcArgs = EventArgs_create(lwc, 0, 0);
+            Event_raise(lwc, lwcArgs);
+            if (!EventArgs_handled(lwcArgs))
+            {
+                PostQuitMessage(0);
+            }
+            EventArgs_destroy(lwcArgs);
+        }
         EventArgs_setHandled(args);
         break;
     }
 }
 
-static B_Window *B_Window_create(Window *w)
+static int B_Window_create(Window *self)
 {
-    B_Window *self = calloc(1, sizeof(B_Window));
-    const char *title = Window_title(w);
+    B_Window *bw = calloc(1, sizeof(B_Window));
+    defaultBackend->privateApi->setBackendObject(self, bw);
+    const char *title = Window_title(self);
     size_t titleLen = strlen(title) + 1;
-    self->name = calloc(1, 2 * titleLen);
-    MultiByteToWideChar(CP_UTF8, 0, title, titleLen, self->name, titleLen);
-    titleLen = 2 * (wcslen(self->name) + 1);
-    self->name = realloc(self->name, titleLen);
-    self->w = w;
-    self->wc.cbSize = sizeof(WNDCLASSEXW);
-    self->wc.hInstance = GetModuleHandleW(0);
-    self->wc.lpszClassName = self->name;
-    self->wc.lpfnWndProc = Eventloop_win32WndProc;
-    self->wc.hbrBackground = (HBRUSH) COLOR_WINDOW;
-    self->wc.hCursor = LoadCursorA(0, IDC_ARROW);
-    RegisterClassExW(&self->wc);
-    self->hndl = CreateWindowExW(0, self->name, self->name,
+    bw->name = calloc(1, 2 * titleLen);
+    MultiByteToWideChar(CP_UTF8, 0, title, titleLen, bw->name, titleLen);
+    titleLen = 2 * (wcslen(bw->name) + 1);
+    bw->name = realloc(bw->name, titleLen);
+    bw->w = self;
+    bw->wc.cbSize = sizeof(WNDCLASSEXW);
+    bw->wc.hInstance = GetModuleHandleW(0);
+    bw->wc.lpszClassName = bw->name;
+    bw->wc.lpfnWndProc = EventLoop_win32WndProc;
+    bw->wc.hbrBackground = (HBRUSH) COLOR_WINDOW;
+    bw->wc.hCursor = LoadCursorA(0, IDC_ARROW);
+    RegisterClassExW(&bw->wc);
+    bw->hndl = CreateWindowExW(0, bw->name, bw->name,
             WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT,
-            Window_width(w), Window_height(w), 0, 0,
-            self->wc.hInstance, 0);
-    Event_register(Eventloop_win32MsgEvent(), self, handleWin32MessageEvent);
-    return self;
+            Window_width(self), Window_height(self), 0, 0,
+            bw->wc.hInstance, 0);
+    Event_register(EventLoop_win32MsgEvent(), bw, handleWin32MessageEvent);
+    EventLoop_setProcessMessages(++bdata.nWindows);
+    return 1;
 }
 
-static void B_Window_show(B_Window *self)
+static void B_Window_show(Window *self)
 {
-    ShowWindow(self->hndl, SW_SHOWNORMAL);
-    UpdateWindow(self->hndl);
+    B_Window *bw = defaultBackend->privateApi->backendObject(self);
+    ShowWindow(bw->hndl, SW_SHOWNORMAL);
+    UpdateWindow(bw->hndl);
 }
 
-static void B_Window_hide(B_Window *self)
+static void B_Window_hide(Window *self)
 {
-    ShowWindow(self->hndl, SW_HIDE);
+    B_Window *bw = defaultBackend->privateApi->backendObject(self);
+    ShowWindow(bw->hndl, SW_HIDE);
 }
 
-static void B_Window_setMenu(B_Window *self, B_Menu *menu)
+static void B_Window_setMenu(Window *self, Menu *menu)
 {
-    SetMenu(self->hndl, menu->menu);
-    DrawMenuBar(self->hndl);
+    B_Window *bw = defaultBackend->privateApi->backendObject(self);
+    B_Menu *bm = defaultBackend->privateApi->backendObject(menu);
+    SetMenu(bw->hndl, bm->menu);
+    DrawMenuBar(bw->hndl);
 }
 
-static void B_Window_close(B_Window *self)
+static void B_Window_close(Window *self)
 {
-    DestroyWindow(self->hndl);
+    B_Window *bw = defaultBackend->privateApi->backendObject(self);
+    DestroyWindow(bw->hndl);
 }
 
-static void B_Window_destroy(B_Window *self)
+static void B_Window_destroy(Window *self)
 {
     if (!self) return;
-    DestroyWindow(self->hndl);
-    UnregisterClassW(self->name, self->wc.hInstance);
-    Event_unregister(Eventloop_win32MsgEvent(), self, handleWin32MessageEvent);
-    free(self->name);
-    free(self);
+    B_Window *bw = defaultBackend->privateApi->backendObject(self);
+    DestroyWindow(bw->hndl);
+    UnregisterClassW(bw->name, bw->wc.hInstance);
+    Event_unregister(EventLoop_win32MsgEvent(), bw, handleWin32MessageEvent);
+    free(bw->name);
+    free(bw);
 }
 
-static B_Menu *B_Menu_create(Menu *m)
+static int B_Menu_create(Menu *self)
 {
-    B_Menu *self = malloc(sizeof(B_Menu));
-    self->m = m;
-    self->menu = CreateMenu();
-    return self;
+    B_Menu *bm = malloc(sizeof(B_Menu));
+    defaultBackend->privateApi->setBackendObject(self, bm);
+    bm->m = self;
+    bm->menu = CreateMenu();
+    return 1;
 }
 
-static void B_Menu_addItem(B_Menu *self, B_MenuItem *item)
+static void B_Menu_addItem(Menu *self, MenuItem *item)
 {
-    Menu *subMenu = MenuItem_subMenu(item->m);
+    B_Menu *bm = defaultBackend->privateApi->backendObject(self);
+    B_MenuItem *bi = defaultBackend->privateApi->backendObject(item);
+    Menu *subMenu = MenuItem_subMenu(item);
     if (subMenu)
     {
-        B_Menu *sub = ((Frontend *)subMenu)->b;
-        AppendMenuW(self->menu, MF_POPUP, (UINT_PTR)sub->menu, item->text);
+        B_Menu *sub = defaultBackend->privateApi->backendObject(subMenu);
+        AppendMenuW(bm->menu, MF_POPUP, (UINT_PTR)sub->menu, bi->text);
     }
     else
     {
-        Command *cmd = MenuItem_command(item->m);
+        Command *cmd = MenuItem_command(item);
         if (cmd)
         {
-            B_Command *c = ((Frontend *)cmd)->b;
-            AppendMenuW(self->menu, MF_STRING, (UINT_PTR)c->id, item->text);
+            B_Command *c = defaultBackend->privateApi->backendObject(cmd);
+            AppendMenuW(bm->menu, MF_STRING, (UINT_PTR)c->id, bi->text);
         }
         else
         {
-            AppendMenuW(self->menu, MF_STRING, 0, item->text);
+            AppendMenuW(bm->menu, MF_STRING, 0, bi->text);
         }
     }
 }
 
-static void B_Menu_destroy(B_Menu *self)
+static void B_Menu_destroy(Menu *self)
 {
     if (!self) return;
-    DestroyMenu(self->menu);
-    free(self);
-    return;
+    B_Menu *bm = defaultBackend->privateApi->backendObject(self);
+    DestroyMenu(bm->menu);
+    free(bm);
 }
 
 static void B_MenuItem_updateText(B_MenuItem *self)
@@ -187,21 +237,22 @@ static void B_MenuItem_updateText(B_MenuItem *self)
     self->text = realloc(self->text, textLen);
 }
 
-static B_MenuItem *B_MenuItem_create(MenuItem *m)
+static int B_MenuItem_create(MenuItem *self)
 {
-    B_MenuItem *self = malloc(sizeof(B_MenuItem));
-    self->m = m;
-    self->text = 0;
-    B_MenuItem_updateText(self);
-    return self;
+    B_MenuItem *bi = malloc(sizeof(B_MenuItem));
+    defaultBackend->privateApi->setBackendObject(self, bi);
+    bi->m = self;
+    bi->text = 0;
+    B_MenuItem_updateText(bi);
+    return 1;
 }
 
-static void B_MenuItem_destroy(B_MenuItem *self)
+static void B_MenuItem_destroy(MenuItem *self)
 {
     if (!self) return;
-    free(self->text);
-    free(self);
-    return;
+    B_MenuItem *bi = defaultBackend->privateApi->backendObject(self);
+    free(bi->text);
+    free(bi);
 }
 
 static void wordKeyProvider(HashKey *key, const void *word)
@@ -209,21 +260,27 @@ static void wordKeyProvider(HashKey *key, const void *word)
     HashKey_set(key, sizeof(WORD), word);
 }
 
-static B_Command *B_Command_create(Command *c)
+static int B_Command_create(Command *self)
 {
-    B_Command *self = malloc(sizeof(B_Command));
-    self->c = c;
-    self->id = ++nextCommandId;
-    if (!commands) commands = HashTable_create(HashTableSize_64, wordKeyProvider, 0, 0);
-    HashTable_set(commands, &self->id, self);
-    return self;
+    B_Command *bc = malloc(sizeof(B_Command));
+    defaultBackend->privateApi->setBackendObject(self, bc);
+    bc->c = self;
+    bc->id = ++bdata.nextCommandId;
+    if (!bdata.commands)
+    {
+        bdata.commands = HashTable_create(
+                HashTableSize_64, wordKeyProvider, 0, 0);
+    }
+    HashTable_set(bdata.commands, &bc->id, bc);
+    return 1;
 }
 
-static void B_Command_destroy(B_Command *self)
+static void B_Command_destroy(Command *self)
 {
     if (!self) return;
-    HashTable_remove(commands, &self->id);
-    free(self);
+    B_Command *bc = defaultBackend->privateApi->backendObject(self);
+    HashTable_remove(bdata.commands, &bc->id);
+    free(bc);
 }
 
 static MessageBoxButton B_MessageBox_show(const Window *w, const char *title,
@@ -293,7 +350,7 @@ static MessageBoxButton B_MessageBox_show(const Window *w, const char *title,
 
     if (w)
     {
-        B_Window *bw = ((const Frontend *)w)->b;
+        B_Window *bw = defaultBackend->privateApi->backendObject(w);
         hwnd = bw->hndl;
     }
 
@@ -318,26 +375,34 @@ static MessageBoxButton B_MessageBox_show(const Window *w, const char *title,
 }
 
 static Backend win32Backend = {
-    .name = B_name,
-
-    .Window_create = B_Window_create,
-    .Window_show = B_Window_show,
-    .Window_hide = B_Window_hide,
-    .Window_setMenu = B_Window_setMenu,
-    .Window_close = B_Window_close,
-    .Window_destroy = B_Window_destroy,
-
-    .Menu_create = B_Menu_create,
-    .Menu_addItem = B_Menu_addItem,
-    .Menu_destroy = B_Menu_destroy,
-
-    .MenuItem_create = B_MenuItem_create,
-    .MenuItem_destroy = B_MenuItem_destroy,
-
-    .Command_create = B_Command_create,
-    .Command_destroy = B_Command_destroy,
-
-    .MessageBox_show = B_MessageBox_show
+    .backendApi = {
+        .name = B_name,
+        .window = {
+            .create = B_Window_create,
+            .show = B_Window_show,
+            .hide = B_Window_hide,
+            .setMenu = B_Window_setMenu,
+            .close = B_Window_close,
+            .destroy = B_Window_destroy,
+        },
+        .menu = {
+            .create = B_Menu_create,
+            .addItem = B_Menu_addItem,
+            .destroy = B_Menu_destroy,
+        },
+        .menuItem = {
+            .create = B_MenuItem_create,
+            .destroy = B_MenuItem_destroy,
+        },
+        .command = {
+            .create = B_Command_create,
+            .destroy = B_Command_destroy,
+        },
+        .messageBox = {
+            .show = B_MessageBox_show
+        },
+    },
+    .privateApi = 0
 };
 
-SOLOCAL const Backend *defaultBackend = &win32Backend;
+SOLOCAL Backend *defaultBackend = &win32Backend;

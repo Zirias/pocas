@@ -1,9 +1,11 @@
 #include <stdlib.h>
+#include <stdio.h>
 
 #include <pocas/core/event.h>
 #include <pocas/core/eventloop.h>
 
 #include <pocas/gui/command.h>
+#include <pocas/gui/container.h>
 #include <pocas/gui/menu.h>
 #include <pocas/gui/messagebox.h>
 #include <pocas/gui/window.h>
@@ -40,6 +42,17 @@ static void handleWindowClosing(void *selfPtr, EventArgs *args)
     }
 }
 
+static void handleWindowResized(void *selfPtr, EventArgs *args)
+{
+    (void)selfPtr;
+
+    Window *w = EventArgs_sender(args);
+
+    printf("Client area resized: %u x %u\n",
+           Container_width(w), Container_height(w));
+    fflush(stdout);
+}
+
 SOLOCAL Gui *Gui_create(void)
 {
     Gui *self = malloc(sizeof(Gui));
@@ -66,6 +79,9 @@ SOLOCAL Gui *Gui_create(void)
 
     Event_register(Window_closingEvent(self->mainWindow),
             self, handleWindowClosing);
+
+    Event_register(Container_resizedEvent(self->mainWindow),
+            self, handleWindowResized);
 
     return self;
 }

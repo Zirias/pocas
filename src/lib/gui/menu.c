@@ -3,19 +3,19 @@
 #include <pocas/core/list.h>
 #include <pocas/core/string.h>
 
-#include "backend_internal.h"
+#include "internal.h"
 
 #include <pocas/gui/menu.h>
 
 struct Menu
 {
-    B_Menu *b;
+    GuiClass gc;
     List *items;
 };
 
 struct MenuItem
 {
-    B_MenuItem *b;
+    GuiClass gc;
     char *text;
     Command *command;
     Menu *subMenu;
@@ -29,10 +29,11 @@ static void deleteItem(void *item)
 SOEXPORT Menu *Menu_create()
 {
     Menu *self = malloc(sizeof(Menu));
+    GCINIT(self);
     self->items = List_create(0, deleteItem, 0);
 
     const Backend *b = Backend_current();
-    self->b = b->Menu_create ? b->Menu_create(self) : 0;
+    if (b->backendApi.menu.create) b->backendApi.menu.create(self);
     return self;
 }
 
@@ -46,7 +47,7 @@ SOEXPORT void Menu_addItem(Menu *self, MenuItem *item)
     List_append(self->items, item);
 
     const Backend *b = Backend_current();
-    if (b->Menu_addItem) b->Menu_addItem(self->b, ((Frontend *)item)->b);
+    if (b->backendApi.menu.addItem) b->backendApi.menu.addItem(self, item);
 }
 
 SOEXPORT void Menu_removeItem(Menu *self, MenuItem *item)
@@ -54,7 +55,7 @@ SOEXPORT void Menu_removeItem(Menu *self, MenuItem *item)
     List_remove(self->items, item);
 
     const Backend *b = Backend_current();
-    if (b->Menu_removeItem) b->Menu_removeItem(self->b, ((Frontend *)item)->b);
+    if (b->backendApi.menu.removeItem) b->backendApi.menu.removeItem(self, item);
 }
 
 SOEXPORT void Menu_destroy(Menu *self)
@@ -62,18 +63,19 @@ SOEXPORT void Menu_destroy(Menu *self)
     if (!self) return;
     List_destroy(self->items);
     const Backend *b = Backend_current();
-    if (b->Menu_destroy) b->Menu_destroy(self->b);
+    if (b->backendApi.menu.destroy) b->backendApi.menu.destroy(self);
     free(self);
 }
 
 SOEXPORT MenuItem *MenuItem_create(const char *text)
 {
     MenuItem *self = malloc(sizeof(MenuItem));
+    GCINIT(self);
     self->text = String_copy(text);
     self->command = 0;
     self->subMenu = 0;
     const Backend *b = Backend_current();
-    self->b = b->MenuItem_create ? b->MenuItem_create(self) : 0;
+    if (b->backendApi.menuItem.create) b->backendApi.menuItem.create(self);
     return self;
 }
 
@@ -114,6 +116,6 @@ SOEXPORT void MenuItem_destroy(MenuItem *self)
     free(self->text);
     Menu_destroy(self->subMenu);
     const Backend *b = Backend_current();
-    if (b->MenuItem_destroy) b->MenuItem_destroy(self->b);
+    if (b->backendApi.menuItem.destroy) b->backendApi.menuItem.destroy(self);
     free(self);
 }

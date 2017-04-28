@@ -16,6 +16,7 @@ struct win32EventLoopData
     HANDLE *handles;
     DWORD maxHandles;
     DWORD numHandles;
+    int processMessages;
     MSG msg;
 };
 
@@ -28,16 +29,17 @@ static void init(void)
         data.initialized = 1;
         data.win32HndlEvent = Event_create("win32Hndl");
         data.win32MsgEvent = Event_create("win32Msg");
+        data.processMessages = 0;
     }
 }
 
-SOEXPORT Event *Eventloop_win32HndlEvent()
+SOEXPORT Event *EventLoop_win32HndlEvent()
 {
     init();
     return data.win32HndlEvent;
 }
 
-SOEXPORT Event *Eventloop_win32MsgEvent()
+SOEXPORT Event *EventLoop_win32MsgEvent()
 {
     init();
     return data.win32MsgEvent;
@@ -46,11 +48,30 @@ SOEXPORT Event *Eventloop_win32MsgEvent()
 SOEXPORT int EventLoop_processEvents(int timeout)
 {
     init();
-    DWORD rc = MsgWaitForMultipleObjectsEx(data.numHandles,
-            data.handles, (DWORD)timeout, QS_ALLEVENTS, MWMO_INPUTAVAILABLE);
+
+    if (!data.numHandles && !data.processMessages)
+    {
+        EventLoop_exit(EXIT_FAILURE);
+        return 0;
+    }
+
+    DWORD rc;
+
+    if (data.processMessages)
+    {
+        rc = MsgWaitForMultipleObjectsEx(data.numHandles,
+                data.handles, (DWORD)timeout,
+                QS_ALLEVENTS, MWMO_INPUTAVAILABLE);
+    }
+    else
+    {
+        rc = WaitForMultipleObjectsEx(data.numHandles,
+                data.handles, 0, (DWORD)timeout, 1);
+    }
+
     if (rc == WAIT_FAILED) return -1;
     if (rc == WAIT_TIMEOUT) return 0;
-    if (rc == WAIT_OBJECT_0 + data.numHandles)
+    if (data.processMessages && rc == WAIT_OBJECT_0 + data.numHandles)
     {
         int nevents = 0;
         while (PeekMessageW(&data.msg, 0, 0, 0, PM_REMOVE))
@@ -91,7 +112,7 @@ SOEXPORT int EventLoop_processEvents(int timeout)
     }
 }
 
-SOEXPORT LRESULT CALLBACK Eventloop_win32WndProc(HWND wnd, UINT msg, WPARAM wp, LPARAM lp)
+SOEXPORT LRESULT CALLBACK EventLoop_win32WndProc(HWND wnd, UINT msg, WPARAM wp, LPARAM lp)
 {
     init();
     data.msgEvInfo.wnd = wnd;
@@ -103,6 +124,11 @@ SOEXPORT LRESULT CALLBACK Eventloop_win32WndProc(HWND wnd, UINT msg, WPARAM wp, 
     int handled = EventArgs_handled(args);
     EventArgs_destroy(args);
     return handled ? 0 : DefWindowProcW(wnd, msg, wp, lp);
+}
+
+SOEXPORT void EventLoop_setProcessMessages(int processMessages)
+{
+    data.processMessages = !!processMessages;
 }
 
 /*

@@ -20,4 +20,6 @@ DECLEXPORT void Window_close(Window *self);
 DECLEXPORT Event *Window_closingEvent(const Window *self);
 DECLEXPORT void Window_destroy(Window *self);
 
+DECLEXPORT Event *Window_lastWindowClosedEvent(void);
+
 #endif
