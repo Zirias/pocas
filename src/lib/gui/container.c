@@ -35,6 +35,7 @@ SOEXPORT void Container_setControl(void *self, void *control)
 {
     Container *c = privateApi.containerObject(self);
     c->control = control;
+    privateApi.control.setContainer(control, self);
 }
 
 SOEXPORT unsigned int Container_width(const void *self)

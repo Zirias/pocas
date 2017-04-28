@@ -15,6 +15,7 @@
 #include <pocas/gui/container.h>
 #include <pocas/gui/window.h>
 #include <pocas/gui/menu.h>
+#include <pocas/gui/label.h>
 
 struct bdata
 {
@@ -23,8 +24,23 @@ struct bdata
     size_t nWindows;
 };
 
+enum B_Type
+{
+    BT_Window,
+    BT_Menu,
+    BT_MenuItem,
+    BT_Command,
+    BT_Label,
+};
+
+typedef struct BO
+{
+    enum B_Type t;
+} BO;
+
 typedef struct B_Window
 {
+    BO bo;
     Window *w;
     WNDCLASSEXW wc;
     HWND hndl;
@@ -33,21 +49,32 @@ typedef struct B_Window
 
 typedef struct B_Menu
 {
+    BO bo;
     Menu *m;
     HMENU menu;
 } B_Menu;
 
 typedef struct B_MenuItem
 {
+    BO bo;
     MenuItem *m;
     LPWSTR text;
 } B_MenuItem;
 
 typedef struct B_Command
 {
+    BO bo;
     Command *c;
     WORD id;
 } B_Command;
+
+typedef struct B_Label
+{
+    BO bo;
+    Label *l;
+    HWND hndl;
+    LPWSTR text;
+} B_Label;
 
 static thread_local struct bdata bdata = {0, 0x100, 0};
 
@@ -129,6 +156,7 @@ static int B_Window_create(Window *self)
 {
     B_Window *bw = calloc(1, sizeof(B_Window));
     defaultBackend->privateApi->setBackendObject(self, bw);
+    bw->bo.t = BT_Window;
     const char *title = Window_title(self);
     size_t titleLen = strlen(title) + 1;
     bw->name = calloc(1, 2 * titleLen);
@@ -193,6 +221,7 @@ static void B_Window_destroy(Window *self)
 static int B_Menu_create(Menu *self)
 {
     B_Menu *bm = malloc(sizeof(B_Menu));
+    bm->bo.t = BT_Menu;
     defaultBackend->privateApi->setBackendObject(self, bm);
     bm->m = self;
     bm->menu = CreateMenu();
@@ -246,6 +275,7 @@ static void B_MenuItem_updateText(B_MenuItem *self)
 static int B_MenuItem_create(MenuItem *self)
 {
     B_MenuItem *bi = malloc(sizeof(B_MenuItem));
+    bi->bo.t = BT_MenuItem;
     defaultBackend->privateApi->setBackendObject(self, bi);
     bi->m = self;
     bi->text = 0;
@@ -269,6 +299,7 @@ static void wordKeyProvider(HashKey *key, const void *word)
 static int B_Command_create(Command *self)
 {
     B_Command *bc = malloc(sizeof(B_Command));
+    bc->bo.t = BT_Command;
     defaultBackend->privateApi->setBackendObject(self, bc);
     bc->c = self;
     bc->id = ++bdata.nextCommandId;
@@ -380,9 +411,90 @@ static MessageBoxButton B_MessageBox_show(const Window *w, const char *title,
     }
 }
 
+static void B_Label_updateText(Label *self, const char *text)
+{
+    B_Label *bl = defaultBackend->privateApi->backendObject(self);
+    free(bl->text);
+    if (text)
+    {
+        size_t textLen = strlen(text) + 1;
+        bl->text = malloc(2*textLen);
+        MultiByteToWideChar(CP_UTF8, 0, text, textLen, bl->text, textLen);
+        textLen = 2 * wcslen(bl->text) + 2;
+        bl->text = realloc(bl->text, textLen);
+    }
+    else
+    {
+        bl->text = 0;
+    }
+}
+
+static int B_Label_create(Label *self)
+{
+    B_Label *bl = malloc(sizeof(B_Label));
+    bl->bo.t = BT_Label;
+    bl->l = self;
+    bl->text = 0;
+    defaultBackend->privateApi->setBackendObject(self, bl);
+    const char *text = Label_text(self);
+    B_Label_updateText(self, text);
+    bl->hndl = INVALID_HANDLE_VALUE;
+    return 1;
+}
+
+static void B_Label_setText(Label *self, const char *text)
+{
+    B_Label_updateText(self, text);
+}
+
+static void B_Label_destroy(Label *self)
+{
+    if (!self) return;
+    B_Label *bl = defaultBackend->privateApi->backendObject(self);
+    free(bl->text);
+    free(bl);
+}
+
+static void setLabelContainer(B_Label *bl, void *container)
+{
+    BO *cbo = defaultBackend->privateApi->backendObject(container);
+    HWND parent = INVALID_HANDLE_VALUE;
+    if (cbo->t == BT_Window)
+    {
+        B_Window *bw = (B_Window *)cbo;
+        parent = bw->hndl;
+    }
+    if (bl->hndl != INVALID_HANDLE_VALUE)
+    {
+        DestroyWindow(bl->hndl);
+        bl->hndl = INVALID_HANDLE_VALUE;
+    }
+    if (parent != INVALID_HANDLE_VALUE)
+    {
+        bl->hndl = CreateWindowExW(0, L"Static", L"",
+                WS_CHILD|WS_VISIBLE|SS_CENTER|SS_CENTERIMAGE,
+                2, 2, 400, 80, parent, 0, GetModuleHandleW(0), 0);
+        SetWindowTextW(bl->hndl, bl->text);
+    }
+}
+
+static void B_Control_setContainer(void *self, void *container)
+{
+    BO *bo = defaultBackend->privateApi->backendObject(self);
+    switch (bo->t)
+    {
+    case BT_Label:
+        setLabelContainer((B_Label *)bo, container);
+        break;
+    }
+}
+
 static Backend win32Backend = {
     .backendApi = {
         .name = B_name,
+        .control = {
+            .setContainer = B_Control_setContainer,
+        },
         .window = {
             .create = B_Window_create,
             .show = B_Window_show,
@@ -405,10 +517,15 @@ static Backend win32Backend = {
             .destroy = B_Command_destroy,
         },
         .messageBox = {
-            .show = B_MessageBox_show
+            .show = B_MessageBox_show,
+        },
+        .label = {
+            .create = B_Label_create,
+            .setText = B_Label_setText,
+            .destroy = B_Label_destroy,
         },
     },
-    .privateApi = 0
+    .privateApi = 0,
 };
 
 SOLOCAL Backend *defaultBackend = &win32Backend;

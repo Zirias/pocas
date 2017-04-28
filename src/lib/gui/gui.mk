@@ -1,4 +1,4 @@
-pocasgui_MODULES:= backend command control container messagebox window menu
+pocasgui_MODULES:= backend command control container messagebox window menu label
 pocasgui_PLATFORMMODULES := backend
 pocasgui_DEFINES:= -DBUILDING_POCAS_GUI
 pocasgui_DEPS:= pocascore

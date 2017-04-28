@@ -36,6 +36,12 @@ typedef struct Window Window;
 typedef struct Menu Menu;
 typedef struct MenuItem MenuItem;
 typedef struct Command Command;
+typedef struct Label Label;
+
+typedef struct IBackendControl
+{
+    void (*setContainer)(void *control, void *container);
+} IBackendControl;
 
 typedef struct IBackendWindow
 {
@@ -73,14 +79,23 @@ typedef struct IBackendMessageBox
             const char *text, MessageBoxButton buttons, MessageBoxStyle style);
 } IBackendMessageBox;
 
+typedef struct IBackendLabel
+{
+    int (*create)(Label *self);
+    void (*setText)(Label *self, const char *text);
+    void (*destroy)(Label *self);
+} IBackendLabel;
+
 typedef struct GuiBackendApi
 {
     const char *(*name)(void);
+    IBackendControl control;
     IBackendWindow window;
     IBackendMenu menu;
     IBackendMenuItem menuItem;
     IBackendCommand command;
     IBackendMessageBox messageBox;
+    IBackendLabel label;
 } GuiBackendApi;
 
 struct Backend
