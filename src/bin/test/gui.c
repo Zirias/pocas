@@ -4,6 +4,7 @@
 #include <pocas/core/event.h>
 #include <pocas/core/eventloop.h>
 
+#include <pocas/gui/bounds.h>
 #include <pocas/gui/command.h>
 #include <pocas/gui/container.h>
 #include <pocas/gui/menu.h>
@@ -46,10 +47,8 @@ static void handleWindowResized(void *selfPtr, EventArgs *args)
 {
     (void)selfPtr;
 
-    Window *w = EventArgs_sender(args);
-
-    printf("Client area resized: %u x %u\n",
-           Container_width(w), Container_height(w));
+    Bounds *b = EventArgs_evInfo(args);
+    printf("Client area resized: %u x %u\n", b->width, b->height);
     fflush(stdout);
 }
 

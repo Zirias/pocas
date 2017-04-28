@@ -10,6 +10,7 @@
 #include <pocas/core/hashtable.h>
 
 #include <pocas/gui/private/backend.h>
+#include <pocas/gui/bounds.h>
 #include <pocas/gui/command.h>
 #include <pocas/gui/container.h>
 #include <pocas/gui/window.h>
@@ -60,14 +61,19 @@ SOLOCAL Backend *defaultBackend;
 static void updateWindowClientSize(B_Window *self)
 {
     RECT r;
+    Bounds b;
     GetClientRect(self->hndl, &r);
 
+    b.x = 0;
+    b.y = 0;
+    b.width = (unsigned int) r.right;
+    b.height = (unsigned int) r.bottom;
     const GuiPrivateApi *api = defaultBackend->privateApi;
-    api->container.setHeight(self->w, (unsigned int)r.bottom);
-    api->container.setWidth(self->w, (unsigned int)r.right);
+    api->container.setHeight(self->w, b.height);
+    api->container.setWidth(self->w, b.width);
 
     Event *resized = Container_resizedEvent(self->w);
-    EventArgs *args = EventArgs_create(resized, self->w, 0);
+    EventArgs *args = EventArgs_create(resized, self->w, &b);
     Event_raise(resized, args);
     EventArgs_destroy(args);
 }
