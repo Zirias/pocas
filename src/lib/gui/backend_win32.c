@@ -1,3 +1,4 @@
+#define _WIN32_WINNT 0x0600
 #include "c11threads.h"
 
 #include <stdlib.h>
@@ -24,6 +25,7 @@ struct bdata
     WORD nextCommandId;
     size_t nWindows;
     int ncmInitialized;
+    OSVERSIONINFOW vi;
     NONCLIENTMETRICSW ncm;
     HFONT messageFont;
 };
@@ -98,10 +100,17 @@ static void initNcm(void)
 {
     if (!bdata.ncmInitialized)
     {
-        bdata.ncm.cbSize = sizeof(NONCLIENTMETRICSW);
+        bdata.vi.dwOSVersionInfoSize = sizeof(OSVERSIONINFOW);
+        GetVersionExW(&bdata.vi);
+        size_t ncmSize = sizeof(NONCLIENTMETRICSW);
+        if (bdata.vi.dwMajorVersion < 6)
+        {
+            ncmSize -= 4;
+            bdata.ncm.iPaddedBorderWidth = 0;
+        }
+        bdata.ncm.cbSize = ncmSize;
         SystemParametersInfoW(SPI_GETNONCLIENTMETRICS,
-                sizeof(NONCLIENTMETRICSW), &bdata.ncm, 0);
-
+                ncmSize, &bdata.ncm, 0);
         bdata.messageFont = CreateFontIndirectW(&bdata.ncm.lfMessageFont);
         bdata.ncmInitialized = 1;
     }
@@ -178,6 +187,7 @@ static void handleWin32MessageEvent(void *w, EventArgs *args)
 
 static int B_Window_create(Window *self)
 {
+    initNcm();
     B_Window *bw = calloc(1, sizeof(B_Window));
     defaultBackend->privateApi->setBackendObject(self, bw);
     bw->bo.t = BT_Window;
@@ -195,10 +205,15 @@ static int B_Window_create(Window *self)
     bw->wc.hbrBackground = (HBRUSH) COLOR_WINDOW;
     bw->wc.hCursor = LoadCursorA(0, IDC_ARROW);
     RegisterClassExW(&bw->wc);
+    RECT winrect;
+    memset(&winrect, 0, sizeof(RECT));
+    winrect.right = Window_width(self);
+    winrect.bottom = Window_height(self);
+    AdjustWindowRect(&winrect, WS_OVERLAPPEDWINDOW, 0);
     bw->hndl = CreateWindowExW(0, bw->name, bw->name,
             WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT,
-            Window_width(self), Window_height(self), 0, 0,
-            bw->wc.hInstance, 0);
+            winrect.right - winrect.left, winrect.bottom - winrect.top,
+            0, 0, bw->wc.hInstance, 0);
     Event_register(EventLoop_win32MsgEvent(), bw, handleWin32MessageEvent);
     EventLoop_setProcessMessages(++bdata.nWindows);
     return 1;
