@@ -23,6 +23,9 @@ struct bdata
     HashTable *commands;
     WORD nextCommandId;
     size_t nWindows;
+    int ncmInitialized;
+    NONCLIENTMETRICSW ncm;
+    HFONT captionFont;
 };
 
 enum B_Type
@@ -77,7 +80,12 @@ typedef struct B_Label
     LPWSTR text;
 } B_Label;
 
-static thread_local struct bdata bdata = {0, 0x100, 0};
+static thread_local struct bdata bdata = {
+    .commands = 0,
+    .nextCommandId = 0x100,
+    .nWindows = 0,
+    .ncmInitialized = 0,
+};
 
 static const char *B_name(void)
 {
@@ -85,6 +93,21 @@ static const char *B_name(void)
 }
 
 SOLOCAL Backend *defaultBackend;
+
+static void initNcm(void)
+{
+    if (!bdata.ncmInitialized)
+    {
+        bdata.ncm.cbSize = sizeof(NONCLIENTMETRICSW);
+        SystemParametersInfoW(SPI_GETNONCLIENTMETRICS,
+                sizeof(NONCLIENTMETRICSW), &bdata.ncm, 0);
+
+        bdata.ncm.lfCaptionFont.lfQuality = CLEARTYPE_NATURAL_QUALITY;
+        bdata.captionFont = CreateFontIndirectW(&bdata.ncm.lfCaptionFont);
+
+        bdata.ncmInitialized = 1;
+    }
+}
 
 static void updateWindowClientSize(B_Window *self)
 {
@@ -495,6 +518,8 @@ static void setLabelContainer(B_Label *bl, void *container)
                 WS_CHILD|WS_VISIBLE|SS_CENTER|SS_CENTERIMAGE,
                 0, 0, Container_width(container), Container_height(container),
                 parent, 0, GetModuleHandleW(0), 0);
+        initNcm();
+        SendMessageW(bl->hndl, WM_SETFONT, (WPARAM) bdata.captionFont, 1);
         SetWindowTextW(bl->hndl, bl->text);
     }
 }

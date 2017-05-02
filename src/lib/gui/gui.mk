@@ -5,6 +5,7 @@ pocasgui_DEPS:= pocascore
 pocasgui_LIBS:= pocascore
 pocasgui_CFLAGS_STATIC:= -DSTATIC_POCAS_CORE
 pocasgui_posix_LDFLAGS:= -pthread
+pocasgui_win32_LIBS:= gdi32
 pocasgui_win32_STATICLIBS:= pthread
 pocasgui_V_MAJ:= 0
 pocasgui_V_MIN:= 0
