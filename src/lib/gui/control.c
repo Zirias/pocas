@@ -55,6 +55,12 @@ SOLOCAL void Control_setContainer(void *self, void *container)
         b->backendApi.control.setContainer(self, container);
 }
 
+SOLOCAL void *Control_container(const void *self)
+{
+    Control *c = privateApi.controlObject(self);
+    return c->container;
+}
+
 SOLOCAL void Control_destroy(void *self)
 {
     if (!self) return;

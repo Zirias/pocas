@@ -13,6 +13,7 @@
 #include <pocas/gui/bounds.h>
 #include <pocas/gui/command.h>
 #include <pocas/gui/container.h>
+#include <pocas/gui/control.h>
 #include <pocas/gui/window.h>
 #include <pocas/gui/menu.h>
 #include <pocas/gui/label.h>
@@ -103,6 +104,8 @@ static void updateWindowClientSize(B_Window *self)
     EventArgs *args = EventArgs_create(resized, self->w, &b);
     Event_raise(resized, args);
     EventArgs_destroy(args);
+    InvalidateRect(self->hndl, &r, 0);
+    UpdateWindow(self->hndl);
 }
 
 static void handleWin32MessageEvent(void *w, EventArgs *args)
@@ -455,6 +458,23 @@ static void B_Label_destroy(Label *self)
     free(bl);
 }
 
+static void containerResized(void *self, EventArgs *args)
+{
+    Bounds *b = EventArgs_evInfo(args);
+    BO *bo = defaultBackend->privateApi->backendObject(self);
+    switch (bo->t)
+    {
+    B_Label *bl;
+    case BT_Label:
+        bl = (B_Label *)bo;
+        if (bl->hndl != INVALID_HANDLE_VALUE)
+        {
+            MoveWindow(bl->hndl, 0, 0, b->width, b->height, 1);
+        }
+        break;
+    }
+}
+
 static void setLabelContainer(B_Label *bl, void *container)
 {
     BO *cbo = defaultBackend->privateApi->backendObject(container);
@@ -473,13 +493,19 @@ static void setLabelContainer(B_Label *bl, void *container)
     {
         bl->hndl = CreateWindowExW(0, L"Static", L"",
                 WS_CHILD|WS_VISIBLE|SS_CENTER|SS_CENTERIMAGE,
-                2, 2, 400, 80, parent, 0, GetModuleHandleW(0), 0);
+                0, 0, Container_width(container), Container_height(container),
+                parent, 0, GetModuleHandleW(0), 0);
         SetWindowTextW(bl->hndl, bl->text);
     }
 }
 
 static void B_Control_setContainer(void *self, void *container)
 {
+    void *cc = defaultBackend->privateApi->control.container(self);
+    if (cc)
+    {
+        Event_unregister(Container_resizedEvent(cc), self, containerResized);
+    }
     BO *bo = defaultBackend->privateApi->backendObject(self);
     switch (bo->t)
     {
@@ -487,6 +513,7 @@ static void B_Control_setContainer(void *self, void *container)
         setLabelContainer((B_Label *)bo, container);
         break;
     }
+    Event_register(Container_resizedEvent(container), self, containerResized);
 }
 
 static Backend win32Backend = {

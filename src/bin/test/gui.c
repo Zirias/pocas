@@ -1,5 +1,4 @@
 #include <stdlib.h>
-#include <stdio.h>
 
 #include <pocas/core/event.h>
 #include <pocas/core/eventloop.h>
@@ -44,15 +43,6 @@ static void handleWindowClosing(void *selfPtr, EventArgs *args)
     }
 }
 
-static void handleWindowResized(void *selfPtr, EventArgs *args)
-{
-    (void)selfPtr;
-
-    Bounds *b = EventArgs_evInfo(args);
-    printf("Client area resized: %u x %u\n", b->width, b->height);
-    fflush(stdout);
-}
-
 SOLOCAL Gui *Gui_create(void)
 {
     Gui *self = malloc(sizeof(Gui));
@@ -81,9 +71,6 @@ SOLOCAL Gui *Gui_create(void)
 
     Event_register(Window_closingEvent(self->mainWindow),
             self, handleWindowClosing);
-
-    Event_register(Container_resizedEvent(self->mainWindow),
-            self, handleWindowResized);
 
     return self;
 }

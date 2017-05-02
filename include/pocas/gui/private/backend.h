@@ -7,6 +7,7 @@
 typedef struct IPrivateControl
 {
     int (*create)(void *self);
+    void *(*container)(const void *self);
     void (*setContainer)(void *self, void *container);
     void (*destroy)(void *self);
 } IPrivateControl;
