@@ -25,7 +25,7 @@ struct bdata
     size_t nWindows;
     int ncmInitialized;
     NONCLIENTMETRICSW ncm;
-    HFONT captionFont;
+    HFONT messageFont;
 };
 
 enum B_Type
@@ -102,9 +102,7 @@ static void initNcm(void)
         SystemParametersInfoW(SPI_GETNONCLIENTMETRICS,
                 sizeof(NONCLIENTMETRICSW), &bdata.ncm, 0);
 
-        bdata.ncm.lfCaptionFont.lfQuality = CLEARTYPE_NATURAL_QUALITY;
-        bdata.captionFont = CreateFontIndirectW(&bdata.ncm.lfCaptionFont);
-
+        bdata.messageFont = CreateFontIndirectW(&bdata.ncm.lfMessageFont);
         bdata.ncmInitialized = 1;
     }
 }
@@ -519,7 +517,7 @@ static void setLabelContainer(B_Label *bl, void *container)
                 0, 0, Container_width(container), Container_height(container),
                 parent, 0, GetModuleHandleW(0), 0);
         initNcm();
-        SendMessageW(bl->hndl, WM_SETFONT, (WPARAM) bdata.captionFont, 1);
+        SendMessageW(bl->hndl, WM_SETFONT, (WPARAM) bdata.messageFont, 1);
         SetWindowTextW(bl->hndl, bl->text);
     }
 }
