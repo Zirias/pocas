@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <pocas/gui/bounds.h>
 #include "internal.h"
 #include "control_internal.h"
 

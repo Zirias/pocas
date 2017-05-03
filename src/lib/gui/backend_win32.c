@@ -120,22 +120,19 @@ static void updateWindowClientSize(B_Window *self)
 {
     RECT r;
     Bounds b;
+
     GetClientRect(self->hndl, &r);
+    b.x = (unsigned int) r.left;
+    b.y = (unsigned int) r.top;
+    b.width = (unsigned int) (r.right - r.left);
+    b.height = (unsigned int) (r.bottom - r.top);
 
-    b.x = 0;
-    b.y = 0;
-    b.width = (unsigned int) r.right;
-    b.height = (unsigned int) r.bottom;
     const GuiPrivateApi *api = defaultBackend->privateApi;
-    api->container.setHeight(self->w, b.height);
-    api->container.setWidth(self->w, b.width);
-
-    Event *resized = Container_resizedEvent(self->w);
-    EventArgs *args = EventArgs_create(resized, self->w, &b);
-    Event_raise(resized, args);
-    EventArgs_destroy(args);
-    InvalidateRect(self->hndl, &r, 0);
-    UpdateWindow(self->hndl);
+    if (api->container.setBounds(self->w, &b))
+    {
+        InvalidateRect(self->hndl, &r, 0);
+        UpdateWindow(self->hndl);
+    }
 }
 
 static void handleWin32MessageEvent(void *w, EventArgs *args)
@@ -505,7 +502,7 @@ static void containerResized(void *self, EventArgs *args)
         bl = (B_Label *)bo;
         if (bl->hndl != INVALID_HANDLE_VALUE)
         {
-            MoveWindow(bl->hndl, 0, 0, b->width, b->height, 1);
+            MoveWindow(bl->hndl, b->x, b->y, b->width, b->height, 1);
         }
         break;
     }
@@ -527,9 +524,11 @@ static void setLabelContainer(B_Label *bl, void *container)
     }
     if (parent != INVALID_HANDLE_VALUE)
     {
+        Bounds cb;
+        Container_bounds(container, &cb);
         bl->hndl = CreateWindowExW(0, L"Static", L"",
                 WS_CHILD|WS_VISIBLE|SS_CENTER|SS_CENTERIMAGE,
-                0, 0, Container_width(container), Container_height(container),
+                cb.x, cb.y, cb.width, cb.height,
                 parent, 0, GetModuleHandleW(0), 0);
         initNcm();
         SendMessageW(bl->hndl, WM_SETFONT, (WPARAM) bdata.messageFont, 1);

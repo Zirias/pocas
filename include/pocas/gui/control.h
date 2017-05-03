@@ -2,7 +2,8 @@
 #define POCAS_GUI_CONTROL_H
 
 #include <pocas/gui/decl.h>
-#include <pocas/gui/bounds.h>
+
+typedef struct Bounds Bounds;
 
 typedef enum ControlDockMode
 {

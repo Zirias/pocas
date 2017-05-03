@@ -4,6 +4,8 @@
 #include <pocas/gui/backend.h>
 #include <pocas/gui/messagebox.h>
 
+typedef struct Bounds Bounds;
+
 typedef struct IPrivateControl
 {
     int (*create)(void *self);
@@ -15,8 +17,7 @@ typedef struct IPrivateControl
 typedef struct IPrivateContainer
 {
     int (*create)(void *self);
-    void (*setWidth)(void *self, unsigned int width);
-    void (*setHeight)(void *self, unsigned int height);
+    int (*setBounds)(void *self, Bounds *b);
     void (*destroy)(void *self);
 } IPrivateContainer;
 

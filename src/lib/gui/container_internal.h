@@ -4,8 +4,7 @@
 #include <pocas/gui/container.h>
 
 int Container_create(void *self);
-void Container_setWidth(void *self, unsigned int width);
-void Container_setHeight(void *self, unsigned int height);
+int Container_setBounds(void *self, Bounds *b);
 void *Container_owner(void *self);
 void Container_setOwner(void *self, void *owner);
 void Container_destroy(void *self);

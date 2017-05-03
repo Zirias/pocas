@@ -1,14 +1,15 @@
 #include <stdlib.h>
+#include <string.h>
 
 #include <pocas/core/event.h>
 
+#include <pocas/gui/bounds.h>
 #include "internal.h"
 #include "container_internal.h"
 
 typedef struct Container
 {
-    unsigned int width;
-    unsigned int height;
+    Bounds b;
     Event *resized;
     void *control;
 } Container;
@@ -38,28 +39,25 @@ SOEXPORT void Container_setControl(void *self, void *control)
     privateApi.control.setContainer(control, self);
 }
 
-SOEXPORT unsigned int Container_width(const void *self)
+SOEXPORT void Container_bounds(const void *self, Bounds *b)
 {
     Container *c = privateApi.containerObject(self);
-    return c->width;
+    memcpy(b, &c->b, sizeof(Bounds));
 }
 
-SOLOCAL void Container_setWidth(void *self, unsigned int width)
+SOLOCAL int Container_setBounds(void *self, Bounds *b)
 {
     Container *c = privateApi.containerObject(self);
-    c->width = width;
-}
-
-SOEXPORT unsigned int Container_height(const void *self)
-{
-    Container *c = privateApi.containerObject(self);
-    return c->height;
-}
-
-SOLOCAL void Container_setHeight(void *self, unsigned int height)
-{
-    Container *c = privateApi.containerObject(self);
-    c->height = height;
+    if (c->b.x != b->x || c->b.y != b->y
+            || c->b.width != b->width || c->b.height != b->height)
+    {
+        memcpy(&c->b, b, sizeof(Bounds));
+        EventArgs *args = EventArgs_create(c->resized, self, &c->b);
+        Event_raise(c->resized, args);
+        EventArgs_destroy(args);
+        return 1;
+    }
+    return 0;
 }
 
 SOEXPORT Event *Container_resizedEvent(const void *self)
