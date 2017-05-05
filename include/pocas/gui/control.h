@@ -30,5 +30,6 @@ DECLEXPORT void Control_setShown(void *self, int shown);
 
 DECLEXPORT Event *Control_resizedEvent(const void *self);
 DECLEXPORT Event *Control_shownChangedEvent(const void *self);
+DECLEXPORT Event *Control_containerChangedEvent(const void *self);
 
 #endif

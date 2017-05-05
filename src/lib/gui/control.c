@@ -15,6 +15,7 @@ typedef struct Control
     int shown;
     Event *resized;
     Event *shownChanged;
+    Event *containerChanged;
     void *container;
 } Control;
 
@@ -28,6 +29,7 @@ SOLOCAL int Control_create(void *self)
     }
     c->resized = Event_create("resized");
     c->shownChanged = Event_create("shownChanged");
+    c->containerChanged = Event_create("containerChanged");
     return 1;
 }
 
@@ -51,8 +53,14 @@ SOEXPORT Event *Control_resizedEvent(const void *self)
 
 SOEXPORT Event *Control_shownChangedEvent(const void *self)
 {
-    Control *c = privateApi.containerObject(self);
+    Control *c = privateApi.controlObject(self);
     return c->shownChanged;
+}
+
+SOEXPORT Event *Control_containerChangedEvent(const void *self)
+{
+    Control *c = privateApi.controlObject(self);
+    return c->containerChanged;
 }
 
 SOEXPORT void Control_bounds(const void *self, Bounds *b)
@@ -88,10 +96,14 @@ SOEXPORT int Control_shown(const void *self)
 SOEXPORT void Control_setShown(void *self, int shown)
 {
     Control *c = privateApi.controlObject(self);
+    if (c->shown == !!shown) return;
     c->shown = !!shown;
     const Backend *be = Backend_current();
     if (be->backendApi.control.setShown)
         be->backendApi.control.setShown(self, c->shown);
+    EventArgs *args = EventArgs_create(c->shownChanged, self, (void *)c->shown);
+    Event_raise(c->shownChanged, args);
+    EventArgs_destroy(args);
 }
 
 static void updateBounds(void *self, Bounds *nb)
@@ -115,6 +127,7 @@ static void containerResized(void *self, EventArgs *args)
 SOLOCAL void Control_setContainer(void *self, void *container)
 {
     Control *c = privateApi.controlObject(self);
+    if (container == c->container) return;
     if (c->container)
     {
         Event_unregister(Container_resizedEvent(c->container),
@@ -129,6 +142,9 @@ SOLOCAL void Control_setContainer(void *self, void *container)
     Bounds cb;
     Container_bounds(container, &cb);
     updateBounds(self, &cb);
+    EventArgs *args = EventArgs_create(c->containerChanged, self, container);
+    Event_raise(c->containerChanged, args);
+    EventArgs_destroy(args);
 }
 
 SOLOCAL void *Control_container(const void *self)
@@ -141,6 +157,7 @@ SOLOCAL void Control_destroy(void *self)
 {
     if (!self) return;
     Control *c = privateApi.controlObject(self);
+    Event_destroy(c->containerChanged);
     Event_destroy(c->shownChanged);
     Event_destroy(c->resized);
     free(c);

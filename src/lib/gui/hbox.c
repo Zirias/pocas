@@ -63,6 +63,23 @@ static void onResized(void *selfPtr, EventArgs *args)
     updateElementsBounds(self, b);
 }
 
+static void onContainerChanged(void *selfPtr, EventArgs *args)
+{
+    const Backend *be = Backend_current();
+    if (be->backendApi.control.setContainer)
+    {
+        HBox *self = selfPtr;
+        ListIterator *ci = List_iterator(self->controls);
+        while (ListIterator_moveNext(ci))
+        {
+            void *control = ListIterator_current(ci);
+            be->backendApi.control.setContainer(control,
+                    EventArgs_evInfo(args));
+        }
+        ListIterator_destroy(ci);
+    }
+}
+
 SOEXPORT HBox *HBox_create(void)
 {
     HBox *self = malloc(sizeof(HBox));
@@ -71,6 +88,8 @@ SOEXPORT HBox *HBox_create(void)
     self->elements = List_create(0, hboxElementDeleter, 0);
     self->controls = List_create(0, 0, 0);
     Event_register(Control_resizedEvent(self), self, onResized);
+    Event_register(Control_containerChangedEvent(self),
+            self, onContainerChanged);
     return self;
 }
 
@@ -102,6 +121,8 @@ SOEXPORT void HBox_addControl(HBox *self, void *control)
 SOEXPORT void HBox_destroy(HBox *self)
 {
     if (!self) return;
+    Event_unregister(Control_containerChangedEvent(self),
+            self, onContainerChanged);
     Event_unregister(Control_resizedEvent(self), self, onResized);
     List_destroy(self->elements);
     List_destroy(self->controls);

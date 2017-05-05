@@ -75,7 +75,6 @@ SOLOCAL Gui *Gui_create(void)
     Window_setMenu(self->mainWindow, self->mainMenu);
 
     HBox *hb = HBox_create();
-    Container_setControl(self->mainWindow, hb);
 
     Label *lbl = Label_create("(1) This is a test!");
     Control_show(lbl);
@@ -83,6 +82,8 @@ SOLOCAL Gui *Gui_create(void)
     lbl = Label_create("(2) This is a test!");
     Control_show(lbl);
     HBox_addControl(hb, lbl);
+
+    Container_setControl(self->mainWindow, hb);
 
     Event_register(Command_invokedEvent(self->closeCommand),
             self, handleCloseCommand);
