@@ -4,6 +4,7 @@
 #include <pocas/gui/decl.h>
 
 typedef struct Bounds Bounds;
+typedef struct Event Event;
 
 typedef enum ControlDockMode
 {
@@ -19,8 +20,15 @@ typedef enum ControlDockMode
 
 DECLEXPORT ControlDockMode Control_dockMode(const void *self);
 DECLEXPORT void Control_setDockMode(void *self, ControlDockMode mode);
-
 DECLEXPORT void Control_bounds(const void *self, Bounds *b);
 DECLEXPORT void Control_setBounds(void *self, const Bounds *b);
+DECLEXPORT int Control_shown(const void *self);
+DECLEXPORT void Control_setShown(void *self, int shown);
+
+#define Control_show(c) Control_setShown((c),1)
+#define Control_hide(c) Control_setShown((c),0)
+
+DECLEXPORT Event *Control_resizedEvent(const void *self);
+DECLEXPORT Event *Control_shownChangedEvent(const void *self);
 
 #endif

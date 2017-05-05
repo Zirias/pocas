@@ -26,6 +26,7 @@ SOEXPORT Window *Window_create(const char *title, int width, int height)
     Window *self = malloc(sizeof(Window));
     GCINIT(self);
     privateApi.container.create(self);
+    privateApi.control.create(self);
     self->closed = 0;
     self->closing = Event_create("closing");
     self->title = String_copy(title);
@@ -51,18 +52,6 @@ SOEXPORT int Window_width(const Window *self)
 SOEXPORT int Window_height(const Window *self)
 {
     return self->height;
-}
-
-SOEXPORT void Window_show(Window *self)
-{
-    const Backend *b = Backend_current();
-    if (b->backendApi.window.show) b->backendApi.window.show(self);
-}
-
-SOEXPORT void Window_hide(Window *self)
-{
-    const Backend *b = Backend_current();
-    if (b->backendApi.window.hide) b->backendApi.window.hide(self);
 }
 
 SOEXPORT Menu *Window_menu(const Window *self)
@@ -104,6 +93,7 @@ SOEXPORT void Window_destroy(Window *self)
     if (b->backendApi.window.destroy) b->backendApi.window.destroy(self);
     Event_destroy(self->closing);
     free(self->title);
+    privateApi.control.destroy(self);
     privateApi.container.destroy(self);
     free(self);
 }

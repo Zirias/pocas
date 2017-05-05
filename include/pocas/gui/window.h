@@ -12,8 +12,6 @@ DECLEXPORT Window *Window_create(const char *title, int width, int height);
 DECLEXPORT const char *Window_title(const Window *self);
 DECLEXPORT int Window_width(const Window *self);
 DECLEXPORT int Window_height(const Window *self);
-DECLEXPORT void Window_show(Window *self);
-DECLEXPORT void Window_hide(Window *self);
 DECLEXPORT Menu *Window_menu(const Window *self);
 DECLEXPORT void Window_setMenu(Window *self, Menu *menu);
 DECLEXPORT void Window_close(Window *self);

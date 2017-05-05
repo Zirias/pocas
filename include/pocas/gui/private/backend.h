@@ -43,13 +43,13 @@ typedef struct Label Label;
 typedef struct IBackendControl
 {
     void (*setContainer)(void *control, void *container);
+    void (*setBounds)(void *control, const Bounds *b);
+    void (*setShown)(void *control, int shown);
 } IBackendControl;
 
 typedef struct IBackendWindow
 {
     int (*create)(Window *self);
-    void (*show)(Window *self);
-    void (*hide)(Window *self);
     void (*setMenu)(Window *self, Menu *menu);
     void (*close)(Window *self);
     void (*destroy)(Window *self);

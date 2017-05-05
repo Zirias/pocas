@@ -48,8 +48,7 @@ SOEXPORT void Container_bounds(const void *self, Bounds *b)
 SOLOCAL int Container_setBounds(void *self, Bounds *b)
 {
     Container *c = privateApi.containerObject(self);
-    if (c->b.x != b->x || c->b.y != b->y
-            || c->b.width != b->width || c->b.height != b->height)
+    if (!Bounds_equals(&c->b, b))
     {
         memcpy(&c->b, b, sizeof(Bounds));
         EventArgs *args = EventArgs_create(c->resized, self, &c->b);

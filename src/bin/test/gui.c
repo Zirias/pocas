@@ -7,6 +7,8 @@
 #include <pocas/gui/bounds.h>
 #include <pocas/gui/command.h>
 #include <pocas/gui/container.h>
+#include <pocas/gui/control.h>
+#include <pocas/gui/hbox.h>
 #include <pocas/gui/label.h>
 #include <pocas/gui/menu.h>
 #include <pocas/gui/messagebox.h>
@@ -72,8 +74,15 @@ SOLOCAL Gui *Gui_create(void)
     self->mainWindow = Window_create("POCAS Test", 800, 600);
     Window_setMenu(self->mainWindow, self->mainMenu);
 
-    Label *lbl = Label_create("This is a test!");
-    Container_setControl(self->mainWindow, lbl);
+    HBox *hb = HBox_create();
+    Container_setControl(self->mainWindow, hb);
+
+    Label *lbl = Label_create("(1) This is a test!");
+    Control_show(lbl);
+    HBox_addControl(hb, lbl);
+    lbl = Label_create("(2) This is a test!");
+    Control_show(lbl);
+    HBox_addControl(hb, lbl);
 
     Event_register(Command_invokedEvent(self->closeCommand),
             self, handleCloseCommand);
@@ -89,7 +98,7 @@ SOLOCAL Gui *Gui_create(void)
 
 SOLOCAL int Gui_run(Gui *self)
 {
-    Window_show(self->mainWindow);
+    Control_show(self->mainWindow);
     return EventLoop_run();
 }
 
