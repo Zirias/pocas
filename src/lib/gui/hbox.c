@@ -18,12 +18,12 @@ struct HBox
     List *controls;
 };
 
-static void updateElementsBounds(HBox *self)
+static void updateElementsBounds(HBox *self, Bounds *b)
 {
     if (!List_length(self->elements)) return;
     Bounds eb;
-    eb.x = 0;
-    eb.y = 0;
+    eb.x = b->x;
+    eb.y = b->y;
     Extents em;
     ListIterator *ei = List_iterator(self->elements);
     while (ListIterator_moveNext(ei))
@@ -32,7 +32,17 @@ static void updateElementsBounds(HBox *self)
         void *control = Container_control(hbe);
         Control_margin(control, &em);
         eb.width = Control_minWidth(control) + em.left + em.right;
+        if (eb.x + eb.width > b->x + b->width)
+        {
+            if (eb.x >= b->x + b->width) eb.width = 0;
+            else eb.width = b->x + b->width - eb.x;
+        }
         eb.height = Control_minHeight(control)+ em.top + em.bottom;
+        if (eb.y + eb.height > b->y + b->height)
+        {
+            if (eb.y >= b->y + b->height) eb.height = 0;
+            else eb.height = b->y + b->height - eb.y;
+        }
         privateApi.container.setBounds(hbe, &eb);
         eb.x += eb.width;
     }
@@ -43,7 +53,9 @@ static void onElementMinSizeChanged(void *selfPtr, EventArgs *args)
 {
     (void)args;
     HBox *self = selfPtr;
-    updateElementsBounds(self);
+    Bounds b;
+    Control_bounds(self, &b);
+    updateElementsBounds(self, &b);
 }
 
 static void *hboxElementCreator(HBox *self, void *control)
@@ -90,6 +102,13 @@ static void onContainerChanged(void *selfPtr, EventArgs *args)
     }
 }
 
+static void onResized(void *selfPtr, EventArgs *args)
+{
+    HBox *self = selfPtr;
+    Bounds *b = EventArgs_evInfo(args);
+    updateElementsBounds(self, b);
+}
+
 SOEXPORT HBox *HBox_create(void)
 {
     HBox *self = malloc(sizeof(HBox));
@@ -99,6 +118,8 @@ SOEXPORT HBox *HBox_create(void)
     self->controls = List_create(0, 0, 0);
     Event_register(Control_containerChangedEvent(self),
             self, onContainerChanged);
+    Event_register(Control_resizedEvent(self),
+            self, onResized);
     return self;
 }
 
@@ -111,7 +132,9 @@ SOEXPORT void HBox_removeControl(HBox *self, void *control)
 {
     List_removeMatching(self->elements, hboxElementMatcher, control);
     List_remove(self->controls, control);
-    updateElementsBounds(self);
+    Bounds b;
+    Control_bounds(self, &b);
+    updateElementsBounds(self, &b);
 }
 
 SOEXPORT void HBox_addControl(HBox *self, void *control)
@@ -120,12 +143,16 @@ SOEXPORT void HBox_addControl(HBox *self, void *control)
     List_remove(self->controls, control);
     List_append(self->controls, control);
     List_append(self->elements, hboxElementCreator(self, control));
-    updateElementsBounds(self);
+    Bounds b;
+    Control_bounds(self, &b);
+    updateElementsBounds(self, &b);
 }
 
 SOEXPORT void HBox_destroy(HBox *self)
 {
     if (!self) return;
+    Event_unregister(Control_resizedEvent(self),
+            self, onResized);
     Event_unregister(Control_containerChangedEvent(self),
             self, onContainerChanged);
     List_destroy(self->elements);

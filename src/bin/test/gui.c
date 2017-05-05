@@ -96,6 +96,7 @@ SOLOCAL Gui *Gui_create(void)
 
     margin.top = 24;
     Control_setMargin(self->middleLabel, &margin);
+    Control_setMargin(hb, &margin);
 
     Container_setControl(self->mainWindow, hb);
 
