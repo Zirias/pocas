@@ -24,6 +24,7 @@ struct Gui
     Window *mainWindow;
     Menu *mainMenu;
     Command *closeCommand;
+    Label *middleLabel;
 };
 
 static void handleCloseCommand(void *selfPtr, EventArgs *args)
@@ -48,10 +49,12 @@ static void handleWindowClosing(void *selfPtr, EventArgs *args)
 
 static void handleContainerResized(void *selfPtr, EventArgs *args)
 {
-    (void)selfPtr;
+    char labeltext[20];
+    Gui *self = selfPtr;
+
     Bounds *b = EventArgs_evInfo(args);
-    printf("resized: %u x %u\n", b->width, b->height);
-    fflush(stdout);
+    snprintf(labeltext, 20, "(2) %u x %u", b->width, b->height);
+    Label_setText(self->middleLabel, labeltext);
 }
 
 SOLOCAL Gui *Gui_create(void)
@@ -79,7 +82,10 @@ SOLOCAL Gui *Gui_create(void)
     Label *lbl = Label_create("(1) This is a test!");
     Control_show(lbl);
     HBox_addControl(hb, lbl);
-    lbl = Label_create("(2) This is a test!");
+    self->middleLabel = Label_create("(2) ♫ 42");
+    Control_show(self->middleLabel);
+    HBox_addControl(hb, self->middleLabel);
+    lbl = Label_create("(3) This is a test!");
     Control_show(lbl);
     HBox_addControl(hb, lbl);
 

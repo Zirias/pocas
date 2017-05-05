@@ -436,6 +436,18 @@ static MessageBoxButton B_MessageBox_show(const Window *w, const char *title,
     }
 }
 
+static void measureLabelText(void *label)
+{
+    B_Label *bl = defaultBackend->privateApi->backendObject(label);
+    SIZE textSize;
+    HDC dc = GetDC(bl->bo.w);
+    SelectObject(dc, (HGDIOBJ) bdata.messageFont);
+    GetTextExtentExPointW(dc, bl->text, wcslen(bl->text), 0, 0, 0, &textSize);
+    ReleaseDC(bl->bo.w, dc);
+    defaultBackend->privateApi->control.setContentSize(label,
+            textSize.cx, textSize.cy);
+}
+
 static void B_Label_updateText(Label *self, const char *text)
 {
     B_Label *bl = defaultBackend->privateApi->backendObject(self);
@@ -451,6 +463,11 @@ static void B_Label_updateText(Label *self, const char *text)
     else
     {
         bl->text = 0;
+    }
+    if (bl->bo.w != INVALID_HANDLE_VALUE)
+    {
+        measureLabelText(self);
+        SetWindowTextW(bl->bo.w, bl->text);
     }
 }
 
@@ -536,6 +553,7 @@ static int createLabelWindow(void *label)
     {
         initNcm();
         B_Label *bl = defaultBackend->privateApi->backendObject(label);
+        measureLabelText(label);
         SendMessageW(bl->bo.w, WM_SETFONT, (WPARAM) bdata.messageFont, 1);
         SetWindowTextW(bl->bo.w, bl->text);
     }

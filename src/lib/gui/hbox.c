@@ -17,6 +17,35 @@ struct HBox
     List *controls;
 };
 
+static void updateElementsBounds(HBox *self)
+{
+    if (!List_length(self->elements)) return;
+    //unsigned int elementWidth = b->width / List_length(self->elements);
+    Bounds eb;
+    //memcpy(&eb, b, sizeof(Bounds));
+    eb.x = 0;
+    eb.y = 0;
+    //eb.width = elementWidth;
+    ListIterator *ei = List_iterator(self->elements);
+    while (ListIterator_moveNext(ei))
+    {
+        GuiClass *hbe = ListIterator_current(ei);
+        void *control = Container_control(hbe);
+        eb.width = Control_minWidth(control);
+        eb.height = Control_minHeight(control);
+        privateApi.container.setBounds(hbe, &eb);
+        eb.x += eb.width;
+    }
+    ListIterator_destroy(ei);
+}
+
+static void onElementMinSizeChanged(void *selfPtr, EventArgs *args)
+{
+    (void)args;
+    HBox *self = selfPtr;
+    updateElementsBounds(self);
+}
+
 static void *hboxElementCreator(HBox *self, void *control)
 {
     GuiClass *hbe = malloc(sizeof(GuiClass));
@@ -24,11 +53,16 @@ static void *hboxElementCreator(HBox *self, void *control)
     privateApi.container.create(hbe);
     privateApi.setControlObject(hbe, self);
     Container_setControl(hbe, control);
+    Event_register(Control_minSizeChangedEvent(control),
+            self, onElementMinSizeChanged);
     return hbe;
 }
 
 static void hboxElementDeleter(void *hbe)
 {
+    void *control = Container_control(hbe);
+    Event_unregister(Control_minSizeChangedEvent(control),
+            privateApi.controlObject(hbe), onElementMinSizeChanged);
     Container_setControl(hbe, 0);
     privateApi.container.destroy(hbe);
     free(hbe);
@@ -39,28 +73,11 @@ static int hboxElementMatcher(const void *element, void *control)
     return Container_control(element) == control;
 }
 
-static void updateElementsBounds(HBox *self, Bounds *b)
-{
-    if (!List_length(self->elements)) return;
-    unsigned int elementWidth = b->width / List_length(self->elements);
-    Bounds eb;
-    memcpy(&eb, b, sizeof(Bounds));
-    eb.width = elementWidth;
-    ListIterator *ei = List_iterator(self->elements);
-    while (ListIterator_moveNext(ei))
-    {
-        GuiClass *hbe = ListIterator_current(ei);
-        privateApi.container.setBounds(hbe, &eb);
-        eb.x += elementWidth;
-    }
-    ListIterator_destroy(ei);
-}
-
 static void onResized(void *selfPtr, EventArgs *args)
 {
     HBox *self = selfPtr;
     Bounds *b = EventArgs_evInfo(args);
-    updateElementsBounds(self, b);
+    //updateElementsBounds(self, b);
 }
 
 static void onContainerChanged(void *selfPtr, EventArgs *args)
@@ -87,7 +104,7 @@ SOEXPORT HBox *HBox_create(void)
     privateApi.control.create(self);
     self->elements = List_create(0, hboxElementDeleter, 0);
     self->controls = List_create(0, 0, 0);
-    Event_register(Control_resizedEvent(self), self, onResized);
+//    Event_register(Control_resizedEvent(self), self, onResized);
     Event_register(Control_containerChangedEvent(self),
             self, onContainerChanged);
     return self;
@@ -102,9 +119,9 @@ SOEXPORT void HBox_removeControl(HBox *self, void *control)
 {
     List_removeMatching(self->elements, hboxElementMatcher, control);
     List_remove(self->controls, control);
-    Bounds b;
-    Control_bounds(self, &b);
-    updateElementsBounds(self, &b);
+    //Bounds b;
+    //Control_bounds(self, &b);
+    updateElementsBounds(self);
 }
 
 SOEXPORT void HBox_addControl(HBox *self, void *control)
@@ -113,9 +130,9 @@ SOEXPORT void HBox_addControl(HBox *self, void *control)
     List_remove(self->controls, control);
     List_append(self->controls, control);
     List_append(self->elements, hboxElementCreator(self, control));
-    Bounds b;
-    Control_bounds(self, &b);
-    updateElementsBounds(self, &b);
+    //Bounds b;
+    //Control_bounds(self, &b);
+    updateElementsBounds(self);
 }
 
 SOEXPORT void HBox_destroy(HBox *self)
@@ -123,7 +140,7 @@ SOEXPORT void HBox_destroy(HBox *self)
     if (!self) return;
     Event_unregister(Control_containerChangedEvent(self),
             self, onContainerChanged);
-    Event_unregister(Control_resizedEvent(self), self, onResized);
+    //Event_unregister(Control_resizedEvent(self), self, onResized);
     List_destroy(self->elements);
     List_destroy(self->controls);
     privateApi.control.destroy(self);

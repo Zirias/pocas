@@ -11,6 +11,8 @@ typedef struct IPrivateControl
     int (*create)(void *self);
     void *(*container)(const void *self);
     void (*setContainer)(void *self, void *container);
+    void (*setContentSize)(void *self,
+            unsigned int width, unsigned int height);
     void (*destroy)(void *self);
 } IPrivateControl;
 

@@ -3,6 +3,7 @@
 
 #include <pocas/core/event.h>
 
+#include <pocas/gui/extents.h>
 #include <pocas/gui/bounds.h>
 #include <pocas/gui/container.h>
 #include "internal.h"
@@ -12,10 +13,18 @@ typedef struct Control
 {
     Bounds bounds;
     ControlDockMode mode;
+    ControlAlignment alignment;
+    Extents margin;
+    Extents padding;
     int shown;
+    unsigned int minWidth;
+    unsigned int minHeight;
+    unsigned int contentWidth;
+    unsigned int contentHeight;
     Event *resized;
     Event *shownChanged;
     Event *containerChanged;
+    Event *minSizeChanged;
     void *container;
 } Control;
 
@@ -30,6 +39,7 @@ SOLOCAL int Control_create(void *self)
     c->resized = Event_create("resized");
     c->shownChanged = Event_create("shownChanged");
     c->containerChanged = Event_create("containerChanged");
+    c->minSizeChanged = Event_create("minSizeChanged");
     return 1;
 }
 
@@ -43,6 +53,18 @@ SOEXPORT void Control_setDockMode(void *self, ControlDockMode mode)
 {
     Control *c = privateApi.controlObject(self);
     c->mode = mode;
+}
+
+SOEXPORT ControlAlignment Control_alignment(const void *self)
+{
+    Control *c = privateApi.controlObject(self);
+    return c->alignment;
+}
+
+SOEXPORT void Control_setAlignment(void *self, ControlAlignment alignment)
+{
+    Control *c = privateApi.controlObject(self);
+    c->alignment = alignment;
 }
 
 SOEXPORT Event *Control_resizedEvent(const void *self)
@@ -61,6 +83,12 @@ SOEXPORT Event *Control_containerChangedEvent(const void *self)
 {
     Control *c = privateApi.controlObject(self);
     return c->containerChanged;
+}
+
+SOEXPORT Event *Control_minSizeChangedEvent(const void *self)
+{
+    Control *c = privateApi.controlObject(self);
+    return c->minSizeChanged;
 }
 
 SOEXPORT void Control_bounds(const void *self, Bounds *b)
@@ -85,6 +113,81 @@ SOEXPORT void Control_setBounds(void *self, const Bounds *b)
     EventArgs *args = EventArgs_create(c->resized, self, &c->bounds);
     Event_raise(c->resized, args);
     EventArgs_destroy(args);
+}
+
+SOEXPORT void Control_margin(const void *self, Extents *e)
+{
+    Control *c = privateApi.controlObject(self);
+    memcpy(e, &c->margin, sizeof(Extents));
+}
+
+SOEXPORT void Control_setMargin(void *self, const Extents *e)
+{
+    Control *c = privateApi.controlObject(self);
+    memcpy(&c->margin, e, sizeof(Extents));
+}
+
+SOEXPORT void Control_padding(const void *self, Extents *e)
+{
+    Control *c = privateApi.controlObject(self);
+    memcpy(e, &c->padding, sizeof(Extents));
+}
+
+SOEXPORT void Control_setPadding(void *self, const Extents *e)
+{
+    Control *c = privateApi.controlObject(self);
+    memcpy(&c->padding, e, sizeof(Extents));
+}
+
+SOEXPORT unsigned int Control_minWidth(const void *self)
+{
+    Control *c = privateApi.controlObject(self);
+    return c->contentWidth > c->minWidth ? c->contentWidth : c->minWidth;
+}
+
+SOEXPORT unsigned int Control_minHeight(const void *self)
+{
+    Control *c = privateApi.controlObject(self);
+    return c->contentHeight > c->minHeight ? c->contentHeight : c->minHeight;
+}
+
+static void fireEventIfMinSizeChanged(void *self,
+        unsigned int width, unsigned int height)
+{
+    Control *c = privateApi.controlObject(self);
+    Bounds msb;
+    msb.x = 0;
+    msb.y = 0;
+    msb.width = Control_minWidth(self);
+    msb.height = Control_minHeight(self);
+    if (msb.width != width || msb.height != height)
+    {
+        EventArgs *args = EventArgs_create(c->minSizeChanged, self, &msb);
+        Event_raise(c->minSizeChanged, args);
+        EventArgs_destroy(args);
+    }
+}
+
+SOEXPORT void Control_setMinSize(void *self,
+        unsigned int minWidth, unsigned int minHeight)
+{
+    Control *c = privateApi.controlObject(self);
+    unsigned int currentMinWidth = Control_minWidth(self);
+    unsigned int currentMinHeight = Control_minHeight(self);
+    c->minWidth = minWidth;
+    c->minHeight = minHeight;
+    fireEventIfMinSizeChanged(self, currentMinWidth, currentMinHeight);
+}
+
+SOLOCAL void Control_setContentSize(void *self,
+        unsigned int width, unsigned int height)
+{
+    Control *c = privateApi.controlObject(self);
+    unsigned int currentMinWidth = Control_minWidth(self);
+    unsigned int currentMinHeight = Control_minHeight(self);
+    c->contentWidth = width;
+    c->contentHeight = height;
+    fireEventIfMinSizeChanged(self, currentMinWidth, currentMinHeight);
 }
 
 SOEXPORT int Control_shown(const void *self)
@@ -157,6 +260,7 @@ SOLOCAL void Control_destroy(void *self)
 {
     if (!self) return;
     Control *c = privateApi.controlObject(self);
+    Event_destroy(c->minSizeChanged);
     Event_destroy(c->containerChanged);
     Event_destroy(c->shownChanged);
     Event_destroy(c->resized);

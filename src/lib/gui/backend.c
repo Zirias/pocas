@@ -67,6 +67,7 @@ SOLOCAL const GuiPrivateApi privateApi =
         .create = Control_create,
         .container = Control_container,
         .setContainer = Control_setContainer,
+        .setContentSize = Control_setContentSize,
         .destroy = Control_destroy
     },
 
