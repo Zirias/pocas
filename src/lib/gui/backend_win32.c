@@ -130,7 +130,6 @@ static void updateWindowClientSize(B_Window *self)
     if (api->container.setBounds(self->w, &b))
     {
         InvalidateRect(self->bo.w, &r, 0);
-        UpdateWindow(self->bo.w);
     }
 }
 
@@ -576,7 +575,6 @@ static void B_Control_setShown(void *self, int shown)
     if (bo->w != INVALID_HANDLE_VALUE)
     {
         ShowWindow(bo->w, shown ? SW_NORMAL : SW_HIDE);
-        UpdateWindow(bo->w);
     }
 }
 

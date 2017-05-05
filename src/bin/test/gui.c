@@ -8,6 +8,7 @@
 #include <pocas/gui/command.h>
 #include <pocas/gui/container.h>
 #include <pocas/gui/control.h>
+#include <pocas/gui/extents.h>
 #include <pocas/gui/hbox.h>
 #include <pocas/gui/label.h>
 #include <pocas/gui/menu.h>
@@ -79,15 +80,22 @@ SOLOCAL Gui *Gui_create(void)
 
     HBox *hb = HBox_create();
 
+    Extents margin = {8,8,8,8};
+
     Label *lbl = Label_create("(1) This is a test!");
     Control_show(lbl);
+    Control_setMargin(lbl, &margin);
     HBox_addControl(hb, lbl);
     self->middleLabel = Label_create("(2) ♫ 42");
     Control_show(self->middleLabel);
     HBox_addControl(hb, self->middleLabel);
     lbl = Label_create("(3) This is a test!");
     Control_show(lbl);
+    Control_setMargin(lbl, &margin);
     HBox_addControl(hb, lbl);
+
+    margin.top = 24;
+    Control_setMargin(self->middleLabel, &margin);
 
     Container_setControl(self->mainWindow, hb);
 
