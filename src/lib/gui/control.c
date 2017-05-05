@@ -213,6 +213,12 @@ static void updateBounds(void *self, Bounds *nb)
 {
     Control *c = privateApi.controlObject(self);
     memcpy(&c->bounds, nb, sizeof(Bounds));
+    c->bounds.x += c->margin.left;
+    c->bounds.y += c->margin.top;
+    c->bounds.width = c->bounds.width > c->margin.left + c->margin.right ?
+                c->bounds.width - c->margin.left - c->margin.right : 0;
+    c->bounds.height = c->bounds.height > c->margin.top + c->margin.bottom ?
+                c->bounds.height - c->margin.top - c->margin.bottom : 0;
     const Backend *b = Backend_current();
     if (b->backendApi.control.setBounds)
         b->backendApi.control.setBounds(self, &c->bounds);

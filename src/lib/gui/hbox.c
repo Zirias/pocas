@@ -23,6 +23,7 @@ static void updateElementsBounds(HBox *self)
     if (!List_length(self->elements)) return;
     Bounds eb;
     eb.x = 0;
+    eb.y = 0;
     Extents em;
     ListIterator *ei = List_iterator(self->elements);
     while (ListIterator_moveNext(ei))
@@ -30,12 +31,10 @@ static void updateElementsBounds(HBox *self)
         GuiClass *hbe = ListIterator_current(ei);
         void *control = Container_control(hbe);
         Control_margin(control, &em);
-        eb.x += em.left;
-        eb.y = em.top;
-        eb.width = Control_minWidth(control);
-        eb.height = Control_minHeight(control);
+        eb.width = Control_minWidth(control) + em.left + em.right;
+        eb.height = Control_minHeight(control)+ em.top + em.bottom;
         privateApi.container.setBounds(hbe, &eb);
-        eb.x += eb.width + em.right;
+        eb.x += eb.width;
     }
     ListIterator_destroy(ei);
 }
