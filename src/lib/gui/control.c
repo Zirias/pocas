@@ -17,6 +17,7 @@ typedef struct Control
     Extents margin;
     Extents padding;
     int shown;
+    int enabled;
     unsigned int minWidth;
     unsigned int minHeight;
     unsigned int contentWidth;
@@ -36,6 +37,7 @@ SOLOCAL int Control_create(void *self)
         free(c);
         return 0;
     }
+    c->enabled = 1;
     c->resized = Event_create("resized");
     c->shownChanged = Event_create("shownChanged");
     c->containerChanged = Event_create("containerChanged");
@@ -207,6 +209,22 @@ SOEXPORT void Control_setShown(void *self, int shown)
     EventArgs *args = EventArgs_create(c->shownChanged, self, (void *)c->shown);
     Event_raise(c->shownChanged, args);
     EventArgs_destroy(args);
+}
+
+SOEXPORT int Control_enabled(const void *self)
+{
+    Control *c = privateApi.controlObject(self);
+    return c->enabled;
+}
+
+SOEXPORT void Control_setEnabled(void *self, int enabled)
+{
+    Control *c = privateApi.controlObject(self);
+    if (c->enabled == !!enabled) return;
+    c->enabled = !!enabled;
+    const Backend *be = Backend_current();
+    if (be->backendApi.control.setEnabled)
+        be->backendApi.control.setEnabled(self, c->enabled);
 }
 
 static void updateBounds(void *self, Bounds *nb)

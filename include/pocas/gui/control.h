@@ -45,11 +45,16 @@ DECLEXPORT unsigned int Control_minWidth(const void *self);
 DECLEXPORT unsigned int Control_minHeight(const void *self);
 DECLEXPORT void Control_setMinSize(void *self,
         unsigned int minWidth, unsigned int minHeight);
+
 DECLEXPORT int Control_shown(const void *self);
 DECLEXPORT void Control_setShown(void *self, int shown);
-
 #define Control_show(c) Control_setShown((c),1)
 #define Control_hide(c) Control_setShown((c),0)
+
+DECLEXPORT int Control_enabled(const void *self);
+DECLEXPORT void Control_setEnabled(void *self, int enabled);
+#define Control_enable(c) Control_setEnabled((c),1)
+#define Control_disable(c) Control_setEnabled((c),0)
 
 DECLEXPORT Event *Control_resizedEvent(const void *self);
 DECLEXPORT Event *Control_shownChangedEvent(const void *self);
