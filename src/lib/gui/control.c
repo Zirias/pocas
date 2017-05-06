@@ -243,6 +243,7 @@ SOLOCAL void Control_setContainer(void *self, void *container)
                          self, containerResized);
     }
     c->container = container;
+    if (!container) return;
     const Backend *b = Backend_current();
     if (b->backendApi.control.setContainer)
         b->backendApi.control.setContainer(self, container);

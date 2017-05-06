@@ -9,7 +9,7 @@
 #include <pocas/gui/container.h>
 #include <pocas/gui/control.h>
 #include <pocas/gui/extents.h>
-#include <pocas/gui/hbox.h>
+#include <pocas/gui/lbox.h>
 #include <pocas/gui/label.h>
 #include <pocas/gui/menu.h>
 #include <pocas/gui/messagebox.h>
@@ -25,7 +25,7 @@ struct Gui
     Window *mainWindow;
     Menu *mainMenu;
     Command *closeCommand;
-    Label *middleLabel;
+    Label *boundsLabel;
 };
 
 static void handleCloseCommand(void *selfPtr, EventArgs *args)
@@ -48,14 +48,18 @@ static void handleWindowClosing(void *selfPtr, EventArgs *args)
     }
 }
 
-static void handleContainerResized(void *selfPtr, EventArgs *args)
+static void showSize(Gui *self, Bounds *b)
 {
     char labeltext[20];
-    Gui *self = selfPtr;
+    snprintf(labeltext, 20, "[ %u x %u ]", b->width, b->height);
+    Label_setText(self->boundsLabel, labeltext);
+}
 
+static void handleContainerResized(void *selfPtr, EventArgs *args)
+{
+    Gui *self = selfPtr;
     Bounds *b = EventArgs_evInfo(args);
-    snprintf(labeltext, 20, "(2) %u x %u", b->width, b->height);
-    Label_setText(self->middleLabel, labeltext);
+    showSize(self, b);
 }
 
 SOLOCAL Gui *Gui_create(void)
@@ -78,27 +82,32 @@ SOLOCAL Gui *Gui_create(void)
     self->mainWindow = Window_create("POCAS Test", 800, 600);
     Window_setMenu(self->mainWindow, self->mainMenu);
 
-    HBox *hb = HBox_create();
+    LBox *vb = LBox_create(BO_Vertical);
+    LBox *hb = LBox_create(BO_Horizontal);
 
     Extents margin = {8,8,8,8};
 
     Label *lbl = Label_create("(1) This is a test!");
     Control_show(lbl);
     Control_setMargin(lbl, &margin);
-    HBox_addControl(hb, lbl);
-    self->middleLabel = Label_create("(2) ♫ 42");
-    Control_show(self->middleLabel);
-    HBox_addControl(hb, self->middleLabel);
+    LBox_addControl(hb, lbl);
+    lbl = Label_create("(2) ♫ 42");
+    Control_show(lbl);
+    Control_setMargin(lbl, &margin);
+    LBox_addControl(hb, lbl);
     lbl = Label_create("(3) This is a test!");
     Control_show(lbl);
     Control_setMargin(lbl, &margin);
-    HBox_addControl(hb, lbl);
+    LBox_addControl(hb, lbl);
 
-    margin.top = 24;
-    Control_setMargin(self->middleLabel, &margin);
-    Control_setMargin(hb, &margin);
+    margin.bottom = 24;
+    self->boundsLabel = Label_create(0);
+    Control_show(self->boundsLabel);
+    Control_setMargin(self->boundsLabel, &margin);
+    LBox_addControl(vb, self->boundsLabel);
+    LBox_addControl(vb, hb);
 
-    Container_setControl(self->mainWindow, hb);
+    Container_setControl(self->mainWindow, vb);
 
     Event_register(Command_invokedEvent(self->closeCommand),
             self, handleCloseCommand);
@@ -115,6 +124,9 @@ SOLOCAL Gui *Gui_create(void)
 SOLOCAL int Gui_run(Gui *self)
 {
     Control_show(self->mainWindow);
+    Bounds b;
+    Container_bounds(self->mainWindow, &b);
+    showSize(self, &b);
     return EventLoop_run();
 }
 

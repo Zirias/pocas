@@ -439,10 +439,18 @@ static void measureLabelText(void *label)
 {
     B_Label *bl = defaultBackend->privateApi->backendObject(label);
     SIZE textSize;
-    HDC dc = GetDC(bl->bo.w);
-    SelectObject(dc, (HGDIOBJ) bdata.messageFont);
-    GetTextExtentExPointW(dc, bl->text, wcslen(bl->text), 0, 0, 0, &textSize);
-    ReleaseDC(bl->bo.w, dc);
+    if (bl->text)
+    {
+        HDC dc = GetDC(bl->bo.w);
+        SelectObject(dc, (HGDIOBJ) bdata.messageFont);
+        GetTextExtentExPointW(dc, bl->text, wcslen(bl->text), 0, 0, 0, &textSize);
+        ReleaseDC(bl->bo.w, dc);
+    }
+    else
+    {
+        textSize.cx = 0;
+        textSize.cy = 0;
+    }
     defaultBackend->privateApi->control.setContentSize(label,
             textSize.cx, textSize.cy);
 }
@@ -520,7 +528,7 @@ static HWND findParentControlWindow(void *control)
     {
         void *cc = defaultBackend->privateApi->controlObject(container);
         if (!cc) return INVALID_HANDLE_VALUE;
-        container = defaultBackend->privateApi->control.container(cc);
+        container = defaultBackend->privateApi->control.container(container);
         if (!container) return INVALID_HANDLE_VALUE;
         cbo = defaultBackend->privateApi->backendObject(container);
     }
