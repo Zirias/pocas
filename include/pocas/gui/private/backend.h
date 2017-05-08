@@ -73,12 +73,6 @@ typedef struct IBackendMenuItem
     void (*destroy)(MenuItem *self);
 } IBackendMenuItem;
 
-typedef struct IBackendCommand
-{
-    int (*create)(Command *self);
-    void (*destroy)(Command *self);
-} IBackendCommand;
-
 typedef struct IBackendMessageBox
 {
     MessageBoxButton (*show)(const Window *w, const char *title,
@@ -106,7 +100,6 @@ typedef struct GuiBackendApi
     IBackendWindow window;
     IBackendMenu menu;
     IBackendMenuItem menuItem;
-    IBackendCommand command;
     IBackendMessageBox messageBox;
     IBackendLabel label;
     IBackendButton button;

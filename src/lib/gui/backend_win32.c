@@ -23,8 +23,8 @@
 
 struct bdata
 {
-    HashTable *commands;
-    WORD nextCommandId;
+    HashTable *controls;
+    WORD nextId;
     size_t nWindows;
     int ncmInitialized;
     OSVERSIONINFOW vi;
@@ -48,6 +48,12 @@ typedef struct BO
     HWND w;
 } BO;
 
+typedef struct BOTXT
+{
+    BO bo;
+    LPWSTR text;
+} BOTXT;
+
 typedef struct B_Window
 {
     BO bo;
@@ -65,23 +71,10 @@ typedef struct B_Menu
 
 typedef struct B_MenuItem
 {
-    BO bo;
+    BOTXT botxt;
     MenuItem *m;
-    LPWSTR text;
-} B_MenuItem;
-
-typedef struct B_Command
-{
-    BO bo;
-    Command *c;
     WORD id;
-} B_Command;
-
-typedef struct BOTXT
-{
-    BO bo;
-    LPWSTR text;
-} BOTXT;
+} B_MenuItem;
 
 typedef struct B_Label
 {
@@ -93,11 +86,12 @@ typedef struct B_Button
 {
     BOTXT botxt;
     Button *b;
+    WORD id;
 } B_Button;
 
 static thread_local struct bdata bdata = {
-    .commands = 0,
-    .nextCommandId = 0x100,
+    .controls = 0,
+    .nextId = 0x100,
     .nWindows = 0,
     .ncmInitialized = 0,
 };
@@ -108,6 +102,28 @@ static const char *B_name(void)
 }
 
 SOLOCAL Backend *defaultBackend;
+
+static void wordKeyProvider(HashKey *key, const void *word)
+{
+    HashKey_set(key, sizeof(WORD), word);
+}
+
+static WORD registerControl(BO *bo)
+{
+    WORD id = ++bdata.nextId;
+    if (!bdata.controls)
+    {
+        bdata.controls = HashTable_create(
+                HashTableSize_64, wordKeyProvider, 0, 0);
+    }
+    HashTable_set(bdata.controls, &id, bo);
+    return id;
+}
+
+static void unregisterControl(WORD id)
+{
+    HashTable_remove(bdata.controls, &id);
+}
 
 static void initNcm(void)
 {
@@ -168,11 +184,20 @@ static void handleWin32MessageEvent(void *w, EventArgs *args)
 
     case WM_COMMAND:
         id = LOWORD(mei->wp);
-        const B_Command *c = HashTable_get(bdata.commands, &id);
-        if (c)
+        const BO *bo = HashTable_get(bdata.controls, &id);
+        if (bo)
         {
-            Command_invoke(c->c);
-            EventArgs_setHandled(args);
+            switch (bo->t)
+            {
+            case BT_Button:
+                Button_click(((B_Button *)bo)->b);
+                EventArgs_setHandled(args);
+                break;
+            case BT_MenuItem:
+                MenuItem_select(((B_MenuItem *)bo)->m);
+                EventArgs_setHandled(args);
+                break;
+            }
         }
         break;
 
@@ -251,111 +276,6 @@ static void B_Window_destroy(Window *self)
     Event_unregister(EventLoop_win32MsgEvent(), bw, handleWin32MessageEvent);
     free(bw->name);
     free(bw);
-}
-
-static int B_Menu_create(Menu *self)
-{
-    B_Menu *bm = malloc(sizeof(B_Menu));
-    bm->bo.t = BT_Menu;
-    bm->bo.w = INVALID_HANDLE_VALUE;
-    defaultBackend->privateApi->setBackendObject(self, bm);
-    bm->m = self;
-    bm->menu = CreateMenu();
-    return 1;
-}
-
-static void B_Menu_addItem(Menu *self, MenuItem *item)
-{
-    B_Menu *bm = defaultBackend->privateApi->backendObject(self);
-    B_MenuItem *bi = defaultBackend->privateApi->backendObject(item);
-    Menu *subMenu = MenuItem_subMenu(item);
-    if (subMenu)
-    {
-        B_Menu *sub = defaultBackend->privateApi->backendObject(subMenu);
-        AppendMenuW(bm->menu, MF_POPUP, (UINT_PTR)sub->menu, bi->text);
-    }
-    else
-    {
-        Command *cmd = MenuItem_command(item);
-        if (cmd)
-        {
-            B_Command *c = defaultBackend->privateApi->backendObject(cmd);
-            AppendMenuW(bm->menu, MF_STRING, (UINT_PTR)c->id, bi->text);
-        }
-        else
-        {
-            AppendMenuW(bm->menu, MF_STRING, 0, bi->text);
-        }
-    }
-}
-
-static void B_Menu_destroy(Menu *self)
-{
-    if (!self) return;
-    B_Menu *bm = defaultBackend->privateApi->backendObject(self);
-    DestroyMenu(bm->menu);
-    free(bm);
-}
-
-static void B_MenuItem_updateText(B_MenuItem *self)
-{
-    free(self->text);
-    const char *text = MenuItem_text(self->m);
-    size_t textLen = strlen(text) + 1;
-    self->text = calloc(1, 2 * textLen);
-    MultiByteToWideChar(CP_UTF8, 0, text, textLen, self->text, textLen);
-    textLen = 2 * (wcslen(self->text) + 1);
-    self->text = realloc(self->text, textLen);
-}
-
-static int B_MenuItem_create(MenuItem *self)
-{
-    B_MenuItem *bi = malloc(sizeof(B_MenuItem));
-    bi->bo.t = BT_MenuItem;
-    bi->bo.w = INVALID_HANDLE_VALUE;
-    defaultBackend->privateApi->setBackendObject(self, bi);
-    bi->m = self;
-    bi->text = 0;
-    B_MenuItem_updateText(bi);
-    return 1;
-}
-
-static void B_MenuItem_destroy(MenuItem *self)
-{
-    if (!self) return;
-    B_MenuItem *bi = defaultBackend->privateApi->backendObject(self);
-    free(bi->text);
-    free(bi);
-}
-
-static void wordKeyProvider(HashKey *key, const void *word)
-{
-    HashKey_set(key, sizeof(WORD), word);
-}
-
-static int B_Command_create(Command *self)
-{
-    B_Command *bc = malloc(sizeof(B_Command));
-    bc->bo.t = BT_Command;
-    bc->bo.w = INVALID_HANDLE_VALUE;
-    defaultBackend->privateApi->setBackendObject(self, bc);
-    bc->c = self;
-    bc->id = ++bdata.nextCommandId;
-    if (!bdata.commands)
-    {
-        bdata.commands = HashTable_create(
-                HashTableSize_64, wordKeyProvider, 0, 0);
-    }
-    HashTable_set(bdata.commands, &bc->id, bc);
-    return 1;
-}
-
-static void B_Command_destroy(Command *self)
-{
-    if (!self) return;
-    B_Command *bc = defaultBackend->privateApi->backendObject(self);
-    HashTable_remove(bdata.commands, &bc->id);
-    free(bc);
 }
 
 static MessageBoxButton B_MessageBox_show(const Window *w, const char *title,
@@ -495,6 +415,63 @@ static void BOTXT_updateText(void *self, const char *text)
     }
 }
 
+static int B_Menu_create(Menu *self)
+{
+    B_Menu *bm = malloc(sizeof(B_Menu));
+    bm->bo.t = BT_Menu;
+    bm->bo.w = INVALID_HANDLE_VALUE;
+    defaultBackend->privateApi->setBackendObject(self, bm);
+    bm->m = self;
+    bm->menu = CreateMenu();
+    return 1;
+}
+
+static void B_Menu_addItem(Menu *self, MenuItem *item)
+{
+    B_Menu *bm = defaultBackend->privateApi->backendObject(self);
+    B_MenuItem *bi = defaultBackend->privateApi->backendObject(item);
+    Menu *subMenu = MenuItem_subMenu(item);
+    if (subMenu)
+    {
+        B_Menu *sub = defaultBackend->privateApi->backendObject(subMenu);
+        AppendMenuW(bm->menu, MF_POPUP, (UINT_PTR)sub->menu, bi->botxt.text);
+    }
+    else
+    {
+        bi->id = registerControl((BO *)bi);
+        AppendMenuW(bm->menu, MF_STRING, (UINT_PTR)bi->id, bi->botxt.text);
+    }
+}
+
+static void B_Menu_destroy(Menu *self)
+{
+    if (!self) return;
+    B_Menu *bm = defaultBackend->privateApi->backendObject(self);
+    DestroyMenu(bm->menu);
+    free(bm);
+}
+
+static int B_MenuItem_create(MenuItem *self)
+{
+    B_MenuItem *bi = malloc(sizeof(B_MenuItem));
+    bi->botxt.bo.t = BT_MenuItem;
+    bi->botxt.bo.w = INVALID_HANDLE_VALUE;
+    defaultBackend->privateApi->setBackendObject(self, bi);
+    bi->m = self;
+    bi->botxt.text = 0;
+    const char *text = MenuItem_text(self);
+    BOTXT_updateText(self, text);
+    return 1;
+}
+
+static void B_MenuItem_destroy(MenuItem *self)
+{
+    if (!self) return;
+    B_MenuItem *bi = defaultBackend->privateApi->backendObject(self);
+    free(bi->botxt.text);
+    free(bi);
+}
+
 static int B_Label_create(Label *self)
 {
     B_Label *bl = malloc(sizeof(B_Label));
@@ -531,6 +508,7 @@ static int B_Button_create(Button *self)
     defaultBackend->privateApi->setBackendObject(self, bb);
     const char *text = Button_text(self);
     BOTXT_updateText(self, text);
+    bb->id = registerControl((BO *)bb);
     return 1;
 }
 
@@ -543,6 +521,7 @@ static void B_Button_destroy(Button *self)
 {
     if (!self) return;
     B_Button *bb = defaultBackend->privateApi->backendObject(self);
+    unregisterControl(bb->id);
     free(bb->botxt.text);
     free(bb);
 }
@@ -634,12 +613,8 @@ static void B_Control_setShown(void *self, int shown)
 
     switch (bo->t)
     {
-    Command *c;
-    B_Command *bc;
     case BT_Button:
-        c = Button_command(((B_Button *)bo)->b);
-        bc = defaultBackend->privateApi->backendObject(c);
-        id = (HMENU)bc->id;
+        id = (HMENU)((B_Button *)bo)->id;
     case BT_Label:
         if (bo->w == INVALID_HANDLE_VALUE)
         {
@@ -660,9 +635,7 @@ static void setTextControlParent(void *self)
     HMENU id = 0;
     if (bt->bo.t == BT_Button)
     {
-        Command *c = Button_command(((B_Button *)bt)->b);
-        B_Command *bc = defaultBackend->privateApi->backendObject(c);
-        id = (HMENU)bc->id;
+        id = (HMENU)((B_Button *)bt)->id;
     }
     if (bt->bo.w == INVALID_HANDLE_VALUE)
     {
@@ -715,10 +688,6 @@ static Backend win32Backend = {
         .menuItem = {
             .create = B_MenuItem_create,
             .destroy = B_MenuItem_destroy,
-        },
-        .command = {
-            .create = B_Command_create,
-            .destroy = B_Command_destroy,
         },
         .messageBox = {
             .show = B_MessageBox_show,

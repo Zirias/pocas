@@ -1,10 +1,12 @@
 #include <stdlib.h>
 
+#include <pocas/core/event.h>
 #include <pocas/core/list.h>
 #include <pocas/core/string.h>
 
 #include "internal.h"
 
+#include <pocas/gui/command.h>
 #include <pocas/gui/menu.h>
 
 struct Menu
@@ -18,6 +20,7 @@ struct MenuItem
     GuiClass gc;
     char *text;
     Command *command;
+    Event *selected;
     Menu *subMenu;
 };
 
@@ -74,6 +77,7 @@ SOEXPORT MenuItem *MenuItem_create(const char *text)
     self->text = String_copy(text);
     self->command = 0;
     self->subMenu = 0;
+    self->selected = Event_create("selected");
     const Backend *b = Backend_current();
     if (b->backendApi.menuItem.create) b->backendApi.menuItem.create(self);
     return self;
@@ -100,6 +104,22 @@ SOEXPORT void MenuItem_setCommand(MenuItem *self, Command *command)
     self->command = command;
 }
 
+SOEXPORT void MenuItem_select(MenuItem *self)
+{
+    EventArgs *args = EventArgs_create(self->selected, self, 0);
+    Event_raise(self->selected, args);
+    if (!EventArgs_handled(args) && self->command)
+    {
+        Command_invoke(self->command);
+    }
+    EventArgs_destroy(args);
+}
+
+SOEXPORT Event * MenuItem_selectedEvent(const MenuItem *self)
+{
+    return self->selected;
+}
+
 SOEXPORT Menu *MenuItem_subMenu(const MenuItem *self)
 {
     return self->subMenu;
@@ -115,6 +135,7 @@ SOEXPORT void MenuItem_destroy(MenuItem *self)
     if (!self) return;
     free(self->text);
     Menu_destroy(self->subMenu);
+    Event_destroy(self->selected);
     const Backend *b = Backend_current();
     if (b->backendApi.menuItem.destroy) b->backendApi.menuItem.destroy(self);
     free(self);

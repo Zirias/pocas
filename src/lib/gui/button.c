@@ -15,30 +15,17 @@ struct Button
     GuiClass gc;
     char *text;
     Command *command;
-    int commandOwned;
     Event *clicked;
 };
 
-static void onButtonClicked(void *selfPtr, EventArgs *args)
-{
-    (void)args;
-    Button *self = selfPtr;
-    EventArgs *clickedArgs = EventArgs_create(self->clicked, self, 0);
-    Event_raise(self->clicked, clickedArgs);
-    EventArgs_destroy(clickedArgs);
-}
-
-SOEXPORT Button *Button_create(const char *text, Command *command)
+SOEXPORT Button *Button_create(const char *text)
 {
     Button *self = malloc(sizeof(Button));
     GCINIT(self);
     privateApi.control.create(self);
     self->text = text ? String_copy(text) : 0;
-    self->command = command ? command : Command_create();
-    self->commandOwned = !command;
+    self->command = 0;
     self->clicked = Event_create("clicked");
-    Event_register(Command_invokedEvent(self->command),
-            self, onButtonClicked);
     Extents padding = {4,4,4,4};
     Control_setPadding(self, &padding);
     Control_setMinSize(self, 50, 0);
@@ -69,6 +56,22 @@ SOEXPORT Command *Button_command(const Button *self)
     return self->command;
 }
 
+SOEXPORT void Button_setCommand(Button *self, Command *command)
+{
+    self->command = command;
+}
+
+SOEXPORT void Button_click(Button *self)
+{
+    EventArgs *args = EventArgs_create(self->clicked, self, 0);
+    Event_raise(self->clicked, args);
+    if (!EventArgs_handled(args) && self->command)
+    {
+        Command_invoke(self->command);
+    }
+    EventArgs_destroy(args);
+}
+
 SOEXPORT Event *Button_clickedEvent(const Button *self)
 {
     return self->clicked;
@@ -80,9 +83,6 @@ SOEXPORT void Button_destroy(Button *self)
     const Backend *b = Backend_current();
     if (b->backendApi.button.destroy)
         b->backendApi.button.destroy(self);
-    Event_unregister(Command_invokedEvent(self->command),
-            self, onButtonClicked);
-    if (self->commandOwned) Command_destroy(self->command);
     Event_destroy(self->clicked);
     free(self->text);
     free(self);

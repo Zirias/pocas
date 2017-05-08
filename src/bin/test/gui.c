@@ -92,7 +92,8 @@ SOLOCAL Gui *Gui_create(void)
     Control_show(lbl);
     Control_setMargin(lbl, &margin);
     LBox_addControl(hb, lbl);
-    Button *btn = Button_create("(2) ♫ 42", self->closeCommand);
+    Button *btn = Button_create("(2) ♫ 42");
+    Button_setCommand(btn, self->closeCommand);
     Control_show(btn);
     Control_setMargin(btn, &margin);
     LBox_addControl(hb, btn);

@@ -16,8 +16,6 @@ SOEXPORT Command *Command_create(void)
     Command *self = malloc(sizeof(Command));
     GCINIT(self);
     self->invoked = Event_create("invoked");
-    const Backend *b = Backend_current();
-    if (b->backendApi.command.create) b->backendApi.command.create(self);
     return self;
 }
 
@@ -37,8 +35,6 @@ SOEXPORT Event *Command_invokedEvent(const Command *self)
 SOEXPORT void Command_destroy(Command *self)
 {
     if (!self) return;
-    const Backend *b = Backend_current();
-    if (b->backendApi.command.destroy) b->backendApi.command.destroy(self);
     Event_destroy(self->invoked);
     free(self);
 }
