@@ -187,6 +187,8 @@ static void handleWin32MessageEvent(void *w, EventArgs *args)
         const BO *bo = HashTable_get(bdata.controls, &id);
         if (bo)
         {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wswitch"
             switch (bo->t)
             {
             case BT_Button:
@@ -198,6 +200,7 @@ static void handleWin32MessageEvent(void *w, EventArgs *args)
                 EventArgs_setHandled(args);
                 break;
             }
+#pragma GCC diagnostic pop
         }
         break;
 
@@ -530,6 +533,8 @@ static void B_Control_setBounds(void *self, const Bounds *b)
 {
     BO *bo = defaultBackend->privateApi->backendObject(self);
     if (!bo) return;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wswitch"
     switch (bo->t)
     {
     case BT_Label:
@@ -540,6 +545,7 @@ static void B_Control_setBounds(void *self, const Bounds *b)
         }
         break;
     }
+#pragma GCC diagnostic pop
 }
 
 static HWND findParentControlWindow(void *control)
@@ -584,6 +590,8 @@ static int createTextControlWindow(void *control, HMENU id)
 
     BOTXT *bt = defaultBackend->privateApi->backendObject(control);
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wswitch"
     switch (bt->bo.t)
     {
     case BT_Label:
@@ -594,15 +602,17 @@ static int createTextControlWindow(void *control, HMENU id)
         wc = L"Button";
         style = SS_CENTER|SS_CENTERIMAGE;
     }
+#pragma GCC diagnostic pop
 
     if (createChildControlWindow(control, wc, style, id))
     {
         initNcm();
-        BOTXT *bt = defaultBackend->privateApi->backendObject(control);
         BOTXT_measureText(control);
         SendMessageW(bt->bo.w, WM_SETFONT, (WPARAM) bdata.messageFont, 1);
         SetWindowTextW(bt->bo.w, bt->text);
+        return 1;
     }
+    return 0;
 }
 
 static void B_Control_setShown(void *self, int shown)
@@ -611,10 +621,12 @@ static void B_Control_setShown(void *self, int shown)
     if (!bo) return;
     HMENU id = 0;
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wswitch"
     switch (bo->t)
     {
     case BT_Button:
-        id = (HMENU)((B_Button *)bo)->id;
+        id = (HMENU)(UINT_PTR)((B_Button *)bo)->id;
     case BT_Label:
         if (bo->w == INVALID_HANDLE_VALUE)
         {
@@ -622,6 +634,7 @@ static void B_Control_setShown(void *self, int shown)
         }
         break;
     }
+#pragma GCC diagnostic pop
 
     if (bo->w != INVALID_HANDLE_VALUE)
     {
@@ -635,7 +648,7 @@ static void setTextControlParent(void *self)
     HMENU id = 0;
     if (bt->bo.t == BT_Button)
     {
-        id = (HMENU)((B_Button *)bt)->id;
+        id = (HMENU)(UINT_PTR)((B_Button *)bt)->id;
     }
     if (bt->bo.w == INVALID_HANDLE_VALUE)
     {
@@ -655,8 +668,11 @@ static void setTextControlParent(void *self)
 
 static void B_Control_setContainer(void *self, void *container)
 {
+    (void)container;
     BO *bo = defaultBackend->privateApi->backendObject(self);
     if (!bo) return;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wswitch"
     switch (bo->t)
     {
     case BT_Label:
@@ -664,6 +680,7 @@ static void B_Control_setContainer(void *self, void *container)
         setTextControlParent(self);
         break;
     }
+#pragma GCC diagnostic pop
 }
 
 static Backend win32Backend = {
