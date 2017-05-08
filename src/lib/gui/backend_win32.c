@@ -601,6 +601,9 @@ static int createTextControlWindow(void *control, HMENU id)
     case BT_Button:
         wc = L"Button";
         style = SS_CENTER|SS_CENTERIMAGE;
+        break;
+    default:
+        return 0;
     }
 #pragma GCC diagnostic pop
 
