@@ -12,9 +12,11 @@
 
 #include <pocas/gui/private/backend.h>
 #include <pocas/gui/bounds.h>
+#include <pocas/gui/button.h>
 #include <pocas/gui/command.h>
 #include <pocas/gui/container.h>
 #include <pocas/gui/control.h>
+#include <pocas/gui/extents.h>
 #include <pocas/gui/window.h>
 #include <pocas/gui/menu.h>
 #include <pocas/gui/label.h>
@@ -37,6 +39,7 @@ enum B_Type
     BT_MenuItem,
     BT_Command,
     BT_Label,
+    BT_Button
 };
 
 typedef struct BO
@@ -74,12 +77,23 @@ typedef struct B_Command
     WORD id;
 } B_Command;
 
-typedef struct B_Label
+typedef struct BOTXT
 {
     BO bo;
-    Label *l;
     LPWSTR text;
+} BOTXT;
+
+typedef struct B_Label
+{
+    BOTXT botxt;
+    Label *l;
 } B_Label;
+
+typedef struct B_Button
+{
+    BOTXT botxt;
+    Button *b;
+} B_Button;
 
 static thread_local struct bdata bdata = {
     .commands = 0,
@@ -435,73 +449,102 @@ static MessageBoxButton B_MessageBox_show(const Window *w, const char *title,
     }
 }
 
-static void measureLabelText(void *label)
+static void BOTXT_measureText(void *self)
 {
-    B_Label *bl = defaultBackend->privateApi->backendObject(label);
+    BOTXT *bt = defaultBackend->privateApi->backendObject(self);
     SIZE textSize;
-    if (bl->text)
+    if (bt->text)
     {
-        HDC dc = GetDC(bl->bo.w);
+        HDC dc = GetDC(bt->bo.w);
         SelectObject(dc, (HGDIOBJ) bdata.messageFont);
-        GetTextExtentExPointW(dc, bl->text, wcslen(bl->text), 0, 0, 0, &textSize);
-        ReleaseDC(bl->bo.w, dc);
+        GetTextExtentExPointW(dc, bt->text, wcslen(bt->text), 0, 0, 0, &textSize);
+        ReleaseDC(bt->bo.w, dc);
     }
     else
     {
         textSize.cx = 0;
         textSize.cy = 0;
     }
-    defaultBackend->privateApi->control.setContentSize(label,
-            textSize.cx, textSize.cy);
+    Extents cp;
+    Control_padding(self, &cp);
+    defaultBackend->privateApi->control.setContentSize(self,
+            textSize.cx + cp.left + cp.right,
+            textSize.cy + cp.top + cp.bottom);
 }
 
-static void B_Label_updateText(Label *self, const char *text)
+static void BOTXT_updateText(void *self, const char *text)
 {
-    B_Label *bl = defaultBackend->privateApi->backendObject(self);
-    free(bl->text);
+    BOTXT *bt = defaultBackend->privateApi->backendObject(self);
+    free(bt->text);
     if (text)
     {
         size_t textLen = strlen(text) + 1;
-        bl->text = malloc(2*textLen);
-        MultiByteToWideChar(CP_UTF8, 0, text, textLen, bl->text, textLen);
-        textLen = 2 * wcslen(bl->text) + 2;
-        bl->text = realloc(bl->text, textLen);
+        bt->text = malloc(2*textLen);
+        MultiByteToWideChar(CP_UTF8, 0, text, textLen, bt->text, textLen);
+        textLen = 2 * wcslen(bt->text) + 2;
+        bt->text = realloc(bt->text, textLen);
     }
     else
     {
-        bl->text = 0;
+        bt->text = 0;
     }
-    if (bl->bo.w != INVALID_HANDLE_VALUE)
+    if (bt->bo.w != INVALID_HANDLE_VALUE)
     {
-        measureLabelText(self);
-        SetWindowTextW(bl->bo.w, bl->text);
+        BOTXT_measureText(self);
+        SetWindowTextW(bt->bo.w, bt->text);
     }
 }
 
 static int B_Label_create(Label *self)
 {
     B_Label *bl = malloc(sizeof(B_Label));
-    bl->bo.t = BT_Label;
-    bl->bo.w = INVALID_HANDLE_VALUE;
+    bl->botxt.bo.t = BT_Label;
+    bl->botxt.bo.w = INVALID_HANDLE_VALUE;
     bl->l = self;
-    bl->text = 0;
+    bl->botxt.text = 0;
     defaultBackend->privateApi->setBackendObject(self, bl);
     const char *text = Label_text(self);
-    B_Label_updateText(self, text);
+    BOTXT_updateText(self, text);
     return 1;
 }
 
 static void B_Label_setText(Label *self, const char *text)
 {
-    B_Label_updateText(self, text);
+    BOTXT_updateText(self, text);
 }
 
 static void B_Label_destroy(Label *self)
 {
     if (!self) return;
     B_Label *bl = defaultBackend->privateApi->backendObject(self);
-    free(bl->text);
+    free(bl->botxt.text);
     free(bl);
+}
+
+static int B_Button_create(Button *self)
+{
+    B_Button *bb = malloc(sizeof(B_Button));
+    bb->botxt.bo.t = BT_Button;
+    bb->botxt.bo.w = INVALID_HANDLE_VALUE;
+    bb->b = self;
+    bb->botxt.text = 0;
+    defaultBackend->privateApi->setBackendObject(self, bb);
+    const char *text = Button_text(self);
+    BOTXT_updateText(self, text);
+    return 1;
+}
+
+static void B_Button_setText(Button *self, const char *text)
+{
+    BOTXT_updateText(self, text);
+}
+
+static void B_Button_destroy(Button *self)
+{
+    if (!self) return;
+    B_Button *bb = defaultBackend->privateApi->backendObject(self);
+    free(bb->botxt.text);
+    free(bb);
 }
 
 static void B_Control_setBounds(void *self, const Bounds *b)
@@ -511,6 +554,7 @@ static void B_Control_setBounds(void *self, const Bounds *b)
     switch (bo->t)
     {
     case BT_Label:
+    case BT_Button:
         if (bo->w != INVALID_HANDLE_VALUE)
         {
             MoveWindow(bo->w, b->x, b->y, b->width, b->height, 1);
@@ -536,7 +580,7 @@ static HWND findParentControlWindow(void *control)
 }
 
 static int createChildControlWindow(void *control,
-        const wchar_t *wc, DWORD style)
+        const wchar_t *wc, DWORD style, HMENU id)
 {
     BO *bo = defaultBackend->privateApi->backendObject(control);
     Bounds b;
@@ -550,19 +594,35 @@ static int createChildControlWindow(void *control,
     style |= WS_CHILD;
     if (Control_shown(control)) style |= WS_VISIBLE;
     bo->w = CreateWindowExW(0, wc, L"", style, b.x, b.y, b.width, b.height,
-            parent, 0, GetModuleHandleW(0), 0);
+            parent, id, GetModuleHandleW(0), 0);
     return 1;
 }
 
-static int createLabelWindow(void *label)
+static int createTextControlWindow(void *control, HMENU id)
 {
-    if (createChildControlWindow(label, L"Static", SS_CENTER|SS_CENTERIMAGE))
+    wchar_t *wc;
+    DWORD style;
+
+    BOTXT *bt = defaultBackend->privateApi->backendObject(control);
+
+    switch (bt->bo.t)
+    {
+    case BT_Label:
+        wc = L"Static";
+        style = SS_CENTER|SS_CENTERIMAGE;
+        break;
+    case BT_Button:
+        wc = L"Button";
+        style = SS_CENTER|SS_CENTERIMAGE;
+    }
+
+    if (createChildControlWindow(control, wc, style, id))
     {
         initNcm();
-        B_Label *bl = defaultBackend->privateApi->backendObject(label);
-        measureLabelText(label);
-        SendMessageW(bl->bo.w, WM_SETFONT, (WPARAM) bdata.messageFont, 1);
-        SetWindowTextW(bl->bo.w, bl->text);
+        BOTXT *bt = defaultBackend->privateApi->backendObject(control);
+        BOTXT_measureText(control);
+        SendMessageW(bt->bo.w, WM_SETFONT, (WPARAM) bdata.messageFont, 1);
+        SetWindowTextW(bt->bo.w, bt->text);
     }
 }
 
@@ -570,12 +630,20 @@ static void B_Control_setShown(void *self, int shown)
 {
     BO *bo = defaultBackend->privateApi->backendObject(self);
     if (!bo) return;
+    HMENU id = 0;
+
     switch (bo->t)
     {
+    Command *c;
+    B_Command *bc;
+    case BT_Button:
+        c = Button_command(((B_Button *)bo)->b);
+        bc = defaultBackend->privateApi->backendObject(c);
+        id = (HMENU)bc->id;
     case BT_Label:
         if (bo->w == INVALID_HANDLE_VALUE)
         {
-            createLabelWindow(self);
+            createTextControlWindow(self, id);
         }
         break;
     }
@@ -586,6 +654,32 @@ static void B_Control_setShown(void *self, int shown)
     }
 }
 
+static void setTextControlParent(void *self)
+{
+    BOTXT *bt = defaultBackend->privateApi->backendObject(self);
+    HMENU id = 0;
+    if (bt->bo.t == BT_Button)
+    {
+        Command *c = Button_command(((B_Button *)bt)->b);
+        B_Command *bc = defaultBackend->privateApi->backendObject(c);
+        id = (HMENU)bc->id;
+    }
+    if (bt->bo.w == INVALID_HANDLE_VALUE)
+    {
+        createTextControlWindow(self, id);
+    }
+    else
+    {
+        HWND currentParent = GetParent(bt->bo.w);
+        HWND newParent = findParentControlWindow(self);
+        if (currentParent != newParent)
+        {
+            DestroyWindow(bt->bo.w);
+            createTextControlWindow(self, id);
+        }
+    }
+}
+
 static void B_Control_setContainer(void *self, void *container)
 {
     BO *bo = defaultBackend->privateApi->backendObject(self);
@@ -593,20 +687,8 @@ static void B_Control_setContainer(void *self, void *container)
     switch (bo->t)
     {
     case BT_Label:
-        if (bo->w == INVALID_HANDLE_VALUE)
-        {
-            createLabelWindow(self);
-        }
-        else
-        {
-            HWND currentParent = GetParent(bo->w);
-            HWND newParent = findParentControlWindow(self);
-            if (currentParent != newParent)
-            {
-                DestroyWindow(bo->w);
-                createLabelWindow(self);
-            }
-        }
+    case BT_Button:
+        setTextControlParent(self);
         break;
     }
 }
@@ -645,6 +727,11 @@ static Backend win32Backend = {
             .create = B_Label_create,
             .setText = B_Label_setText,
             .destroy = B_Label_destroy,
+        },
+        .button = {
+            .create = B_Button_create,
+            .setText = B_Button_setText,
+            .destroy = B_Button_destroy
         },
     },
     .privateApi = 0,
