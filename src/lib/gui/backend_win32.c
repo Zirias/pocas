@@ -5,6 +5,7 @@
 #include <string.h>
 #include <wchar.h>
 #include <windows.h>
+#include <commctrl.h>
 
 #include <pocas/core/event_win32.h>
 #include <pocas/core/eventloop_win32.h>
@@ -104,6 +105,33 @@ static const char *B_name(void)
 
 SOLOCAL Backend *defaultBackend;
 
+/* hack to enable visual styles without relying on manifest
+ * found at http://stackoverflow.com/a/10444161
+ * modified for unicode-only code */
+ULONG_PTR EnableVisualStyles(void)
+{
+    wchar_t dir[MAX_PATH];
+    ULONG_PTR ulpActivationCookie = FALSE;
+    ACTCTXW actCtx =
+    {
+        sizeof(actCtx),
+        ACTCTX_FLAG_RESOURCE_NAME_VALID
+            | ACTCTX_FLAG_SET_PROCESS_DEFAULT
+            | ACTCTX_FLAG_ASSEMBLY_DIRECTORY_VALID,
+        L"shell32.dll", 0, 0, dir, (LPWSTR)124,
+        0, 0
+    };
+    UINT cch = GetSystemDirectoryW(dir, sizeof(dir) / sizeof(*dir));
+    if (cch >= sizeof(dir) / sizeof(*dir)) { return 0; }
+    dir[cch] = L'\0';
+    ActivateActCtx(CreateActCtxW(&actCtx), &ulpActivationCookie);
+    INITCOMMONCONTROLSEX icx;
+    icx.dwSize = sizeof(INITCOMMONCONTROLSEX);
+    icx.dwICC = ICC_WIN95_CLASSES;
+    InitCommonControlsEx(&icx);
+    return ulpActivationCookie;
+}
+
 static void wordKeyProvider(HashKey *key, const void *word)
 {
     HashKey_set(key, sizeof(WORD), word);
@@ -130,6 +158,7 @@ static void initNcm(void)
 {
     if (!bdata.ncmInitialized)
     {
+        EnableVisualStyles();
         bdata.vi.dwOSVersionInfoSize = sizeof(OSVERSIONINFOW);
         GetVersionExW(&bdata.vi);
         size_t ncmSize = sizeof(NONCLIENTMETRICSW);
