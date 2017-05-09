@@ -21,6 +21,7 @@
 #include <pocas/gui/window.h>
 #include <pocas/gui/menu.h>
 #include <pocas/gui/label.h>
+#include <pocas/gui/textbox.h>
 
 struct bdata
 {
@@ -31,7 +32,10 @@ struct bdata
     OSVERSIONINFOW vi;
     NONCLIENTMETRICSW ncm;
     HFONT messageFont;
+    int minButtonHeight;
     int minButtonWidth;
+    int minTextBoxHeight;
+    int minTextBoxWidth;
 };
 
 enum B_Type
@@ -41,7 +45,8 @@ enum B_Type
     BT_MenuItem,
     BT_Command,
     BT_Label,
-    BT_Button
+    BT_Button,
+    BT_TextBox
 };
 
 typedef struct BO
@@ -90,6 +95,13 @@ typedef struct B_Button
     Button *b;
     WORD id;
 } B_Button;
+
+typedef struct B_TextBox
+{
+    BOTXT botxt;
+    TextBox *t;
+    WORD id;
+} B_TextBox;
 
 static thread_local struct bdata bdata = {
     .controls = 0,
@@ -179,6 +191,9 @@ static void initNcm(void)
                  52, 0, 0, 0, &sampleSize);
         ReleaseDC(0, dc);
         bdata.minButtonWidth = MulDiv(sampleSize.cx, 50, 4 * 52);
+        bdata.minButtonHeight = MulDiv(sampleSize.cy, 14, 8);
+        bdata.minTextBoxWidth = MulDiv(sampleSize.cx, 100, 4 * 52);
+        bdata.minTextBoxHeight = MulDiv(sampleSize.cy, 14, 8);
         bdata.ncmInitialized = 1;
     }
 }
@@ -428,9 +443,11 @@ static void BOTXT_measureText(void *self)
     }
     if (bt->bo.t == BT_Button)
     {
-        int minHeight = MulDiv(textSize.cy, 14, 8);
-        if (textSize.cy < minHeight) textSize.cy = minHeight;
-        textSize.cx += minHeight / 2;
+        if (textSize.cy < bdata.minButtonHeight)
+        {
+            textSize.cy = bdata.minButtonHeight;
+        }
+        textSize.cx += bdata.minButtonHeight / 2;
         if (textSize.cx < bdata.minButtonWidth)
         {
             textSize.cx = bdata.minButtonWidth;
@@ -456,7 +473,8 @@ static void BOTXT_updateText(void *self, const char *text)
     {
         bt->text = 0;
     }
-    if (bt->bo.w != INVALID_HANDLE_VALUE)
+    if ((bt->bo.t == BT_Label || bt->bo.t == BT_Button)
+            && bt->bo.w != INVALID_HANDLE_VALUE)
     {
         BOTXT_measureText(self);
         SetWindowTextW(bt->bo.w, bt->text);
@@ -574,6 +592,34 @@ static void B_Button_destroy(Button *self)
     free(bb);
 }
 
+static int B_TextBox_create(TextBox *self)
+{
+    B_TextBox *bt = malloc(sizeof(B_TextBox));
+    bt->botxt.bo.t = BT_TextBox;
+    bt->botxt.bo.w = INVALID_HANDLE_VALUE;
+    bt->t = self;
+    bt->botxt.text = 0;
+    defaultBackend->privateApi->setBackendObject(self, bt);
+    bt->id = registerControl((BO *)bt);
+    defaultBackend->privateApi->control.setContentSize(
+                self, bdata.minTextBoxWidth, bdata.minTextBoxHeight);
+    return 1;
+}
+
+static void B_TextBox_setText(TextBox *self, const char *text)
+{
+    BOTXT_updateText(self, text);
+}
+
+static void B_TextBox_destroy(TextBox *self)
+{
+    if (!self) return;
+    B_TextBox *bt = defaultBackend->privateApi->backendObject(self);
+    unregisterControl(bt->id);
+    free(bt->botxt.text);
+    free(bt);
+}
+
 static void B_Control_setBounds(void *self, const Bounds *b)
 {
     BO *bo = defaultBackend->privateApi->backendObject(self);
@@ -584,6 +630,7 @@ static void B_Control_setBounds(void *self, const Bounds *b)
     {
     case BT_Label:
     case BT_Button:
+    case BT_TextBox:
         if (bo->w != INVALID_HANDLE_VALUE)
         {
             MoveWindow(bo->w, b->x, b->y, b->width, b->height, 1);
@@ -610,7 +657,7 @@ static HWND findParentControlWindow(void *control)
 }
 
 static int createChildControlWindow(void *control,
-        const wchar_t *wc, DWORD style, HMENU id)
+        const wchar_t *wc, DWORD style, DWORD exStyle, HMENU id)
 {
     BO *bo = defaultBackend->privateApi->backendObject(control);
     Bounds b;
@@ -623,15 +670,16 @@ static int createChildControlWindow(void *control,
     }
     style |= WS_CHILD;
     if (Control_shown(control)) style |= WS_VISIBLE;
-    bo->w = CreateWindowExW(0, wc, L"", style, b.x, b.y, b.width, b.height,
+    bo->w = CreateWindowExW(exStyle, wc, L"", style, b.x, b.y, b.width, b.height,
             parent, id, GetModuleHandleW(0), 0);
     return 1;
 }
 
 static int createTextControlWindow(void *control, HMENU id)
 {
-    wchar_t *wc;
-    DWORD style;
+    wchar_t *wc = 0;
+    DWORD style = 0;
+    DWORD exStyle = 0;
 
     BOTXT *bt = defaultBackend->privateApi->backendObject(control);
 
@@ -647,17 +695,28 @@ static int createTextControlWindow(void *control, HMENU id)
         wc = L"Button";
         style = SS_CENTER;
         break;
+    case BT_TextBox:
+        wc = L"Edit";
+        style = ES_AUTOHSCROLL;
+        exStyle = WS_EX_CLIENTEDGE;
+        break;
     default:
         return 0;
     }
 #pragma GCC diagnostic pop
 
-    if (createChildControlWindow(control, wc, style, id))
+    if (createChildControlWindow(control, wc, style, exStyle, id))
     {
         initNcm();
-        BOTXT_measureText(control);
+        if (bt->bo.t == BT_Label || bt->bo.t == BT_Button)
+        {
+            BOTXT_measureText(control);
+        }
         SendMessageW(bt->bo.w, WM_SETFONT, (WPARAM) bdata.messageFont, 1);
-        SetWindowTextW(bt->bo.w, bt->text);
+        if (bt->text)
+        {
+            SetWindowTextW(bt->bo.w, bt->text);
+        }
         return 1;
     }
     return 0;
@@ -675,7 +734,12 @@ static void B_Control_setShown(void *self, int shown)
     {
     case BT_Button:
         id = (HMENU)(UINT_PTR)((B_Button *)bo)->id;
+        goto createTextControl;
+    case BT_TextBox:
+        id = (HMENU)(UINT_PTR)((B_TextBox *)bo)->id;
+        goto createTextControl;
     case BT_Label:
+        createTextControl:
         if (bo->w == INVALID_HANDLE_VALUE)
         {
             createTextControlWindow(self, id);
@@ -697,6 +761,10 @@ static void setTextControlParent(void *self)
     if (bt->bo.t == BT_Button)
     {
         id = (HMENU)(UINT_PTR)((B_Button *)bt)->id;
+    }
+    else if (bt->bo.t == BT_TextBox)
+    {
+        id = (HMENU)(UINT_PTR)((B_TextBox *)bt)->id;
     }
     if (bt->bo.w == INVALID_HANDLE_VALUE)
     {
@@ -725,6 +793,7 @@ static void B_Control_setContainer(void *self, void *container)
     {
     case BT_Label:
     case BT_Button:
+    case BT_TextBox:
         setTextControlParent(self);
         break;
     }
@@ -766,6 +835,11 @@ static Backend win32Backend = {
             .create = B_Button_create,
             .setText = B_Button_setText,
             .destroy = B_Button_destroy
+        },
+        .textBox = {
+            .create = B_TextBox_create,
+            .setText = B_TextBox_setText,
+            .destroy = B_TextBox_destroy,
         },
     },
     .privateApi = 0,

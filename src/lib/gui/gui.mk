@@ -1,4 +1,5 @@
-pocasgui_MODULES:= backend bounds button command control container lbox messagebox window menu label
+pocasgui_MODULES:= backend bounds button command control container label \
+                   lbox menu messagebox textbox window
 pocasgui_PLATFORMMODULES := backend
 pocasgui_DEFINES:= -DBUILDING_POCAS_GUI
 pocasgui_DEPS:= pocascore

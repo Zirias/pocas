@@ -15,6 +15,7 @@
 #include <pocas/gui/menu.h>
 #include <pocas/gui/messagebox.h>
 #include <pocas/gui/window.h>
+#include <pocas/gui/textbox.h>
 
 #include <pocas/test/decl.h>
 
@@ -80,7 +81,7 @@ SOLOCAL Gui *Gui_create(void)
     MenuItem_setSubMenu(item, fileMenu);
     Menu_addItem(self->mainMenu, item);
 
-    self->mainWindow = Window_create("POCAS Test", 320, 200);
+    self->mainWindow = Window_create("POCAS Test", 480, 160);
     Window_setMenu(self->mainWindow, self->mainMenu);
 
     LBox *vb = LBox_create(BO_Vertical);
@@ -97,10 +98,15 @@ SOLOCAL Gui *Gui_create(void)
     Control_show(btn);
     Control_setMargin(btn, &margin);
     LBox_addControl(hb, btn);
+    TextBox *tb = TextBox_create(TBS_Normal);
+    Control_show(tb);
+    Control_setMargin(tb, &margin);
+    LBox_addControl(hb, tb);
     lbl = Label_create("(3) This is a test!");
     Control_show(lbl);
     Control_setMargin(lbl, &margin);
     LBox_addControl(hb, lbl);
+
 
     margin.bottom = 24;
     self->boundsLabel = Label_create(0);

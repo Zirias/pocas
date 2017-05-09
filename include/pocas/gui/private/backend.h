@@ -42,6 +42,7 @@ typedef struct MenuItem MenuItem;
 typedef struct Command Command;
 typedef struct Label Label;
 typedef struct Button Button;
+typedef struct TextBox TextBox;
 
 typedef struct IBackendControl
 {
@@ -93,6 +94,13 @@ typedef struct IBackendButton
     void (*destroy)(Button *self);
 } IBackendButton;
 
+typedef struct IBackendTextBox
+{
+    int (*create)(TextBox *self);
+    void (*setText)(TextBox *self, const char *text);
+    void (*destroy)(TextBox *self);
+} IBackendTextBox;
+
 typedef struct GuiBackendApi
 {
     const char *(*name)(void);
@@ -103,6 +111,7 @@ typedef struct GuiBackendApi
     IBackendMessageBox messageBox;
     IBackendLabel label;
     IBackendButton button;
+    IBackendTextBox textBox;
 } GuiBackendApi;
 
 struct Backend
