@@ -108,10 +108,10 @@ SOLOCAL Backend *defaultBackend;
 /* hack to enable visual styles without relying on manifest
  * found at http://stackoverflow.com/a/10444161
  * modified for unicode-only code */
-ULONG_PTR EnableVisualStyles(void)
+static int enableVisualStyles(void)
 {
     wchar_t dir[MAX_PATH];
-    ULONG_PTR ulpActivationCookie = FALSE;
+    ULONG_PTR ulpActivationCookie = 0;
     ACTCTXW actCtx =
     {
         sizeof(actCtx),
@@ -129,7 +129,7 @@ ULONG_PTR EnableVisualStyles(void)
     icx.dwSize = sizeof(INITCOMMONCONTROLSEX);
     icx.dwICC = ICC_WIN95_CLASSES;
     InitCommonControlsEx(&icx);
-    return ulpActivationCookie;
+    return (int) ulpActivationCookie;
 }
 
 static void wordKeyProvider(HashKey *key, const void *word)
@@ -158,7 +158,7 @@ static void initNcm(void)
 {
     if (!bdata.ncmInitialized)
     {
-        EnableVisualStyles();
+        enableVisualStyles();
         bdata.vi.dwOSVersionInfoSize = sizeof(OSVERSIONINFOW);
         GetVersionExW(&bdata.vi);
         size_t ncmSize = sizeof(NONCLIENTMETRICSW);
