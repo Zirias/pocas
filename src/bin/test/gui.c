@@ -36,34 +36,6 @@ static void handleCloseCommand(void *selfPtr, EventArgs *args)
     EventArgs_setHandled(args);
 }
 
-static void handleButtonClicked(void *selfPtr, EventArgs *args)
-{
-    Gui *self = selfPtr;
-
-    MessageBoxButton result = MessageBox_show(self->mainWindow,
-            "Button clicked", "Cancel this event?",
-            MBB_Yes|MBB_No, MBS_Question);
-
-    if (result == MBB_Yes)
-    {
-        EventArgs_setHandled(args);
-    }
-}
-
-static void handleMenuItemSelected(void *selfPtr, EventArgs *args)
-{
-    Gui *self = selfPtr;
-
-    MessageBoxButton result = MessageBox_show(self->mainWindow,
-            "Menu item selected", "Cancel this event?",
-            MBB_Yes|MBB_No, MBS_Question);
-
-    if (result == MBB_Yes)
-    {
-        EventArgs_setHandled(args);
-    }
-}
-
 static void handleWindowClosing(void *selfPtr, EventArgs *args)
 {
     Gui *self = selfPtr;
@@ -103,8 +75,6 @@ SOLOCAL Gui *Gui_create(void)
     MenuItem *item = MenuItem_create("E&xit");
     MenuItem_setCommand(item, self->closeCommand);
     Menu_addItem(fileMenu, item);
-    Event_register(MenuItem_selectedEvent(item),
-            self, handleMenuItemSelected);
 
     item = MenuItem_create("&File");
     MenuItem_setSubMenu(item, fileMenu);
@@ -126,8 +96,6 @@ SOLOCAL Gui *Gui_create(void)
     Button_setCommand(btn, self->closeCommand);
     Control_show(btn);
     Control_setMargin(btn, &margin);
-    Event_register(Button_clickedEvent(btn),
-            self, handleButtonClicked);
     LBox_addControl(hb, btn);
     lbl = Label_create("(3) This is a test!");
     Control_show(lbl);
