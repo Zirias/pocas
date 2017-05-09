@@ -30,6 +30,7 @@ struct bdata
     OSVERSIONINFOW vi;
     NONCLIENTMETRICSW ncm;
     HFONT messageFont;
+    int minButtonWidth;
 };
 
 enum B_Type
@@ -141,6 +142,14 @@ static void initNcm(void)
         SystemParametersInfoW(SPI_GETNONCLIENTMETRICS,
                 ncmSize, &bdata.ncm, 0);
         bdata.messageFont = CreateFontIndirectW(&bdata.ncm.lfMessageFont);
+        HDC dc = GetDC(0);
+        SelectObject(dc, (HGDIOBJ) bdata.messageFont);
+        SIZE sampleSize;
+        GetTextExtentExPointA(dc,
+                "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz",
+                 52, 0, 0, 0, &sampleSize);
+        ReleaseDC(0, dc);
+        bdata.minButtonWidth = MulDiv(sampleSize.cx, 50, 4 * 52);
         bdata.ncmInitialized = 1;
     }
 }
@@ -388,11 +397,18 @@ static void BOTXT_measureText(void *self)
         textSize.cx = 0;
         textSize.cy = 0;
     }
-    Extents cp;
-    Control_padding(self, &cp);
+    if (bt->bo.t == BT_Button)
+    {
+        int minHeight = MulDiv(textSize.cy, 14, 8);
+        if (textSize.cy < minHeight) textSize.cy = minHeight;
+        textSize.cx += minHeight / 2;
+        if (textSize.cx < bdata.minButtonWidth)
+        {
+            textSize.cx = bdata.minButtonWidth;
+        }
+    }
     defaultBackend->privateApi->control.setContentSize(self,
-            textSize.cx + cp.left + cp.right,
-            textSize.cy + cp.top + cp.bottom);
+            textSize.cx, textSize.cy);
 }
 
 static void BOTXT_updateText(void *self, const char *text)
@@ -600,7 +616,7 @@ static int createTextControlWindow(void *control, HMENU id)
         break;
     case BT_Button:
         wc = L"Button";
-        style = SS_CENTER|SS_CENTERIMAGE;
+        style = SS_CENTER;
         break;
     default:
         return 0;

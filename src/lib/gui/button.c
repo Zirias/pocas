@@ -26,9 +26,6 @@ SOEXPORT Button *Button_create(const char *text)
     self->text = text ? String_copy(text) : 0;
     self->command = 0;
     self->clicked = Event_create("clicked");
-    Extents padding = {4,4,4,4};
-    Control_setPadding(self, &padding);
-    Control_setMinSize(self, 50, 0);
 
     const Backend *b = Backend_current();
     if (b->backendApi.button.create)

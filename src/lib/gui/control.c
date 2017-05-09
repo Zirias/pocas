@@ -135,24 +135,6 @@ SOEXPORT void Control_padding(const void *self, Extents *e)
     memcpy(e, &c->padding, sizeof(Extents));
 }
 
-SOEXPORT void Control_setPadding(void *self, const Extents *e)
-{
-    Control *c = privateApi.controlObject(self);
-    memcpy(&c->padding, e, sizeof(Extents));
-}
-
-SOEXPORT unsigned int Control_minWidth(const void *self)
-{
-    Control *c = privateApi.controlObject(self);
-    return c->contentWidth > c->minWidth ? c->contentWidth : c->minWidth;
-}
-
-SOEXPORT unsigned int Control_minHeight(const void *self)
-{
-    Control *c = privateApi.controlObject(self);
-    return c->contentHeight > c->minHeight ? c->contentHeight : c->minHeight;
-}
-
 static void fireEventIfMinSizeChanged(void *self,
         unsigned int width, unsigned int height)
 {
@@ -168,6 +150,29 @@ static void fireEventIfMinSizeChanged(void *self,
         Event_raise(c->minSizeChanged, args);
         EventArgs_destroy(args);
     }
+}
+
+SOEXPORT void Control_setPadding(void *self, const Extents *e)
+{
+    Control *c = privateApi.controlObject(self);
+    unsigned int currentMinWidth = Control_minWidth(self);
+    unsigned int currentMinHeight = Control_minHeight(self);
+    memcpy(&c->padding, e, sizeof(Extents));
+    fireEventIfMinSizeChanged(self, currentMinWidth, currentMinHeight);
+}
+
+SOEXPORT unsigned int Control_minWidth(const void *self)
+{
+    Control *c = privateApi.controlObject(self);
+    return c->minWidth ? c->minWidth :
+            (c->contentWidth + c->padding.left + c->padding.right);
+}
+
+SOEXPORT unsigned int Control_minHeight(const void *self)
+{
+    Control *c = privateApi.controlObject(self);
+    return c->minHeight ? c->minHeight :
+            (c->contentHeight + c->padding.top + c->padding.bottom);
 }
 
 SOEXPORT void Control_setMinSize(void *self,
