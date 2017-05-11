@@ -683,7 +683,7 @@ static LRESULT CALLBACK textBoxProc(HWND w, UINT msg, WPARAM wp, LPARAM lp)
 
     case WM_NCCALCSIZE:
         if (!wp) break;
-        LRESULT result = CallWindowProc(bt->baseWndProc, w, msg, wp, lp);
+        LRESULT result = CallWindowProcW(bt->baseWndProc, w, msg, wp, lp);
         NCCALCSIZE_PARAMS *p = (NCCALCSIZE_PARAMS *)lp;
         int height = p->rgrc[0].bottom - p->rgrc[0].top;
         if (height > bdata.messageFontHeight + 3)
@@ -699,7 +699,7 @@ static LRESULT CALLBACK textBoxProc(HWND w, UINT msg, WPARAM wp, LPARAM lp)
         return result;
     }
 
-    return CallWindowProc(bt->baseWndProc, w, msg, wp, lp);
+    return CallWindowProcW(bt->baseWndProc, w, msg, wp, lp);
 }
 
 static int createChildControlWindow(void *control,
