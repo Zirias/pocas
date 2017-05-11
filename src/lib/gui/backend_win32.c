@@ -32,11 +32,12 @@ struct bdata
     OSVERSIONINFOW vi;
     NONCLIENTMETRICSW ncm;
     HFONT messageFont;
-    int minButtonHeight;
-    int minButtonWidth;
-    int minTextBoxHeight;
-    int minTextBoxWidth;
+    int messageFontHeight;
+    int textControlHeight;
+    int buttonWidth;
 };
+
+#define textBoxWidth 100
 
 enum B_Type
 {
@@ -190,10 +191,9 @@ static void initNcm(void)
                 "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz",
                  52, 0, 0, 0, &sampleSize);
         ReleaseDC(0, dc);
-        bdata.minButtonWidth = MulDiv(sampleSize.cx, 50, 4 * 52);
-        bdata.minButtonHeight = MulDiv(sampleSize.cy, 14, 8);
-        bdata.minTextBoxWidth = MulDiv(sampleSize.cx, 100, 4 * 52);
-        bdata.minTextBoxHeight = MulDiv(sampleSize.cy, 14, 8);
+        bdata.messageFontHeight = sampleSize.cy;
+        bdata.buttonWidth = MulDiv(sampleSize.cx, 50, 4 * 52);
+        bdata.textControlHeight = MulDiv(sampleSize.cy, 14, 8);
         bdata.ncmInitialized = 1;
     }
 }
@@ -425,36 +425,29 @@ static MessageBoxButton B_MessageBox_show(const Window *w, const char *title,
     }
 }
 
-static void BOTXT_measureText(void *self)
+static void BOTXT_measure(void *self)
 {
     BOTXT *bt = defaultBackend->privateApi->backendObject(self);
-    SIZE textSize;
-    if (bt->text)
+    SIZE size;
+    if (bt->bo.t == BT_Button)
+    {
+        size.cx = bdata.buttonWidth;
+        size.cy = bdata.textControlHeight;
+    }
+    else if (bt->text)
     {
         HDC dc = GetDC(bt->bo.w);
         SelectObject(dc, (HGDIOBJ) bdata.messageFont);
-        GetTextExtentExPointW(dc, bt->text, wcslen(bt->text), 0, 0, 0, &textSize);
+        GetTextExtentExPointW(dc, bt->text, wcslen(bt->text), 0, 0, 0, &size);
         ReleaseDC(bt->bo.w, dc);
     }
     else
     {
-        textSize.cx = 0;
-        textSize.cy = 0;
-    }
-    if (bt->bo.t == BT_Button)
-    {
-        if (textSize.cy < bdata.minButtonHeight)
-        {
-            textSize.cy = bdata.minButtonHeight;
-        }
-        textSize.cx += bdata.minButtonHeight / 2;
-        if (textSize.cx < bdata.minButtonWidth)
-        {
-            textSize.cx = bdata.minButtonWidth;
-        }
+        size.cx = 0;
+        size.cy = 0;
     }
     defaultBackend->privateApi->control.setContentSize(self,
-            textSize.cx, textSize.cy);
+            size.cx, size.cy);
 }
 
 static void BOTXT_updateText(void *self, const char *text)
@@ -473,10 +466,9 @@ static void BOTXT_updateText(void *self, const char *text)
     {
         bt->text = 0;
     }
-    if ((bt->bo.t == BT_Label || bt->bo.t == BT_Button)
-            && bt->bo.w != INVALID_HANDLE_VALUE)
+    if (bt->bo.t == BT_Label && bt->bo.w != INVALID_HANDLE_VALUE)
     {
-        BOTXT_measureText(self);
+        BOTXT_measure(self);
         SetWindowTextW(bt->bo.w, bt->text);
     }
 }
@@ -602,7 +594,7 @@ static int B_TextBox_create(TextBox *self)
     defaultBackend->privateApi->setBackendObject(self, bt);
     bt->id = registerControl((BO *)bt);
     defaultBackend->privateApi->control.setContentSize(
-                self, bdata.minTextBoxWidth, bdata.minTextBoxHeight);
+                self, textBoxWidth, bdata.textControlHeight);
     return 1;
 }
 
@@ -656,6 +648,51 @@ static HWND findParentControlWindow(void *control)
     return cbo->w;
 }
 
+static LRESULT CALLBACK textBoxProc(HWND w, UINT msg, WPARAM wp, LPARAM lp)
+{
+    WNDPROC defaultProc = (WNDPROC)(UINT_PTR)GetPropW(w, L"defaultProc");
+    RECT *fullClientRect;
+
+    switch (msg)
+    {
+    case WM_ERASEBKGND:
+        fullClientRect = (RECT *)GetPropW(w, L"fullClientRect");
+        if (!fullClientRect) break;
+        WNDCLASSEXW wc;
+        wc.cbSize = sizeof(wc);
+        GetClassInfoExW(0, L"Edit", &wc);
+        HDC dc = GetDC(w);
+        FillRect(dc, fullClientRect, wc.hbrBackground);
+        ReleaseDC(w, dc);
+        return 1;
+
+    case WM_NCCALCSIZE:
+        if (!wp) break;
+        LRESULT result = CallWindowProc(defaultProc, w, msg, wp, lp);
+        NCCALCSIZE_PARAMS *p = (NCCALCSIZE_PARAMS *)lp;
+        int height = p->rgrc[0].bottom - p->rgrc[0].top;
+        if (height > bdata.messageFontHeight + 2)
+        {
+            fullClientRect = (RECT *)GetPropW(w, L"fullClientRect");
+            if (!fullClientRect)
+            {
+                fullClientRect = malloc(sizeof(RECT));
+                SetPropW(w, L"fullClientRect", (HANDLE)fullClientRect);
+            }
+            memcpy(fullClientRect, &(p->rgrc[0]), sizeof(RECT));
+            MapWindowPoints(GetParent(w), w, (LPPOINT) fullClientRect, 2);
+            int offset = (height - bdata.messageFontHeight - 2) / 2;
+            p->rgrc[0].top += offset;
+            p->rgrc[0].bottom -= offset;
+            fullClientRect->top -= offset;
+            fullClientRect->bottom -= offset;
+        }
+        return result;
+    }
+
+    return CallWindowProc(defaultProc, w, msg, wp, lp);
+}
+
 static int createChildControlWindow(void *control,
         const wchar_t *wc, DWORD style, DWORD exStyle, HMENU id)
 {
@@ -672,6 +709,14 @@ static int createChildControlWindow(void *control,
     if (Control_shown(control)) style |= WS_VISIBLE;
     bo->w = CreateWindowExW(exStyle, wc, L"", style, b.x, b.y, b.width, b.height,
             parent, id, GetModuleHandleW(0), 0);
+    if (bo->t == BT_TextBox)
+    {
+        SetPropW(bo->w, L"defaultProc",
+                (HANDLE)SetWindowLongPtr(bo->w, GWLP_WNDPROC,
+                    (LONG_PTR)textBoxProc));
+        SetWindowPos(bo->w, 0, 0, 0, 0, 0,
+                SWP_NOOWNERZORDER|SWP_NOSIZE|SWP_NOMOVE|SWP_FRAMECHANGED);
+    }
     return 1;
 }
 
@@ -693,7 +738,7 @@ static int createTextControlWindow(void *control, HMENU id)
         break;
     case BT_Button:
         wc = L"Button";
-        style = SS_CENTER;
+        style = BS_PUSHBUTTON;
         break;
     case BT_TextBox:
         wc = L"Edit";
@@ -710,7 +755,7 @@ static int createTextControlWindow(void *control, HMENU id)
         initNcm();
         if (bt->bo.t == BT_Label || bt->bo.t == BT_Button)
         {
-            BOTXT_measureText(control);
+            BOTXT_measure(control);
         }
         SendMessageW(bt->bo.w, WM_SETFONT, (WPARAM) bdata.messageFont, 1);
         if (bt->text)

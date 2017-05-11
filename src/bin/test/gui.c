@@ -87,7 +87,7 @@ SOLOCAL Gui *Gui_create(void)
     LBox *vb = LBox_create(BO_Vertical);
     LBox *hb = LBox_create(BO_Horizontal);
 
-    Extents margin = {8,8,8,8};
+    Extents margin = {2,2,2,2};
 
     Label *lbl = Label_create("(1) This is a test!");
     Control_show(lbl);
