@@ -102,6 +102,8 @@ typedef struct B_TextBox
     BOTXT botxt;
     TextBox *t;
     WORD id;
+    WNDPROC baseWndProc;
+    RECT fullClientRect;
 } B_TextBox;
 
 static thread_local struct bdata bdata = {
@@ -586,11 +588,10 @@ static void B_Button_destroy(Button *self)
 
 static int B_TextBox_create(TextBox *self)
 {
-    B_TextBox *bt = malloc(sizeof(B_TextBox));
+    B_TextBox *bt = calloc(1, sizeof(B_TextBox));
     bt->botxt.bo.t = BT_TextBox;
     bt->botxt.bo.w = INVALID_HANDLE_VALUE;
     bt->t = self;
-    bt->botxt.text = 0;
     defaultBackend->privateApi->setBackendObject(self, bt);
     bt->id = registerControl((BO *)bt);
     defaultBackend->privateApi->control.setContentSize(
@@ -650,47 +651,38 @@ static HWND findParentControlWindow(void *control)
 
 static LRESULT CALLBACK textBoxProc(HWND w, UINT msg, WPARAM wp, LPARAM lp)
 {
-    WNDPROC defaultProc = (WNDPROC)(UINT_PTR)GetPropW(w, L"defaultProc");
-    RECT *fullClientRect;
+    B_TextBox *bt = (B_TextBox *)GetPropW(w, L"B_TextBox");
+    WNDCLASSEXW wc;
 
     switch (msg)
     {
     case WM_ERASEBKGND:
-        fullClientRect = (RECT *)GetPropW(w, L"fullClientRect");
-        if (!fullClientRect) break;
-        WNDCLASSEXW wc;
         wc.cbSize = sizeof(wc);
         GetClassInfoExW(0, L"Edit", &wc);
         HDC dc = GetDC(w);
-        FillRect(dc, fullClientRect, wc.hbrBackground);
+        FillRect(dc, &bt->fullClientRect, wc.hbrBackground);
         ReleaseDC(w, dc);
         return 1;
 
     case WM_NCCALCSIZE:
         if (!wp) break;
-        LRESULT result = CallWindowProc(defaultProc, w, msg, wp, lp);
+        LRESULT result = CallWindowProc(bt->baseWndProc, w, msg, wp, lp);
         NCCALCSIZE_PARAMS *p = (NCCALCSIZE_PARAMS *)lp;
         int height = p->rgrc[0].bottom - p->rgrc[0].top;
-        if (height > bdata.messageFontHeight + 2)
+        if (height > bdata.messageFontHeight + 3)
         {
-            fullClientRect = (RECT *)GetPropW(w, L"fullClientRect");
-            if (!fullClientRect)
-            {
-                fullClientRect = malloc(sizeof(RECT));
-                SetPropW(w, L"fullClientRect", (HANDLE)fullClientRect);
-            }
-            memcpy(fullClientRect, &(p->rgrc[0]), sizeof(RECT));
-            MapWindowPoints(GetParent(w), w, (LPPOINT) fullClientRect, 2);
-            int offset = (height - bdata.messageFontHeight - 2) / 2;
+            memcpy(&bt->fullClientRect, &(p->rgrc[0]), sizeof(RECT));
+            MapWindowPoints(GetParent(w), w, (LPPOINT) &bt->fullClientRect, 2);
+            int offset = (height - bdata.messageFontHeight - 3) / 2;
             p->rgrc[0].top += offset;
             p->rgrc[0].bottom -= offset;
-            fullClientRect->top -= offset;
-            fullClientRect->bottom -= offset;
+            bt->fullClientRect.top -= offset;
+            bt->fullClientRect.bottom -= offset;
         }
         return result;
     }
 
-    return CallWindowProc(defaultProc, w, msg, wp, lp);
+    return CallWindowProc(bt->baseWndProc, w, msg, wp, lp);
 }
 
 static int createChildControlWindow(void *control,
@@ -711,9 +703,10 @@ static int createChildControlWindow(void *control,
             parent, id, GetModuleHandleW(0), 0);
     if (bo->t == BT_TextBox)
     {
-        SetPropW(bo->w, L"defaultProc",
-                (HANDLE)SetWindowLongPtr(bo->w, GWLP_WNDPROC,
-                    (LONG_PTR)textBoxProc));
+        B_TextBox *bt = (B_TextBox *)bo;
+        bt->baseWndProc = (WNDPROC)SetWindowLongPtrW(bo->w, GWLP_WNDPROC,
+                (LONG_PTR)textBoxProc);
+        SetPropW(bo->w, L"B_TextBox", (HANDLE)bt);
         SetWindowPos(bo->w, 0, 0, 0, 0, 0,
                 SWP_NOOWNERZORDER|SWP_NOSIZE|SWP_NOMOVE|SWP_FRAMECHANGED);
     }
