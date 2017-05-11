@@ -192,6 +192,7 @@ int main(int argc, char **argv)
 
     if (interactive)
     {
+        List_destroy(positionalArgs);
         Gui *gui = Gui_create();
         int rc = Gui_run(gui);
         Gui_destroy(gui);

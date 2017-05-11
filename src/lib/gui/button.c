@@ -81,6 +81,7 @@ SOEXPORT void Button_destroy(Button *self)
     if (b->backendApi.button.destroy)
         b->backendApi.button.destroy(self);
     Event_destroy(self->clicked);
+    privateApi.control.destroy(self);
     free(self->text);
     free(self);
 }

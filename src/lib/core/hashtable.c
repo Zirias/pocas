@@ -200,6 +200,7 @@ SOEXPORT int HashTable_remove(HashTable *self, const void *key)
             if (prev) prev->next = entry->next;
             else self->buckets[bucket] = entry->next;
             if (self->entryDeleter) self->entryDeleter(entry->valObject);
+            free(entry->key.data);
             free(entry);
             --self->count;
             free(hkey.data);
@@ -224,6 +225,7 @@ SOEXPORT void HashTable_destroy(HashTable *self)
         {
             HashTableEntry *next = entry->next;
             if (self->entryDeleter) self->entryDeleter(entry->valObject);
+            free(entry->key.data);
             free(entry);
             entry = next;
         }

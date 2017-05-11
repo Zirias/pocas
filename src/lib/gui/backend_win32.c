@@ -188,11 +188,12 @@ static void initNcm(void)
                 ncmSize, &bdata.ncm, 0);
         bdata.messageFont = CreateFontIndirectW(&bdata.ncm.lfMessageFont);
         HDC dc = GetDC(0);
-        SelectObject(dc, (HGDIOBJ) bdata.messageFont);
+        HGDIOBJ oldFont = SelectObject(dc, (HGDIOBJ) bdata.messageFont);
         SIZE sampleSize;
         GetTextExtentExPointA(dc,
                 "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz",
                  52, 0, 0, 0, &sampleSize);
+        SelectObject(dc, oldFont);
         ReleaseDC(0, dc);
         bdata.messageFontHeight = sampleSize.cy;
         bdata.buttonWidth = MulDiv(sampleSize.cx, 50, 4 * 52);
@@ -455,8 +456,9 @@ static void BOTXT_measure(void *self)
     else if (bt->text)
     {
         HDC dc = GetDC(bt->bo.w);
-        SelectObject(dc, (HGDIOBJ) bdata.messageFont);
+        HGDIOBJ oldFont = SelectObject(dc, (HGDIOBJ) bdata.messageFont);
         GetTextExtentExPointW(dc, bt->text, wcslen(bt->text), 0, 0, 0, &size);
+        SelectObject(dc, oldFont);
         ReleaseDC(bt->bo.w, dc);
     }
     else
