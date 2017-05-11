@@ -94,9 +94,10 @@ typedef struct IBackendButton
     void (*destroy)(Button *self);
 } IBackendButton;
 
+typedef void (*TextBox_textChanged)(TextBox *self, const char *text);
 typedef struct IBackendTextBox
 {
-    int (*create)(TextBox *self);
+    int (*create)(TextBox *self, TextBox_textChanged changed);
     void (*setText)(TextBox *self, const char *text);
     void (*destroy)(TextBox *self);
 } IBackendTextBox;

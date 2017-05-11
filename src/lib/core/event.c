@@ -59,6 +59,11 @@ SOEXPORT void Event_unregister(Event *self, void *object, EventHandler handler)
     List_removeMatching(self->handlers, handlerElementSelector, &data);
 }
 
+SOEXPORT int Event_count(const Event *self)
+{
+    return List_length(self->handlers);
+}
+
 SOEXPORT void Event_clear(Event *self)
 {
     List_clear(self->handlers);

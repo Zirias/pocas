@@ -102,6 +102,7 @@ typedef struct B_TextBox
     BOTXT botxt;
     TextBox *t;
     WORD id;
+    TextBox_textChanged changed;
     WNDPROC baseWndProc;
     RECT fullClientRect;
 } B_TextBox;
@@ -253,6 +254,21 @@ static void handleWin32MessageEvent(void *w, EventArgs *args)
             case BT_MenuItem:
                 MenuItem_select(((B_MenuItem *)bo)->m);
                 EventArgs_setHandled(args);
+                break;
+            case BT_TextBox:
+                if (HIWORD(mei->wp) == EN_CHANGE)
+                {
+                    B_TextBox *bt = (B_TextBox *)bo;
+                    free(bt->botxt.text);
+                    int textsize = GetWindowTextLengthW(bo->w) + 1;
+                    bt->botxt.text = calloc(textsize, sizeof(wchar_t));
+                    GetWindowTextW(bo->w, bt->botxt.text, textsize);
+                    char *converted = malloc(2 * textsize);
+                    WideCharToMultiByte(CP_UTF8, 0, bt->botxt.text, -1, converted, 2 * textsize, 0, 0);
+                    bt->changed(bt->t, converted);
+                    free(converted);
+                    EventArgs_setHandled(args);
+                }
                 break;
             }
 #pragma GCC diagnostic pop
@@ -586,12 +602,13 @@ static void B_Button_destroy(Button *self)
     free(bb);
 }
 
-static int B_TextBox_create(TextBox *self)
+static int B_TextBox_create(TextBox *self, TextBox_textChanged changed)
 {
     B_TextBox *bt = calloc(1, sizeof(B_TextBox));
     bt->botxt.bo.t = BT_TextBox;
     bt->botxt.bo.w = INVALID_HANDLE_VALUE;
     bt->t = self;
+    bt->changed = changed;
     defaultBackend->privateApi->setBackendObject(self, bt);
     bt->id = registerControl((BO *)bt);
     defaultBackend->privateApi->control.setContentSize(

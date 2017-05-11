@@ -50,6 +50,14 @@ static void handleWindowClosing(void *selfPtr, EventArgs *args)
     }
 }
 
+static void handleTextChanged(void *selfPtr, EventArgs *args)
+{
+    (void)selfPtr;
+    const char *newText = EventArgs_evInfo(args);
+    printf("new text: %s\n", newText);
+    fflush(stdout);
+}
+
 static void showSize(Gui *self, Bounds *b)
 {
     char labeltext[20];
@@ -125,6 +133,9 @@ SOLOCAL Gui *Gui_create(void)
 
     Event_register(Container_resizedEvent(self->mainWindow),
             self, handleContainerResized);
+
+    Event_register(TextBox_textChangedEvent(tb),
+            self, handleTextChanged);
 
     return self;
 }

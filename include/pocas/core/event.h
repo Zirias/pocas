@@ -19,6 +19,7 @@ typedef void (*EventHandler)(void *self, EventArgs *args);
 DECLEXPORT Event *Event_create(const char *name);
 DECLEXPORT void Event_register(Event *self, void *object, EventHandler handler);
 DECLEXPORT void Event_unregister(Event *self, void *object, EventHandler handler);
+DECLEXPORT int Event_count(const Event *self);
 DECLEXPORT void Event_clear(Event *self);
 DECLEXPORT void Event_raise(const Event *self, EventArgs *args);
 DECLEXPORT const char *Event_name(const Event *self);

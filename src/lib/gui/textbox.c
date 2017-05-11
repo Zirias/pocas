@@ -16,6 +16,21 @@ struct TextBox
     Event *textChanged;
 };
 
+static void updateText(TextBox *self, const char *text)
+{
+    char *oldText = self->text;
+    self->text = text ? String_copy(text) : 0;
+    if ((text && !oldText) || (oldText && !text)
+        || (oldText && text && strcmp(oldText, text)))
+    {
+        EventArgs *args = EventArgs_create(
+                self->textChanged, self, self->text);
+        Event_raise(self->textChanged, args);
+        EventArgs_destroy(args);
+    }
+    free(oldText);
+}
+
 SOEXPORT TextBox *TextBox_create(TextBoxStyle style)
 {
     TextBox *self = malloc(sizeof(TextBox));
@@ -27,7 +42,7 @@ SOEXPORT TextBox *TextBox_create(TextBoxStyle style)
 
     const Backend *b = Backend_current();
     if (b->backendApi.textBox.create)
-        b->backendApi.textBox.create(self);
+        b->backendApi.textBox.create(self, updateText);
 
     return self;
 }
@@ -44,17 +59,10 @@ SOEXPORT const char *TextBox_text(const TextBox *self)
 
 SOEXPORT void TextBox_setText(TextBox *self, const char *text)
 {
-    char *oldText = self->text;
-    self->text = text ? String_copy(text) : 0;
-    if ((text && !oldText) || (oldText && !text)
-        || (oldText && text && strcmp(oldText, text)))
-    {
-        EventArgs *args = EventArgs_create(
-                self->textChanged, self, self->text);
-        Event_raise(self->textChanged, args);
-        EventArgs_destroy(args);
-    }
-    free(oldText);
+    updateText(self, text);
+    const Backend *b = Backend_current();
+    if (b->backendApi.textBox.setText)
+        b->backendApi.textBox.setText(self, text);
 }
 
 SOEXPORT Event *TextBox_textChangedEvent(const TextBox *self)
