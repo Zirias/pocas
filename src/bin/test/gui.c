@@ -27,7 +27,13 @@ struct Gui
     Window *mainWindow;
     Menu *mainMenu;
     Command *closeCommand;
+    LBox *hbox;
+    LBox *vbox;
     Label *boundsLabel;
+    Label *test1Label;
+    Label *test2Label;
+    Button *testButton;
+    TextBox *testTextBox;
 };
 
 static void handleCloseCommand(void *selfPtr, EventArgs *args)
@@ -92,38 +98,37 @@ SOLOCAL Gui *Gui_create(void)
     self->mainWindow = Window_create("POCAS Test", 480, 160);
     Window_setMenu(self->mainWindow, self->mainMenu);
 
-    LBox *vb = LBox_create(BO_Vertical);
-    LBox *hb = LBox_create(BO_Horizontal);
+    self->vbox = LBox_create(BO_Vertical);
+    self->hbox = LBox_create(BO_Horizontal);
 
     Extents margin = {2,2,2,2};
 
-    Label *lbl = Label_create("(1) This is a test!");
-    Control_show(lbl);
-    Control_setMargin(lbl, &margin);
-    LBox_addControl(hb, lbl);
-    Button *btn = Button_create("(2) ♫ 42");
-    Button_setCommand(btn, self->closeCommand);
-    Control_show(btn);
-    Control_setMargin(btn, &margin);
-    LBox_addControl(hb, btn);
-    TextBox *tb = TextBox_create(TBS_Normal);
-    Control_show(tb);
-    Control_setMargin(tb, &margin);
-    LBox_addControl(hb, tb);
-    lbl = Label_create("(3) This is a test!");
-    Control_show(lbl);
-    Control_setMargin(lbl, &margin);
-    LBox_addControl(hb, lbl);
-
+    self->test1Label = Label_create("(1) This is a test!");
+    Control_show(self->test1Label);
+    Control_setMargin(self->test1Label, &margin);
+    LBox_addControl(self->hbox, self->test1Label);
+    self->testButton = Button_create("Exit");
+    Button_setCommand(self->testButton, self->closeCommand);
+    Control_show(self->testButton);
+    Control_setMargin(self->testButton, &margin);
+    LBox_addControl(self->hbox, self->testButton);
+    self->testTextBox = TextBox_create(TBS_Normal);
+    Control_show(self->testTextBox);
+    Control_setMargin(self->testTextBox, &margin);
+    LBox_addControl(self->hbox, self->testTextBox);
+    self->test2Label = Label_create("(2) ♫ 42");
+    Control_show(self->test2Label);
+    Control_setMargin(self->test2Label, &margin);
+    LBox_addControl(self->hbox, self->test2Label);
 
     margin.bottom = 24;
     self->boundsLabel = Label_create(0);
     Control_show(self->boundsLabel);
     Control_setMargin(self->boundsLabel, &margin);
-    LBox_addControl(vb, self->boundsLabel);
-    LBox_addControl(vb, hb);
+    LBox_addControl(self->vbox, self->boundsLabel);
+    LBox_addControl(self->vbox, self->hbox);
 
-    Container_setControl(self->mainWindow, vb);
+    Container_setControl(self->mainWindow, self->vbox);
 
     Event_register(Command_invokedEvent(self->closeCommand),
             self, handleCloseCommand);
@@ -134,7 +139,7 @@ SOLOCAL Gui *Gui_create(void)
     Event_register(Container_resizedEvent(self->mainWindow),
             self, handleContainerResized);
 
-    Event_register(TextBox_textChangedEvent(tb),
+    Event_register(TextBox_textChangedEvent(self->testTextBox),
             self, handleTextChanged);
 
     return self;
@@ -152,9 +157,39 @@ SOLOCAL int Gui_run(Gui *self)
 SOLOCAL void Gui_dispose(Gui *self)
 {
     if (self->disposed) return;
-    Window_destroy(self->mainWindow);
+
+    Event_unregister(Command_invokedEvent(self->closeCommand),
+            self, handleCloseCommand);
+
+    Event_unregister(Window_closingEvent(self->mainWindow),
+            self, handleWindowClosing);
+
+    Event_unregister(Container_resizedEvent(self->mainWindow),
+            self, handleContainerResized);
+
+    Event_unregister(TextBox_textChangedEvent(self->testTextBox),
+            self, handleTextChanged);
+
+    LBox_removeControl(self->hbox, self->test2Label);
+    LBox_removeControl(self->hbox, self->testTextBox);
+    LBox_removeControl(self->hbox, self->testButton);
+    LBox_removeControl(self->hbox, self->test1Label);
+    LBox_removeControl(self->vbox, self->hbox);
+    LBox_removeControl(self->vbox, self->boundsLabel);
+    Container_setControl(self->mainWindow, 0);
+
+    TextBox_destroy(self->testTextBox);
+    Button_destroy(self->testButton);
+    Label_destroy(self->test2Label);
+    Label_destroy(self->test1Label);
+    Label_destroy(self->boundsLabel);
+    LBox_destroy(self->hbox);
+    LBox_destroy(self->vbox);
+
     Menu_destroy(self->mainMenu);
     Command_destroy(self->closeCommand);
+    Window_destroy(self->mainWindow);
+
     self->disposed = 1;
 }
 

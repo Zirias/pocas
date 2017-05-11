@@ -35,8 +35,9 @@ SOEXPORT void *Container_control(const void *self)
 SOEXPORT void Container_setControl(void *self, void *control)
 {
     Container *c = privateApi.containerObject(self);
+    if (c->control) privateApi.control.setContainer(c->control, 0);
     c->control = control;
-    privateApi.control.setContainer(control, self);
+    if (control) privateApi.control.setContainer(control, self);
 }
 
 SOEXPORT void Container_bounds(const void *self, Bounds *b)
