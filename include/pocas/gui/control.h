@@ -56,6 +56,8 @@ DECLEXPORT void Control_setEnabled(void *self, int enabled);
 #define Control_enable(c) Control_setEnabled((c),1)
 #define Control_disable(c) Control_setEnabled((c),0)
 
+DECLEXPORT void Control_focus(void *self);
+
 DECLEXPORT Event *Control_resizedEvent(const void *self);
 DECLEXPORT Event *Control_shownChangedEvent(const void *self);
 DECLEXPORT Event *Control_containerChangedEvent(const void *self);

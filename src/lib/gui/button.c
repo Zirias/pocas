@@ -13,16 +13,18 @@
 struct Button
 {
     GuiClass gc;
+    ButtonStyle style;
     char *text;
     Command *command;
     Event *clicked;
 };
 
-SOEXPORT Button *Button_create(const char *text)
+SOEXPORT Button *Button_create(ButtonStyle style, const char *text)
 {
     Button *self = malloc(sizeof(Button));
     GCINIT(self);
     privateApi.control.create(self);
+    self->style = style;
     self->text = text ? String_copy(text) : 0;
     self->command = 0;
     self->clicked = Event_create("clicked");
@@ -31,6 +33,11 @@ SOEXPORT Button *Button_create(const char *text)
     if (b->backendApi.button.create)
         b->backendApi.button.create(self);
     return self;
+}
+
+SOEXPORT ButtonStyle Button_style(const Button *self)
+{
+    return self->style;
 }
 
 SOEXPORT const char *Button_text(const Button *self)

@@ -13,6 +13,7 @@ struct win32EventLoopData
     Win32MsgEvInfo msgEvInfo;
     Event *win32HndlEvent;
     Event *win32MsgEvent;
+    Event *win32RawMsgEvent;
     HANDLE *handles;
     DWORD maxHandles;
     DWORD numHandles;
@@ -29,6 +30,7 @@ static void init(void)
         data.initialized = 1;
         data.win32HndlEvent = Event_create("win32Hndl");
         data.win32MsgEvent = Event_create("win32Msg");
+        data.win32RawMsgEvent = Event_create("win32RawMsg");
         data.processMessages = 0;
     }
 }
@@ -43,6 +45,12 @@ SOEXPORT Event *EventLoop_win32MsgEvent()
 {
     init();
     return data.win32MsgEvent;
+}
+
+SOEXPORT Event *EventLoop_win32RawMsgEvent()
+{
+    init();
+    return data.win32RawMsgEvent;
 }
 
 SOEXPORT int EventLoop_processEvents(int timeout)
@@ -82,8 +90,14 @@ SOEXPORT int EventLoop_processEvents(int timeout)
                 EventLoop_exit((int)data.msg.wParam);
                 return nevents;
             }
-            TranslateMessage(&data.msg);
-            DispatchMessageW(&data.msg);
+            EventArgs *args = EventArgs_create(data.win32RawMsgEvent, 0, &data.msg);
+            Event_raise(data.win32RawMsgEvent, args);
+            if (!EventArgs_handled(args))
+            {
+                TranslateMessage(&data.msg);
+                DispatchMessageW(&data.msg);
+            }
+            EventArgs_destroy(args);
         }
         return nevents;
     }
@@ -119,11 +133,12 @@ SOEXPORT LRESULT CALLBACK EventLoop_win32WndProc(HWND wnd, UINT msg, WPARAM wp, 
     data.msgEvInfo.msg = msg;
     data.msgEvInfo.wp = wp;
     data.msgEvInfo.lp = lp;
+    data.msgEvInfo.result = 1;
     EventArgs *args = EventArgs_create(data.win32MsgEvent, 0, &data.msgEvInfo);
     Event_raise(data.win32MsgEvent, args);
     int handled = EventArgs_handled(args);
     EventArgs_destroy(args);
-    return handled ? 0 : DefWindowProcW(wnd, msg, wp, lp);
+    return handled ? data.msgEvInfo.result : DefWindowProcW(wnd, msg, wp, lp);
 }
 
 SOEXPORT void EventLoop_setProcessMessages(int processMessages)

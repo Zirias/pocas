@@ -232,6 +232,13 @@ SOEXPORT void Control_setEnabled(void *self, int enabled)
         be->backendApi.control.setEnabled(self, c->enabled);
 }
 
+SOEXPORT void Control_focus(void *self)
+{
+    const Backend *be = Backend_current();
+    if (be->backendApi.control.focus)
+        be->backendApi.control.focus(self);
+}
+
 static void updateBounds(void *self, Bounds *nb)
 {
     Control *c = privateApi.controlObject(self);

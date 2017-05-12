@@ -50,6 +50,7 @@ typedef struct IBackendControl
     void (*setBounds)(void *control, const Bounds *b);
     void (*setShown)(void *control, int shown);
     void (*setEnabled)(void *control, int enabled);
+    void (*focus)(void *control);
 } IBackendControl;
 
 typedef struct IBackendWindow

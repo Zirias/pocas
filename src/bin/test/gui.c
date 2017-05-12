@@ -6,7 +6,6 @@
 
 #include <pocas/gui/bounds.h>
 #include <pocas/gui/button.h>
-#include <pocas/gui/command.h>
 #include <pocas/gui/container.h>
 #include <pocas/gui/control.h>
 #include <pocas/gui/extents.h>
@@ -26,7 +25,6 @@ struct Gui
     int disposed;
     Window *mainWindow;
     Menu *mainMenu;
-    Command *closeCommand;
     LBox *hbox;
     LBox *vbox;
     Label *boundsLabel;
@@ -36,13 +34,19 @@ struct Gui
     TextBox *testTextBox;
 
     Window *aboutBox;
+
+    Window *changeButtonText;
+    LBox *dlgBox;
+    Label *dlgLabel;
+    TextBox *dlgTextBox;
+    Button *dlgButton;
 };
 
-static void handleCloseCommand(void *selfPtr, EventArgs *args)
+static void handleExitSelected(void *selfPtr, EventArgs *args)
 {
+    (void)args;
     Gui *self = selfPtr;
     Window_close(self->mainWindow);
-    EventArgs_setHandled(args);
 }
 
 static void handleWindowClosing(void *selfPtr, EventArgs *args)
@@ -94,12 +98,44 @@ static void hideSender(void *selfPtr, EventArgs *args)
     EventArgs_setHandled(args);
 }
 
+static void showChangeDialog(void *selfPtr, EventArgs *args)
+{
+    (void)args;
+    Gui *self = selfPtr;
+
+    TextBox_setText(self->dlgTextBox, Button_text(self->testButton));
+    const char *text = Window_showDialog(self->changeButtonText);
+    if (text)
+    {
+        Button_setText(self->testButton, text);
+    }
+}
+
+static void hideChangeDialog(void *selfPtr, EventArgs *args)
+{
+    Gui *self = selfPtr;
+
+    const char *text = 0;
+    if (EventArgs_sender(args) == self->dlgButton)
+    {
+        text = TextBox_text(self->dlgTextBox);
+    }
+    Window_closeDialog(self->changeButtonText, (char *)text);
+    EventArgs_setHandled(args);
+}
+
+static void initChangeDialog(void *selfPtr, EventArgs *args)
+{
+    (void)args;
+    Gui *self = selfPtr;
+    Control_focus(self->dlgTextBox);
+}
+
 SOLOCAL Gui *Gui_create(void)
 {
     Gui *self = malloc(sizeof(Gui));
     self->disposed = 0;
 
-    self->closeCommand = Command_create();
     self->mainMenu = Menu_create();
     Menu *fileMenu = Menu_create();
 
@@ -108,7 +144,7 @@ SOLOCAL Gui *Gui_create(void)
     Menu_addItem(fileMenu, item);
 
     item = MenuItem_create("E&xit");
-    MenuItem_setCommand(item, self->closeCommand);
+    Event_register(MenuItem_selectedEvent(item), self, handleExitSelected);
     Menu_addItem(fileMenu, item);
 
     item = MenuItem_create("&File");
@@ -127,8 +163,7 @@ SOLOCAL Gui *Gui_create(void)
     Control_show(self->test1Label);
     Control_setMargin(self->test1Label, &margin);
     LBox_addControl(self->hbox, self->test1Label);
-    self->testButton = Button_create("Exit");
-    Button_setCommand(self->testButton, self->closeCommand);
+    self->testButton = Button_create(BS_Normal, "Change me");
     Control_show(self->testButton);
     Control_setMargin(self->testButton, &margin);
     LBox_addControl(self->hbox, self->testButton);
@@ -150,8 +185,8 @@ SOLOCAL Gui *Gui_create(void)
 
     Container_setControl(self->mainWindow, self->vbox);
 
-    Event_register(Command_invokedEvent(self->closeCommand),
-            self, handleCloseCommand);
+    Event_register(Button_clickedEvent(self->testButton),
+            self, showChangeDialog);
 
     Event_register(Window_closingEvent(self->mainWindow),
             self, handleWindowClosing);
@@ -167,6 +202,35 @@ SOLOCAL Gui *Gui_create(void)
 
     Event_register(Window_closingEvent(self->aboutBox),
             self, hideSender);
+
+    self->changeButtonText = Window_create(self->mainWindow,
+            "Change button text", 360, 60);
+    margin.bottom = 2;
+    margin.left = 4;
+    self->dlgBox = LBox_create(BO_Horizontal);
+    self->dlgLabel = Label_create("Text:");
+    Control_show(self->dlgLabel);
+    Control_setMargin(self->dlgLabel, &margin);
+    LBox_addControl(self->dlgBox, self->dlgLabel);
+    self->dlgTextBox = TextBox_create(TBS_Normal);
+    Control_show(self->dlgTextBox);
+    Control_setMinSize(self->dlgTextBox, 200, 0);
+    Control_setMargin(self->dlgTextBox, &margin);
+    LBox_addControl(self->dlgBox, self->dlgTextBox);
+    self->dlgButton = Button_create(BS_Default, "Apply");
+    Control_show(self->dlgButton);
+    Control_setMargin(self->dlgButton, &margin);
+    LBox_addControl(self->dlgBox, self->dlgButton);
+    Container_setControl(self->changeButtonText, self->dlgBox);
+
+    Event_register(Button_clickedEvent(self->dlgButton),
+            self, hideChangeDialog);
+
+    Event_register(Window_closingEvent(self->changeButtonText),
+            self, hideChangeDialog);
+
+    Event_register(Window_dialogShownEvent(self->changeButtonText),
+            self, initChangeDialog);
 
     return self;
 }
@@ -184,17 +248,17 @@ SOLOCAL void Gui_dispose(Gui *self)
 {
     if (self->disposed) return;
 
-    Event_unregister(Command_invokedEvent(self->closeCommand),
-            self, handleCloseCommand);
+    LBox_removeControl(self->dlgBox, self->dlgButton);
+    LBox_removeControl(self->dlgBox, self->dlgTextBox);
+    LBox_removeControl(self->dlgBox, self->dlgLabel);
+    Container_setControl(self->changeButtonText, 0);
 
-    Event_unregister(Window_closingEvent(self->mainWindow),
-            self, handleWindowClosing);
+    Button_destroy(self->dlgButton);
+    TextBox_destroy(self->dlgTextBox);
+    Label_destroy(self->dlgLabel);
+    LBox_destroy(self->dlgBox);
 
-    Event_unregister(Container_resizedEvent(self->mainWindow),
-            self, handleContainerResized);
-
-    Event_unregister(TextBox_textChangedEvent(self->testTextBox),
-            self, handleTextChanged);
+    Window_destroy(self->changeButtonText);
 
     Window_destroy(self->aboutBox);
 
@@ -215,7 +279,6 @@ SOLOCAL void Gui_dispose(Gui *self)
     LBox_destroy(self->vbox);
 
     Menu_destroy(self->mainMenu);
-    Command_destroy(self->closeCommand);
     Window_destroy(self->mainWindow);
 
     self->disposed = 1;

@@ -28,6 +28,7 @@ struct bdata
     HashTable *controls;
     WORD nextId;
     size_t nWindows;
+    HWND activeWindow;
     int ncmInitialized;
     OSVERSIONINFOW vi;
     NONCLIENTMETRICSW ncm;
@@ -104,7 +105,7 @@ typedef struct B_TextBox
     WORD id;
     TextBox_textChanged changed;
     WNDPROC baseWndProc;
-    RECT fullClientRect;
+    int vshrink;
 } B_TextBox;
 
 static thread_local struct bdata bdata = {
@@ -112,6 +113,7 @@ static thread_local struct bdata bdata = {
     .nextId = 0x100,
     .nWindows = 0,
     .ncmInitialized = 0,
+    .activeWindow = INVALID_HANDLE_VALUE,
 };
 
 static const char *B_name(void)
@@ -220,6 +222,18 @@ static void updateWindowClientSize(B_Window *self)
     }
 }
 
+static void handleWin32RawMessageEvent(void *w, EventArgs *args)
+{
+    B_Window *self = w;
+    if (bdata.activeWindow != self->bo.w) return;
+
+    MSG *msg = EventArgs_evInfo(args);
+    if (IsDialogMessageW(self->bo.w, msg))
+    {
+        EventArgs_setHandled(args);
+    }
+}
+
 static void handleWin32MessageEvent(void *w, EventArgs *args)
 {
     B_Window *self = w;
@@ -237,6 +251,11 @@ static void handleWin32MessageEvent(void *w, EventArgs *args)
     case WM_CLOSE:
         Window_close(self->w);
         EventArgs_setHandled(args);
+        break;
+
+    case WM_ACTIVATE:
+        if (mei->wp == 0) bdata.activeWindow = INVALID_HANDLE_VALUE;
+        bdata.activeWindow = self->bo.w;
         break;
 
     case WM_COMMAND:
@@ -331,6 +350,7 @@ static int B_Window_create(Window *self)
             winrect.right - winrect.left, winrect.bottom - winrect.top,
             pw, 0, bw->wc.hInstance, 0);
     Event_register(EventLoop_win32MsgEvent(), bw, handleWin32MessageEvent);
+    Event_register(EventLoop_win32RawMsgEvent(), bw, handleWin32RawMessageEvent);
     EventLoop_setProcessMessages(++bdata.nWindows);
     return 1;
 }
@@ -355,6 +375,7 @@ static void B_Window_destroy(Window *self)
     B_Window *bw = defaultBackend->privateApi->backendObject(self);
     DestroyWindow(bw->bo.w);
     UnregisterClassW(bw->name, bw->wc.hInstance);
+    Event_unregister(EventLoop_win32RawMsgEvent(), bw, handleWin32RawMessageEvent);
     Event_unregister(EventLoop_win32MsgEvent(), bw, handleWin32MessageEvent);
     free(bw->name);
     free(bw);
@@ -493,9 +514,12 @@ static void BOTXT_updateText(void *self, const char *text)
     {
         bt->text = 0;
     }
-    if (bt->bo.t == BT_Label && bt->bo.w != INVALID_HANDLE_VALUE)
+    if (bt->bo.w != INVALID_HANDLE_VALUE)
     {
-        BOTXT_measure(self);
+        if (bt->bo.t == BT_Label)
+        {
+            BOTXT_measure(self);
+        }
         SetWindowTextW(bt->bo.w, bt->text);
     }
 }
@@ -685,8 +709,12 @@ static LRESULT CALLBACK textBoxProc(HWND w, UINT msg, WPARAM wp, LPARAM lp)
     case WM_ERASEBKGND:
         wc.cbSize = sizeof(wc);
         GetClassInfoExW(0, L"Edit", &wc);
+        RECT cr;
+        GetClientRect(w, &cr);
+        cr.top -= bt->vshrink;
+        cr.bottom += bt->vshrink;
         HDC dc = GetDC(w);
-        FillRect(dc, &bt->fullClientRect, wc.hbrBackground);
+        FillRect(dc, &cr, wc.hbrBackground);
         ReleaseDC(w, dc);
         return 1;
 
@@ -695,15 +723,12 @@ static LRESULT CALLBACK textBoxProc(HWND w, UINT msg, WPARAM wp, LPARAM lp)
         LRESULT result = CallWindowProcW(bt->baseWndProc, w, msg, wp, lp);
         NCCALCSIZE_PARAMS *p = (NCCALCSIZE_PARAMS *)lp;
         int height = p->rgrc[0].bottom - p->rgrc[0].top;
+        bt->vshrink = 0;
         if (height > bdata.messageFontHeight + 3)
         {
-            memcpy(&bt->fullClientRect, &(p->rgrc[0]), sizeof(RECT));
-            MapWindowPoints(GetParent(w), w, (LPPOINT) &bt->fullClientRect, 2);
-            int offset = (height - bdata.messageFontHeight - 3) / 2;
-            p->rgrc[0].top += offset;
-            p->rgrc[0].bottom -= offset;
-            bt->fullClientRect.top -= offset;
-            bt->fullClientRect.bottom -= offset;
+            bt->vshrink = (height - bdata.messageFontHeight - 3) / 2;
+            p->rgrc[0].top += bt->vshrink;
+            p->rgrc[0].bottom -= bt->vshrink;
         }
         return result;
     }
@@ -757,11 +782,20 @@ static int createTextControlWindow(void *control, HMENU id)
         break;
     case BT_Button:
         wc = L"Button";
-        style = BS_PUSHBUTTON;
+        switch (Button_style(control))
+        {
+        style = BS_TEXT|WS_TABSTOP;
+        case BS_Normal:
+            style |= BS_PUSHBUTTON;
+            break;
+        case BS_Default:
+            style |= BS_DEFPUSHBUTTON;
+            break;
+        }
         break;
     case BT_TextBox:
         wc = L"Edit";
-        style = ES_AUTOHSCROLL;
+        style = ES_AUTOHSCROLL|WS_TABSTOP;
         exStyle = WS_EX_CLIENTEDGE;
         break;
     default:
@@ -818,6 +852,30 @@ static void B_Control_setShown(void *self, int shown)
     }
 }
 
+static void B_Control_setEnabled(void *self, int enabled)
+{
+    BO *bo = defaultBackend->privateApi->backendObject(self);
+    if (!bo) return;
+    if (bo->w != INVALID_HANDLE_VALUE)
+    {
+        EnableWindow(bo->w, !!enabled);
+    }
+}
+
+static void B_Control_focus(void *self)
+{
+    BO *bo = defaultBackend->privateApi->backendObject(self);
+    if (!bo) return;
+    if (bo->w != INVALID_HANDLE_VALUE)
+    {
+        SetFocus(bo->w);
+        if (bo->t == BT_TextBox)
+        {
+            SendMessageW(bo->w, EM_SETSEL, 0, -1);
+        }
+    }
+}
+
 static void setTextControlParent(void *self)
 {
     BOTXT *bt = defaultBackend->privateApi->backendObject(self);
@@ -871,6 +929,8 @@ static Backend win32Backend = {
             .setContainer = B_Control_setContainer,
             .setBounds = B_Control_setBounds,
             .setShown = B_Control_setShown,
+            .setEnabled = B_Control_setEnabled,
+            .focus = B_Control_focus,
         },
         .window = {
             .create = B_Window_create,

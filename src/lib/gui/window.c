@@ -3,10 +3,12 @@
 #include <stdlib.h>
 
 #include <pocas/core/event.h>
+#include <pocas/core/eventloop.h>
 #include <pocas/core/string.h>
 
 #include "internal.h"
 
+#include <pocas/gui/control.h>
 #include <pocas/gui/menu.h>
 #include <pocas/gui/window.h>
 
@@ -15,7 +17,10 @@ struct Window
     GuiClass gc;
     Window *parent;
     Event *closing;
+    Event *dialogShown;
     int closed;
+    int dialog;
+    void *dialogResult;
     char *title;
     int width;
     int height;
@@ -31,10 +36,13 @@ SOEXPORT Window *Window_create(Window *parent, const char *title, int width, int
     self->parent = parent;
     self->closed = 0;
     self->closing = Event_create("closing");
+    self->dialogShown = Event_create("dialogShown");
     self->title = String_copy(title);
     self->width = width;
     self->height = height;
     self->menu = 0;
+    self->dialog = 0;
+    self->dialogResult = 0;
 
     const Backend *b = Backend_current();
     if (b->backendApi.window.create) b->backendApi.window.create(self);
@@ -88,9 +96,35 @@ SOEXPORT void Window_close(Window *self)
     EventArgs_destroy(args);
 }
 
+SOEXPORT void *Window_showDialog(Window *self)
+{
+    if (!self->parent) return 0;
+    self->dialog = 1;
+    Control_show(self);
+    Control_disable(self->parent);
+    EventArgs *args = EventArgs_create(self->dialogShown, self, 0);
+    Event_raise(self->dialogShown, args);
+    EventArgs_destroy(args);
+    while (self->dialog) EventLoop_processEvents(-1);
+    Control_enable(self->parent);
+    Control_hide(self);
+    return self->dialogResult;
+}
+
+SOEXPORT void Window_closeDialog(Window *self, void *result)
+{
+    self->dialogResult = result;
+    self->dialog = 0;
+}
+
 SOEXPORT Event *Window_closingEvent(const Window *self)
 {
     return self->closing;
+}
+
+SOEXPORT Event *Window_dialogShownEvent(const Window *self)
+{
+    return self->dialogShown;
 }
 
 SOEXPORT void Window_destroy(Window *self)
@@ -98,6 +132,7 @@ SOEXPORT void Window_destroy(Window *self)
     if (!self) return;
     const Backend *b = Backend_current();
     if (b->backendApi.window.destroy) b->backendApi.window.destroy(self);
+    Event_destroy(self->dialogShown);
     Event_destroy(self->closing);
     free(self->title);
     privateApi.control.destroy(self);

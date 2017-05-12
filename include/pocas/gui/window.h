@@ -16,6 +16,9 @@ DECLEXPORT int Window_height(const Window *self);
 DECLEXPORT Menu *Window_menu(const Window *self);
 DECLEXPORT void Window_setMenu(Window *self, Menu *menu);
 DECLEXPORT void Window_close(Window *self);
+DECLEXPORT void *Window_showDialog(Window *self);
+DECLEXPORT void Window_closeDialog(Window *self, void *result);
+DECLEXPORT Event *Window_dialogShownEvent(const Window *self);
 DECLEXPORT Event *Window_closingEvent(const Window *self);
 DECLEXPORT void Window_destroy(Window *self);
 

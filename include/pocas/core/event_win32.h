@@ -17,6 +17,7 @@ typedef struct Win32MsgEvInfo
     UINT msg;
     WPARAM wp;
     LPARAM lp;
+    LRESULT result;
 } Win32MsgEvInfo;
 
 #endif
