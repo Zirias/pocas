@@ -255,7 +255,7 @@ static void handleWin32MessageEvent(void *w, EventArgs *args)
 
     case WM_ACTIVATE:
         if (mei->wp == 0) bdata.activeWindow = INVALID_HANDLE_VALUE;
-        bdata.activeWindow = self->bo.w;
+        else bdata.activeWindow = self->bo.w;
         break;
 
     case WM_COMMAND:
