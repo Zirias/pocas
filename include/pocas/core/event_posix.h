@@ -13,6 +13,5 @@ typedef enum PlatformEventHandleAction
     PEFD_SelectRead
 } PlatformEventHandleAction;
 
-DECLEXPORT PlatformEvent *PlatformEvent_fromFd(int fd, PlatformEventHandleAction action);
 
 #endif

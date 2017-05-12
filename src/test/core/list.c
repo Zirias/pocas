@@ -1,3 +1,4 @@
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -51,9 +52,9 @@ TESTMETHOD(append_three_items)
 
 TESTMETHOD(clone_list)
 {
-    List_append(stringList1, "foo");
-    List_append(stringList1, "bar");
-    List_append(stringList1, "baz");
+    List_append(stringList1, String_copy("foo"));
+    List_append(stringList1, String_copy("bar"));
+    List_append(stringList1, String_copy("baz"));
 
     tmpList1 = List_clone(stringList1);
 

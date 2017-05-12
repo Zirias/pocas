@@ -1,5 +1,7 @@
 SINGLECONFVARS := POCASTEST
 DEFAULT_POCASTEST = $(BINDIR)$(PSEP)pocastest$(EXE) -p
+LD_LIBRARY_PATH = $(LIBDIR)
+export LD_LIBRARY_PATH
 
 include zimk/zimk.mk
 

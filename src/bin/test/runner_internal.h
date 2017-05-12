@@ -10,6 +10,7 @@ typedef struct Runner Runner;
 extern char *exeName;
 
 void Runner_mainHook(List *args, char *gdbPath);
-void Runner_runTest(FILE *output, Plugin *testPlugin, const char *methodName);
+void Runner_runTest(FILE *output, const Plugin *testPlugin,
+	const char *methodName);
 
 #endif

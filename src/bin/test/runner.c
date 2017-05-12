@@ -11,7 +11,8 @@
 
 SOLOCAL char *exeName;
 
-SOLOCAL void Runner_runTest(FILE *output, Plugin *testPlugin, const char *methodName)
+SOLOCAL void Runner_runTest(FILE *output, const Plugin *testPlugin,
+	const char *methodName)
 {
     char *methodSymbol = malloc(19 + strlen(methodName));
     strcpy(methodSymbol, "pocastest__method_");
@@ -42,7 +43,6 @@ SOLOCAL void Runner_runTest(FILE *output, Plugin *testPlugin, const char *method
     TestMethod_destroy(t);
 
 done:
-    Plugin_close(testPlugin);
     fclose(output);
     exit(EXIT_SUCCESS);
 }

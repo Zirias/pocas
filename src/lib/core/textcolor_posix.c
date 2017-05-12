@@ -45,9 +45,9 @@ static int isAnsiTerm(void)
 	int match = 1;
 	const char *t = term;
 	const char *a = *ansiTerm;
-	while (a && t)
+	while (*a && *t)
 	{
-	    if (a++ != t++)
+	    if (*a++ != *t++)
 	    {
 		match = 0;
 		break;
