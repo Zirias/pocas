@@ -241,6 +241,8 @@ static void handleWin32MessageEvent(void *w, EventArgs *args)
     if (mei->wnd != self->bo.w) return;
 
     WORD id;
+    HWND ctl;
+
     switch (mei->msg)
     {
     case WM_SIZE:
@@ -256,6 +258,31 @@ static void handleWin32MessageEvent(void *w, EventArgs *args)
     case WM_ACTIVATE:
         if (mei->wp == 0) bdata.activeWindow = INVALID_HANDLE_VALUE;
         else bdata.activeWindow = self->bo.w;
+        break;
+
+    case DM_GETDEFID:
+        ctl = GetTopWindow(self->bo.w);
+        while (ctl)
+        {
+            wchar_t classname[16];
+            GetClassNameW(ctl, classname, 16);
+            if (!wcscmp(classname, L"Button"))
+            {
+                DWORD styles = GetWindowLongW(ctl, GWL_STYLE);
+                if (styles & BS_DEFPUSHBUTTON) break;
+            }
+            ctl = GetWindow(ctl, GW_HWNDNEXT);
+        }
+        if (ctl)
+        {
+            id = (WORD) GetWindowLongW(ctl, GWL_ID);
+            mei->result = MAKELONG(id, DC_HASDEFID);
+        }
+        else
+        {
+            mei->result = 0;
+        }
+        EventArgs_setHandled(args);
         break;
 
     case WM_COMMAND:
@@ -781,9 +808,9 @@ static int createTextControlWindow(void *control, HMENU id)
         break;
     case BT_Button:
         wc = L"Button";
+        style = BS_TEXT|WS_TABSTOP|WS_GROUP;
         switch (Button_style(control))
         {
-        style = BS_TEXT|WS_TABSTOP;
         case BS_Normal:
             style |= BS_PUSHBUTTON;
             break;
@@ -794,7 +821,7 @@ static int createTextControlWindow(void *control, HMENU id)
         break;
     case BT_TextBox:
         wc = L"Edit";
-        style = ES_AUTOHSCROLL|WS_TABSTOP;
+        style = ES_AUTOHSCROLL|WS_TABSTOP|WS_GROUP;
         exStyle = WS_EX_CLIENTEDGE;
         break;
     default:
