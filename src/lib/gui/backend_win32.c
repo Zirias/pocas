@@ -307,6 +307,13 @@ static int B_Window_create(Window *self)
     titleLen = 2 * (wcslen(bw->name) + 1);
     bw->name = realloc(bw->name, titleLen);
     bw->w = self;
+    Window *parent = Window_parent(self);
+    HWND pw = 0;
+    if (parent)
+    {
+        B_Window *bpw = defaultBackend->privateApi->backendObject(parent);
+        pw = bpw->bo.w;
+    }
     bw->wc.cbSize = sizeof(WNDCLASSEXW);
     bw->wc.hInstance = GetModuleHandleW(0);
     bw->wc.lpszClassName = bw->name;
@@ -322,7 +329,7 @@ static int B_Window_create(Window *self)
     bw->bo.w = CreateWindowExW(0, bw->name, bw->name,
             WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT,
             winrect.right - winrect.left, winrect.bottom - winrect.top,
-            0, 0, bw->wc.hInstance, 0);
+            pw, 0, bw->wc.hInstance, 0);
     Event_register(EventLoop_win32MsgEvent(), bw, handleWin32MessageEvent);
     EventLoop_setProcessMessages(++bdata.nWindows);
     return 1;

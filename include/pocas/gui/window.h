@@ -8,7 +8,8 @@ typedef struct Menu Menu;
 
 typedef struct Window Window;
 
-DECLEXPORT Window *Window_create(const char *title, int width, int height);
+DECLEXPORT Window *Window_create(Window *parent, const char *title, int width, int height);
+DECLEXPORT Window *Window_parent(const Window *self);
 DECLEXPORT const char *Window_title(const Window *self);
 DECLEXPORT int Window_width(const Window *self);
 DECLEXPORT int Window_height(const Window *self);

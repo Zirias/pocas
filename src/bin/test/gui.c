@@ -34,6 +34,8 @@ struct Gui
     Label *test2Label;
     Button *testButton;
     TextBox *testTextBox;
+
+    Window *aboutBox;
 };
 
 static void handleCloseCommand(void *selfPtr, EventArgs *args)
@@ -78,6 +80,20 @@ static void handleContainerResized(void *selfPtr, EventArgs *args)
     showSize(self, b);
 }
 
+static void showAboutBox(void *selfPtr, EventArgs *args)
+{
+    (void)args;
+    Gui *self = selfPtr;
+    Control_show(self->aboutBox);
+}
+
+static void hideSender(void *selfPtr, EventArgs *args)
+{
+    (void)selfPtr;
+    Control_hide(EventArgs_sender(args));
+    EventArgs_setHandled(args);
+}
+
 SOLOCAL Gui *Gui_create(void)
 {
     Gui *self = malloc(sizeof(Gui));
@@ -87,7 +103,11 @@ SOLOCAL Gui *Gui_create(void)
     self->mainMenu = Menu_create();
     Menu *fileMenu = Menu_create();
 
-    MenuItem *item = MenuItem_create("E&xit");
+    MenuItem *item = MenuItem_create("&About");
+    Event_register(MenuItem_selectedEvent(item), self, showAboutBox);
+    Menu_addItem(fileMenu, item);
+
+    item = MenuItem_create("E&xit");
     MenuItem_setCommand(item, self->closeCommand);
     Menu_addItem(fileMenu, item);
 
@@ -95,7 +115,7 @@ SOLOCAL Gui *Gui_create(void)
     MenuItem_setSubMenu(item, fileMenu);
     Menu_addItem(self->mainMenu, item);
 
-    self->mainWindow = Window_create("POCAS Test", 480, 160);
+    self->mainWindow = Window_create(0, "POCAS Test", 480, 160);
     Window_setMenu(self->mainWindow, self->mainMenu);
 
     self->vbox = LBox_create(BO_Vertical);
@@ -142,6 +162,12 @@ SOLOCAL Gui *Gui_create(void)
     Event_register(TextBox_textChangedEvent(self->testTextBox),
             self, handleTextChanged);
 
+    self->aboutBox = Window_create(self->mainWindow,
+            "About POCAS Test", 320, 200);
+
+    Event_register(Window_closingEvent(self->aboutBox),
+            self, hideSender);
+
     return self;
 }
 
@@ -169,6 +195,8 @@ SOLOCAL void Gui_dispose(Gui *self)
 
     Event_unregister(TextBox_textChangedEvent(self->testTextBox),
             self, handleTextChanged);
+
+    Window_destroy(self->aboutBox);
 
     LBox_removeControl(self->hbox, self->test2Label);
     LBox_removeControl(self->hbox, self->testTextBox);

@@ -13,6 +13,7 @@
 struct Window
 {
     GuiClass gc;
+    Window *parent;
     Event *closing;
     int closed;
     char *title;
@@ -21,12 +22,13 @@ struct Window
     Menu *menu;
 };
 
-SOEXPORT Window *Window_create(const char *title, int width, int height)
+SOEXPORT Window *Window_create(Window *parent, const char *title, int width, int height)
 {
     Window *self = malloc(sizeof(Window));
     GCINIT(self);
     privateApi.container.create(self);
     privateApi.control.create(self);
+    self->parent = parent;
     self->closed = 0;
     self->closing = Event_create("closing");
     self->title = String_copy(title);
@@ -37,6 +39,11 @@ SOEXPORT Window *Window_create(const char *title, int width, int height)
     const Backend *b = Backend_current();
     if (b->backendApi.window.create) b->backendApi.window.create(self);
     return self;
+}
+
+SOEXPORT Window *Window_parent(const Window *self)
+{
+    return self->parent;
 }
 
 SOEXPORT const char *Window_title(const Window *self)
