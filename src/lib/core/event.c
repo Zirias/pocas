@@ -16,14 +16,6 @@ struct Event
     List *handlers;
 };
 
-struct EventArgs
-{
-    const Event *event;
-    void *sender;
-    int handled;
-    void *evInfo;
-};
-
 struct handlerData
 {
     void *object;
@@ -76,7 +68,7 @@ SOEXPORT void Event_raise(const Event *self, EventArgs *args)
     {
         const struct handlerData *data = ListIterator_current(i);
         data->handler(data->object, args);
-        if (EventArgs_handled(args)) break;
+        if (args->handled) break;
     }
     ListIterator_destroy(i);
 }
@@ -93,43 +85,3 @@ SOEXPORT void Event_destroy(Event *self)
     free(self);
 }
 
-SOEXPORT EventArgs *EventArgs_create(
-        const Event *event, void *sender, void *evInfo)
-{
-    EventArgs *self = malloc(sizeof(EventArgs));
-    self->event = event;
-    self->sender = sender;
-    self->evInfo = evInfo;
-    self->handled = 0;
-    return self;
-}
-
-SOEXPORT const Event *EventArgs_event(const EventArgs *self)
-{
-    return self->event;
-}
-
-SOEXPORT void *EventArgs_sender(const EventArgs *self)
-{
-    return self->sender;
-}
-
-SOEXPORT void *EventArgs_evInfo(const EventArgs *self)
-{
-    return self->evInfo;
-}
-
-SOEXPORT int EventArgs_handled(const EventArgs *self)
-{
-    return self->handled;
-}
-
-SOEXPORT void EventArgs_setHandled(EventArgs *self)
-{
-    self->handled = 1;
-}
-
-SOEXPORT void EventArgs_destroy(EventArgs *self)
-{
-    free(self);
-}

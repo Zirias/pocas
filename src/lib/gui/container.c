@@ -52,9 +52,8 @@ SOLOCAL int Container_setBounds(void *self, Bounds *b)
     if (!Bounds_equals(&c->b, b))
     {
         memcpy(&c->b, b, sizeof(Bounds));
-        EventArgs *args = EventArgs_create(c->resized, self, &c->b);
-        Event_raise(c->resized, args);
-        EventArgs_destroy(args);
+        EventArgs args = EventArgs_init(c->resized, self, &c->b);
+        Event_raise(c->resized, &args);
         return 1;
     }
     return 0;

@@ -85,15 +85,14 @@ SOEXPORT void Window_setMenu(Window *self, Menu *menu)
 
 SOEXPORT void Window_close(Window *self)
 {
-    EventArgs *args = EventArgs_create(self->closing, self, 0);
-    Event_raise(self->closing, args);
-    if (!EventArgs_handled(args))
+    EventArgs args = EventArgs_init(self->closing, self, 0);
+    Event_raise(self->closing, &args);
+    if (!args.handled)
     {
         const Backend *b = Backend_current();
         if (b->backendApi.window.close) b->backendApi.window.close(self);
         self->closed = 1;
     }
-    EventArgs_destroy(args);
 }
 
 SOEXPORT void *Window_showDialog(Window *self)
@@ -102,9 +101,8 @@ SOEXPORT void *Window_showDialog(Window *self)
     self->dialog = 1;
     Control_show(self);
     Control_disable(self->parent);
-    EventArgs *args = EventArgs_create(self->dialogShown, self, 0);
-    Event_raise(self->dialogShown, args);
-    EventArgs_destroy(args);
+    EventArgs args = EventArgs_init(self->dialogShown, self, 0);
+    Event_raise(self->dialogShown, &args);
     while (self->dialog) EventLoop_processEvents(-1);
     Control_enable(self->parent);
     Control_hide(self);

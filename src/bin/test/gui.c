@@ -58,14 +58,14 @@ static void handleWindowClosing(void *selfPtr, EventArgs *args)
 
     if (result == MBB_No)
     {
-        EventArgs_setHandled(args);
+	args->handled = 1;
     }
 }
 
 static void handleTextChanged(void *selfPtr, EventArgs *args)
 {
     (void)selfPtr;
-    const char *newText = EventArgs_evInfo(args);
+    const char *newText = args->evInfo;
     printf("new text: %s\n", newText);
     fflush(stdout);
 }
@@ -80,7 +80,7 @@ static void showSize(Gui *self, Bounds *b)
 static void handleContainerResized(void *selfPtr, EventArgs *args)
 {
     Gui *self = selfPtr;
-    Bounds *b = EventArgs_evInfo(args);
+    Bounds *b = args->evInfo;
     showSize(self, b);
 }
 
@@ -94,8 +94,8 @@ static void showAboutBox(void *selfPtr, EventArgs *args)
 static void hideSender(void *selfPtr, EventArgs *args)
 {
     (void)selfPtr;
-    Control_hide(EventArgs_sender(args));
-    EventArgs_setHandled(args);
+    Control_hide(args->sender);
+    args->handled = 1;
 }
 
 static void showChangeDialog(void *selfPtr, EventArgs *args)
@@ -116,12 +116,12 @@ static void hideChangeDialog(void *selfPtr, EventArgs *args)
     Gui *self = selfPtr;
 
     const char *text = 0;
-    if (EventArgs_sender(args) == self->dlgButton)
+    if (args->sender == self->dlgButton)
     {
         text = TextBox_text(self->dlgTextBox);
     }
     Window_closeDialog(self->changeButtonText, (char *)text);
-    EventArgs_setHandled(args);
+    args->handled = 1;
 }
 
 static void initChangeDialog(void *selfPtr, EventArgs *args)

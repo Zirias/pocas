@@ -6,7 +6,15 @@
 #include <pocas/core/decl.h>
 
 typedef struct Event Event;
-typedef struct EventArgs EventArgs;
+
+typedef struct EventArgs
+{
+    Event *const event;
+    void *const sender;
+    void *const evInfo;
+    int handled;
+} EventArgs;
+
 
 typedef struct DataEvInfo
 {
@@ -25,12 +33,6 @@ DECLEXPORT void Event_raise(const Event *self, EventArgs *args);
 DECLEXPORT const char *Event_name(const Event *self);
 DECLEXPORT void Event_destroy(Event *self);
 
-DECLEXPORT EventArgs *EventArgs_create(const Event *event, void *sender, void *evInfo);
-DECLEXPORT const Event *EventArgs_event(const EventArgs *self);
-DECLEXPORT void *EventArgs_sender(const EventArgs *self);
-DECLEXPORT void *EventArgs_evInfo(const EventArgs *self);
-DECLEXPORT int EventArgs_handled(const EventArgs *self);
-DECLEXPORT void EventArgs_setHandled(EventArgs *self);
-DECLEXPORT void EventArgs_destroy(EventArgs *self);
+#define EventArgs_init(event, sender, evInfo) {(event), (sender), (evInfo), 0}
 
 #endif

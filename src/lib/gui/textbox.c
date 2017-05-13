@@ -23,10 +23,9 @@ static void updateText(TextBox *self, const char *text)
     if ((text && !oldText) || (oldText && !text)
         || (oldText && text && strcmp(oldText, text)))
     {
-        EventArgs *args = EventArgs_create(
+        EventArgs args = EventArgs_init(
                 self->textChanged, self, self->text);
-        Event_raise(self->textChanged, args);
-        EventArgs_destroy(args);
+        Event_raise(self->textChanged, &args);
     }
     free(oldText);
 }

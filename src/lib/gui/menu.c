@@ -106,13 +106,12 @@ SOEXPORT void MenuItem_setCommand(MenuItem *self, Command *command)
 
 SOEXPORT void MenuItem_select(MenuItem *self)
 {
-    EventArgs *args = EventArgs_create(self->selected, self, 0);
-    Event_raise(self->selected, args);
-    if (!EventArgs_handled(args) && self->command)
+    EventArgs args = EventArgs_init(self->selected, self, 0);
+    Event_raise(self->selected, &args);
+    if (!args.handled && self->command)
     {
         Command_invoke(self->command);
     }
-    EventArgs_destroy(args);
 }
 
 SOEXPORT Event * MenuItem_selectedEvent(const MenuItem *self)

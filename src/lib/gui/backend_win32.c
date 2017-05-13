@@ -183,7 +183,7 @@ static void initNcm(void)
         if (bdata.vi.dwMajorVersion < 6)
         {
             ncmSize -= 4;
-            bdata.ncm.iPaddedBorderWidth = 0;
+            //bdata.ncm.iPaddedBorderWidth = 0;
         }
         bdata.ncm.cbSize = ncmSize;
         SystemParametersInfoW(SPI_GETNONCLIENTMETRICS,
@@ -227,17 +227,17 @@ static void handleWin32RawMessageEvent(void *w, EventArgs *args)
     B_Window *self = w;
     if (bdata.activeWindow != self->bo.w) return;
 
-    MSG *msg = EventArgs_evInfo(args);
+    MSG *msg = args->evInfo;
     if (IsDialogMessageW(self->bo.w, msg))
     {
-        EventArgs_setHandled(args);
+        args->handled = 1;
     }
 }
 
 static void handleWin32MessageEvent(void *w, EventArgs *args)
 {
     B_Window *self = w;
-    Win32MsgEvInfo *mei = EventArgs_evInfo(args);
+    Win32MsgEvInfo *mei = args->evInfo;
     if (mei->wnd != self->bo.w) return;
 
     WORD id;
@@ -245,12 +245,12 @@ static void handleWin32MessageEvent(void *w, EventArgs *args)
     {
     case WM_SIZE:
         updateWindowClientSize(self);
-        EventArgs_setHandled(args);
+        args->handled = 1;
         break;
 
     case WM_CLOSE:
         Window_close(self->w);
-        EventArgs_setHandled(args);
+        args->handled = 1;
         break;
 
     case WM_ACTIVATE:
@@ -269,11 +269,11 @@ static void handleWin32MessageEvent(void *w, EventArgs *args)
             {
             case BT_Button:
                 Button_click(((B_Button *)bo)->b);
-                EventArgs_setHandled(args);
+		args->handled = 1;
                 break;
             case BT_MenuItem:
                 MenuItem_select(((B_MenuItem *)bo)->m);
-                EventArgs_setHandled(args);
+		args->handled = 1;
                 break;
             case BT_TextBox:
                 if (HIWORD(mei->wp) == EN_CHANGE)
@@ -287,7 +287,7 @@ static void handleWin32MessageEvent(void *w, EventArgs *args)
                     WideCharToMultiByte(CP_UTF8, 0, bt->botxt.text, -1, converted, 2 * textsize, 0, 0);
                     bt->changed(bt->t, converted);
                     free(converted);
-                    EventArgs_setHandled(args);
+		    args->handled = 1;
                 }
                 break;
             }
@@ -300,15 +300,14 @@ static void handleWin32MessageEvent(void *w, EventArgs *args)
         if (!bdata.nWindows)
         {
             Event *lwc = Window_lastWindowClosedEvent();
-            EventArgs *lwcArgs = EventArgs_create(lwc, 0, 0);
-            Event_raise(lwc, lwcArgs);
-            if (!EventArgs_handled(lwcArgs))
+            EventArgs lwcArgs = EventArgs_init(lwc, 0, 0);
+            Event_raise(lwc, &lwcArgs);
+            if (!lwcArgs.handled)
             {
                 PostQuitMessage(0);
             }
-            EventArgs_destroy(lwcArgs);
         }
-        EventArgs_setHandled(args);
+	args->handled = 1;
         break;
     }
 }

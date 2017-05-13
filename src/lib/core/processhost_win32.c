@@ -53,19 +53,17 @@ static int mkpipe(HANDLE *read, HANDLE *write,
 static void onStdoutData(void *selfptr, EventArgs *args)
 {
     ProcessHost *self = selfptr;
-    EventArgs *stdoutArgs = EventArgs_create(
-                self->stdoutData, self, EventArgs_evInfo(args));
-    Event_raise(self->stdoutData, stdoutArgs);
-    EventArgs_destroy(stdoutArgs);
+    EventArgs stdoutArgs = EventArgs_init(
+                self->stdoutData, self, args->evInfo);
+    Event_raise(self->stdoutData, &stdoutArgs);
 }
 
 static void onStderrData(void *selfptr, EventArgs *args)
 {
     ProcessHost *self = selfptr;
-    EventArgs *stderrArgs = EventArgs_create(
-                self->stderrData, self, EventArgs_evInfo(args));
-    Event_raise(self->stderrData, stderrArgs);
-    EventArgs_destroy(stderrArgs);
+    EventArgs stderrArgs = EventArgs_init(
+                self->stderrData, self, args->evInfo);
+    Event_raise(self->stderrData, &stderrArgs);
 }
 
 SOEXPORT ProcessHost *ProcessHost_create(const char *executable)

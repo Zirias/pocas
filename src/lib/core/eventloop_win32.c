@@ -90,14 +90,14 @@ SOEXPORT int EventLoop_processEvents(int timeout)
                 EventLoop_exit((int)data.msg.wParam);
                 return nevents;
             }
-            EventArgs *args = EventArgs_create(data.win32RawMsgEvent, 0, &data.msg);
-            Event_raise(data.win32RawMsgEvent, args);
-            if (!EventArgs_handled(args))
+            EventArgs args = EventArgs_init(data.win32RawMsgEvent,
+		    0, &data.msg);
+            Event_raise(data.win32RawMsgEvent, &args);
+            if (!args.handled)
             {
                 TranslateMessage(&data.msg);
                 DispatchMessageW(&data.msg);
             }
-            EventArgs_destroy(args);
         }
         return nevents;
     }
@@ -119,9 +119,9 @@ SOEXPORT int EventLoop_processEvents(int timeout)
 #pragma GCC diagnostic pop
 
         data.hndlEvInfo.hndl = data.handles[idx];
-        EventArgs *args = EventArgs_create(data.win32HndlEvent, 0, &data.hndlEvInfo);
-        Event_raise(data.win32HndlEvent, args);
-        EventArgs_destroy(args);
+        EventArgs args = EventArgs_init(data.win32HndlEvent,
+		0, &data.hndlEvInfo);
+        Event_raise(data.win32HndlEvent, &args);
         return 1;
     }
 }
@@ -134,11 +134,11 @@ SOEXPORT LRESULT CALLBACK EventLoop_win32WndProc(HWND wnd, UINT msg, WPARAM wp, 
     data.msgEvInfo.wp = wp;
     data.msgEvInfo.lp = lp;
     data.msgEvInfo.result = 1;
-    EventArgs *args = EventArgs_create(data.win32MsgEvent, 0, &data.msgEvInfo);
-    Event_raise(data.win32MsgEvent, args);
-    int handled = EventArgs_handled(args);
-    EventArgs_destroy(args);
-    return handled ? data.msgEvInfo.result : DefWindowProcW(wnd, msg, wp, lp);
+    EventArgs args = EventArgs_init(data.win32MsgEvent, 0, &data.msgEvInfo);
+    Event_raise(data.win32MsgEvent, &args);
+    return args.handled
+	? data.msgEvInfo.result
+	: DefWindowProcW(wnd, msg, wp, lp);
 }
 
 SOEXPORT void EventLoop_setProcessMessages(int processMessages)

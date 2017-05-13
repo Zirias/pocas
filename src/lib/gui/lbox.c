@@ -147,7 +147,7 @@ static void onContainerChanged(void *selfPtr, EventArgs *args)
 static void onResized(void *selfPtr, EventArgs *args)
 {
     LBox *self = selfPtr;
-    Bounds *b = EventArgs_evInfo(args);
+    Bounds *b = args->evInfo;
     updateElementsBounds(self, b);
 }
 

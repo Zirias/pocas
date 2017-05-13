@@ -112,9 +112,8 @@ SOEXPORT void Control_setBounds(void *self, const Bounds *b)
     const Backend *be = Backend_current();
     if (be->backendApi.control.setBounds)
         be->backendApi.control.setBounds(self, b);
-    EventArgs *args = EventArgs_create(c->resized, self, &c->bounds);
-    Event_raise(c->resized, args);
-    EventArgs_destroy(args);
+    EventArgs args = EventArgs_init(c->resized, self, &c->bounds);
+    Event_raise(c->resized, &args);
 }
 
 SOEXPORT void Control_margin(const void *self, Extents *e)
@@ -146,9 +145,8 @@ static void fireEventIfMinSizeChanged(void *self,
     msb.height = Control_minHeight(self);
     if (msb.width != width || msb.height != height)
     {
-        EventArgs *args = EventArgs_create(c->minSizeChanged, self, &msb);
-        Event_raise(c->minSizeChanged, args);
-        EventArgs_destroy(args);
+        EventArgs args = EventArgs_init(c->minSizeChanged, self, &msb);
+        Event_raise(c->minSizeChanged, &args);
     }
 }
 
@@ -211,9 +209,8 @@ SOEXPORT void Control_setShown(void *self, int shown)
     const Backend *be = Backend_current();
     if (be->backendApi.control.setShown)
         be->backendApi.control.setShown(self, c->shown);
-    EventArgs *args = EventArgs_create(c->shownChanged, self, (void *)c->shown);
-    Event_raise(c->shownChanged, args);
-    EventArgs_destroy(args);
+    EventArgs args = EventArgs_init(c->shownChanged, self, &c->shown);
+    Event_raise(c->shownChanged, &args);
 }
 
 SOEXPORT int Control_enabled(const void *self)
@@ -252,14 +249,13 @@ static void updateBounds(void *self, Bounds *nb)
     const Backend *b = Backend_current();
     if (b->backendApi.control.setBounds)
         b->backendApi.control.setBounds(self, &c->bounds);
-    EventArgs *args = EventArgs_create(c->resized, self, &c->bounds);
-    Event_raise(c->resized, args);
-    EventArgs_destroy(args);
+    EventArgs args = EventArgs_init(c->resized, self, &c->bounds);
+    Event_raise(c->resized, &args);
 }
 
 static void containerResized(void *self, EventArgs *args)
 {
-    Bounds *nb = EventArgs_evInfo(args);
+    Bounds *nb = args->evInfo;
     updateBounds(self, nb);
 }
 
@@ -282,9 +278,8 @@ SOLOCAL void Control_setContainer(void *self, void *container)
     Bounds cb;
     Container_bounds(container, &cb);
     updateBounds(self, &cb);
-    EventArgs *args = EventArgs_create(c->containerChanged, self, container);
-    Event_raise(c->containerChanged, args);
-    EventArgs_destroy(args);
+    EventArgs args = EventArgs_init(c->containerChanged, self, container);
+    Event_raise(c->containerChanged, &args);
 }
 
 SOLOCAL void *Control_container(const void *self)

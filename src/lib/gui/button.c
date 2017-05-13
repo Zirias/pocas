@@ -67,13 +67,12 @@ SOEXPORT void Button_setCommand(Button *self, Command *command)
 
 SOEXPORT void Button_click(Button *self)
 {
-    EventArgs *args = EventArgs_create(self->clicked, self, 0);
-    Event_raise(self->clicked, args);
-    if (!EventArgs_handled(args) && self->command)
+    EventArgs args = EventArgs_init(self->clicked, self, 0);
+    Event_raise(self->clicked, &args);
+    if (!args.handled && self->command)
     {
         Command_invoke(self->command);
     }
-    EventArgs_destroy(args);
 }
 
 SOEXPORT Event *Button_clickedEvent(const Button *self)

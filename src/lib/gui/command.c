@@ -21,9 +21,8 @@ SOEXPORT Command *Command_create(void)
 
 SOEXPORT void Command_invoke(Command *self)
 {
-    EventArgs *args = EventArgs_create(self->invoked, self, 0);
-    Event_raise(self->invoked, args);
-    EventArgs_destroy(args);
+    EventArgs args = EventArgs_init(self->invoked, self, 0);
+    Event_raise(self->invoked, &args);
 }
 
 
