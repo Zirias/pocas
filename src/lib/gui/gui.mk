@@ -1,3 +1,7 @@
+ifdef WITH_QT
+$(call zinc, qt/qt.mk)
+endif
+
 pocasgui_MODULES:= backend bounds button command control container label \
                    lbox menu messagebox textbox window
 pocasgui_PLATFORMMODULES := backend
