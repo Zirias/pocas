@@ -1,12 +1,16 @@
 #include <pocas/gui/private/backend.h>
 
-static Backend posixBackend = {
+#include "decl.h"
+
+static Backend backend_qt = {
     .backendApi = {
         .name = 0,
         .control = {
             .setContainer = 0,
             .setBounds = 0,
             .setShown = 0,
+	    .setEnabled = 0,
+	    .focus = 0,
         },
         .window = {
             .create = 0,
@@ -17,6 +21,7 @@ static Backend posixBackend = {
         .menu = {
             .create = 0,
             .addItem = 0,
+	    .removeItem = 0,
             .destroy = 0,
         },
         .menuItem = {
@@ -45,5 +50,5 @@ static Backend posixBackend = {
     .privateApi = 0,
 };
 
-SOLOCAL Backend *defaultBackend = &posixBackend;
+SOEXPORT Backend *qtBackend = &backend_qt;
 

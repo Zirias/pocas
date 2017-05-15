@@ -2,14 +2,24 @@
 #define POCAS_GUI_PRIVATE_BACKEND_H
 
 #include <pocas/gui/backend.h>
+#include <pocas/gui/button.h>
 #include <pocas/gui/messagebox.h>
 
 typedef struct Bounds Bounds;
+typedef struct Event Event;
+typedef struct Window Window;
+typedef struct Menu Menu;
+typedef struct MenuItem MenuItem;
+typedef struct Command Command;
+typedef struct Label Label;
+typedef struct TextBox TextBox;
 
 typedef struct IPrivateControl
 {
     int (*create)(void *self);
     void *(*container)(const void *self);
+    void (*bounds)(const void *self, Bounds *b);
+    int (*shown)(const void *self);
     void (*setContainer)(void *self, void *container);
     void (*setContentSize)(void *self,
             unsigned int width, unsigned int height);
@@ -23,6 +33,35 @@ typedef struct IPrivateContainer
     void (*destroy)(void *self);
 } IPrivateContainer;
 
+typedef struct IPrivateWindow
+{
+    void (*close)(Window *self);
+    const char *(*title)(const Window *self);
+    Window *(*parent)(const Window *self);
+    int (*width)(const Window *self);
+    int (*height)(const Window *self);
+    Event *(*lastWindowClosedEvent)(void);
+} IPrivateWindow;
+
+typedef struct IPrivateMenuItem
+{
+    Menu *(*subMenu)(const MenuItem *self);
+    const char *(*text)(const MenuItem *self);
+    void (*select)(MenuItem *self);
+} IPrivateMenuItem;
+
+typedef struct IPrivateLabel
+{
+    const char *(*text)(const Label *self);
+} IPrivateLabel;
+
+typedef struct IPrivateButton
+{
+    const char *(*text)(const Button *self);
+    ButtonStyle (*style)(const Button *self);
+    void (*click)(Button *self);
+} IPrivateButton;
+
 typedef struct GuiPrivateApi
 {
     void *(*backendObject)(const void *frontendObject);
@@ -34,15 +73,11 @@ typedef struct GuiPrivateApi
 
     IPrivateControl control;
     IPrivateContainer container;
+    IPrivateWindow window;
+    IPrivateMenuItem menuItem;
+    IPrivateLabel label;
+    IPrivateButton button;
 } GuiPrivateApi;
-
-typedef struct Window Window;
-typedef struct Menu Menu;
-typedef struct MenuItem MenuItem;
-typedef struct Command Command;
-typedef struct Label Label;
-typedef struct Button Button;
-typedef struct TextBox TextBox;
 
 typedef struct IBackendControl
 {

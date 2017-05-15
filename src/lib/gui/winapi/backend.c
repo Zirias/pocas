@@ -1,5 +1,5 @@
 #define _WIN32_WINNT 0x0600
-#include "c11threads.h"
+#include "../c11threads.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -13,15 +13,8 @@
 
 #include <pocas/gui/private/backend.h>
 #include <pocas/gui/bounds.h>
-#include <pocas/gui/button.h>
-#include <pocas/gui/command.h>
-#include <pocas/gui/container.h>
-#include <pocas/gui/control.h>
-#include <pocas/gui/extents.h>
-#include <pocas/gui/window.h>
-#include <pocas/gui/menu.h>
-#include <pocas/gui/label.h>
-#include <pocas/gui/textbox.h>
+
+#include "decl.h"
 
 struct bdata
 {
@@ -121,7 +114,7 @@ static const char *B_name(void)
     return "win32";
 }
 
-SOLOCAL Backend *defaultBackend;
+SOLOCAL Backend *winapiBackend;
 
 /* hack to enable visual styles without relying on manifest
  * found at http://stackoverflow.com/a/10444161
@@ -215,7 +208,7 @@ static void updateWindowClientSize(B_Window *self)
     b.width = (unsigned int) (r.right - r.left);
     b.height = (unsigned int) (r.bottom - r.top);
 
-    const GuiPrivateApi *api = defaultBackend->privateApi;
+    const GuiPrivateApi *api = winapiBackend->privateApi;
     if (api->container.setBounds(self->w, &b))
     {
         InvalidateRect(self->bo.w, &r, 0);
@@ -238,6 +231,7 @@ static void handleWin32MessageEvent(void *w, EventArgs *args)
 {
     B_Window *self = w;
     Win32MsgEvInfo *mei = args->evInfo;
+    const GuiPrivateApi *api = winapiBackend->privateApi;
     if (mei->wnd != self->bo.w) return;
 
     WORD id;
@@ -251,7 +245,7 @@ static void handleWin32MessageEvent(void *w, EventArgs *args)
         break;
 
     case WM_CLOSE:
-        Window_close(self->w);
+        api->window.close(self->w);
         args->handled = 1;
         break;
 
@@ -295,11 +289,11 @@ static void handleWin32MessageEvent(void *w, EventArgs *args)
             switch (bo->t)
             {
             case BT_Button:
-                Button_click(((B_Button *)bo)->b);
+                api->button.click(((B_Button *)bo)->b);
 		args->handled = 1;
                 break;
             case BT_MenuItem:
-                MenuItem_select(((B_MenuItem *)bo)->m);
+                api->menuItem.select(((B_MenuItem *)bo)->m);
 		args->handled = 1;
                 break;
             case BT_TextBox:
@@ -314,7 +308,7 @@ static void handleWin32MessageEvent(void *w, EventArgs *args)
                     WideCharToMultiByte(CP_UTF8, 0, bt->botxt.text, -1, converted, 2 * textsize, 0, 0);
                     bt->changed(bt->t, converted);
                     free(converted);
-		    args->handled = 1;
+                    args->handled = 1;
                 }
                 break;
             }
@@ -326,7 +320,7 @@ static void handleWin32MessageEvent(void *w, EventArgs *args)
         EventLoop_setProcessMessages(--bdata.nWindows);
         if (!bdata.nWindows)
         {
-            Event *lwc = Window_lastWindowClosedEvent();
+            Event *lwc = api->window.lastWindowClosedEvent();
             EventArgs lwcArgs = EventArgs_init(lwc, 0, 0);
             Event_raise(lwc, &lwcArgs);
             if (!lwcArgs.handled)
@@ -341,22 +335,23 @@ static void handleWin32MessageEvent(void *w, EventArgs *args)
 
 static int B_Window_create(Window *self)
 {
+    const GuiPrivateApi *api = winapiBackend->privateApi;
     initNcm();
     B_Window *bw = calloc(1, sizeof(B_Window));
-    defaultBackend->privateApi->setBackendObject(self, bw);
+    winapiBackend->privateApi->setBackendObject(self, bw);
     bw->bo.t = BT_Window;
-    const char *title = Window_title(self);
+    const char *title = api->window.title(self);
     size_t titleLen = strlen(title) + 1;
     bw->name = calloc(1, 2 * titleLen);
     MultiByteToWideChar(CP_UTF8, 0, title, titleLen, bw->name, titleLen);
     titleLen = 2 * (wcslen(bw->name) + 1);
     bw->name = realloc(bw->name, titleLen);
     bw->w = self;
-    Window *parent = Window_parent(self);
+    Window *parent = api->window.parent(self);
     HWND pw = 0;
     if (parent)
     {
-        B_Window *bpw = defaultBackend->privateApi->backendObject(parent);
+        B_Window *bpw = winapiBackend->privateApi->backendObject(parent);
         pw = bpw->bo.w;
     }
     bw->wc.cbSize = sizeof(WNDCLASSEXW);
@@ -368,8 +363,8 @@ static int B_Window_create(Window *self)
     RegisterClassExW(&bw->wc);
     RECT winrect;
     memset(&winrect, 0, sizeof(RECT));
-    winrect.right = Window_width(self);
-    winrect.bottom = Window_height(self);
+    winrect.right = api->window.width(self);
+    winrect.bottom = api->window.height(self);
     AdjustWindowRect(&winrect, WS_OVERLAPPEDWINDOW, 0);
     bw->bo.w = CreateWindowExW(0, bw->name, bw->name,
             WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT,
@@ -383,22 +378,22 @@ static int B_Window_create(Window *self)
 
 static void B_Window_setMenu(Window *self, Menu *menu)
 {
-    B_Window *bw = defaultBackend->privateApi->backendObject(self);
-    B_Menu *bm = defaultBackend->privateApi->backendObject(menu);
+    B_Window *bw = winapiBackend->privateApi->backendObject(self);
+    B_Menu *bm = winapiBackend->privateApi->backendObject(menu);
     SetMenu(bw->bo.w, bm->menu);
     DrawMenuBar(bw->bo.w);
 }
 
 static void B_Window_close(Window *self)
 {
-    B_Window *bw = defaultBackend->privateApi->backendObject(self);
+    B_Window *bw = winapiBackend->privateApi->backendObject(self);
     DestroyWindow(bw->bo.w);
 }
 
 static void B_Window_destroy(Window *self)
 {
     if (!self) return;
-    B_Window *bw = defaultBackend->privateApi->backendObject(self);
+    B_Window *bw = winapiBackend->privateApi->backendObject(self);
     DestroyWindow(bw->bo.w);
     UnregisterClassW(bw->name, bw->wc.hInstance);
     Event_unregister(EventLoop_win32RawMsgEvent(), bw, handleWin32RawMessageEvent);
@@ -474,7 +469,7 @@ static MessageBoxButton B_MessageBox_show(const Window *w, const char *title,
 
     if (w)
     {
-        B_Window *bw = defaultBackend->privateApi->backendObject(w);
+        B_Window *bw = winapiBackend->privateApi->backendObject(w);
         hwnd = bw->bo.w;
     }
 
@@ -500,7 +495,7 @@ static MessageBoxButton B_MessageBox_show(const Window *w, const char *title,
 
 static void BOTXT_measure(void *self)
 {
-    BOTXT *bt = defaultBackend->privateApi->backendObject(self);
+    BOTXT *bt = winapiBackend->privateApi->backendObject(self);
     SIZE size;
     if (bt->bo.t == BT_Button)
     {
@@ -520,13 +515,13 @@ static void BOTXT_measure(void *self)
         size.cx = 0;
         size.cy = 0;
     }
-    defaultBackend->privateApi->control.setContentSize(self,
+    winapiBackend->privateApi->control.setContentSize(self,
             size.cx, size.cy);
 }
 
 static void BOTXT_updateText(void *self, const char *text)
 {
-    BOTXT *bt = defaultBackend->privateApi->backendObject(self);
+    BOTXT *bt = winapiBackend->privateApi->backendObject(self);
     free(bt->text);
     if (text)
     {
@@ -555,7 +550,7 @@ static int B_Menu_create(Menu *self)
     B_Menu *bm = malloc(sizeof(B_Menu));
     bm->bo.t = BT_Menu;
     bm->bo.w = INVALID_HANDLE_VALUE;
-    defaultBackend->privateApi->setBackendObject(self, bm);
+    winapiBackend->privateApi->setBackendObject(self, bm);
     bm->m = self;
     bm->menu = CreateMenu();
     return 1;
@@ -563,12 +558,13 @@ static int B_Menu_create(Menu *self)
 
 static void B_Menu_addItem(Menu *self, MenuItem *item)
 {
-    B_Menu *bm = defaultBackend->privateApi->backendObject(self);
-    B_MenuItem *bi = defaultBackend->privateApi->backendObject(item);
-    Menu *subMenu = MenuItem_subMenu(item);
+    const GuiPrivateApi *api = winapiBackend->privateApi;
+    B_Menu *bm = api->backendObject(self);
+    B_MenuItem *bi = api->backendObject(item);
+    Menu *subMenu = api->menuItem.subMenu(item);
     if (subMenu)
     {
-        B_Menu *sub = defaultBackend->privateApi->backendObject(subMenu);
+        B_Menu *sub = api->backendObject(subMenu);
         AppendMenuW(bm->menu, MF_POPUP, (UINT_PTR)sub->menu, bi->botxt.text);
     }
     else
@@ -581,20 +577,21 @@ static void B_Menu_addItem(Menu *self, MenuItem *item)
 static void B_Menu_destroy(Menu *self)
 {
     if (!self) return;
-    B_Menu *bm = defaultBackend->privateApi->backendObject(self);
+    B_Menu *bm = winapiBackend->privateApi->backendObject(self);
     DestroyMenu(bm->menu);
     free(bm);
 }
 
 static int B_MenuItem_create(MenuItem *self)
 {
+    const GuiPrivateApi *api = winapiBackend->privateApi;
     B_MenuItem *bi = malloc(sizeof(B_MenuItem));
     bi->botxt.bo.t = BT_MenuItem;
     bi->botxt.bo.w = INVALID_HANDLE_VALUE;
-    defaultBackend->privateApi->setBackendObject(self, bi);
+    api->setBackendObject(self, bi);
     bi->m = self;
     bi->botxt.text = 0;
-    const char *text = MenuItem_text(self);
+    const char *text = api->menuItem.text(self);
     BOTXT_updateText(self, text);
     return 1;
 }
@@ -602,20 +599,21 @@ static int B_MenuItem_create(MenuItem *self)
 static void B_MenuItem_destroy(MenuItem *self)
 {
     if (!self) return;
-    B_MenuItem *bi = defaultBackend->privateApi->backendObject(self);
+    B_MenuItem *bi = winapiBackend->privateApi->backendObject(self);
     free(bi->botxt.text);
     free(bi);
 }
 
 static int B_Label_create(Label *self)
 {
+    const GuiPrivateApi *api = winapiBackend->privateApi;
     B_Label *bl = malloc(sizeof(B_Label));
     bl->botxt.bo.t = BT_Label;
     bl->botxt.bo.w = INVALID_HANDLE_VALUE;
     bl->l = self;
     bl->botxt.text = 0;
-    defaultBackend->privateApi->setBackendObject(self, bl);
-    const char *text = Label_text(self);
+    api->setBackendObject(self, bl);
+    const char *text = api->label.text(self);
     BOTXT_updateText(self, text);
     return 1;
 }
@@ -628,20 +626,21 @@ static void B_Label_setText(Label *self, const char *text)
 static void B_Label_destroy(Label *self)
 {
     if (!self) return;
-    B_Label *bl = defaultBackend->privateApi->backendObject(self);
+    B_Label *bl = winapiBackend->privateApi->backendObject(self);
     free(bl->botxt.text);
     free(bl);
 }
 
 static int B_Button_create(Button *self)
 {
+    const GuiPrivateApi *api = winapiBackend->privateApi;
     B_Button *bb = malloc(sizeof(B_Button));
     bb->botxt.bo.t = BT_Button;
     bb->botxt.bo.w = INVALID_HANDLE_VALUE;
     bb->b = self;
     bb->botxt.text = 0;
-    defaultBackend->privateApi->setBackendObject(self, bb);
-    const char *text = Button_text(self);
+    api->setBackendObject(self, bb);
+    const char *text = api->button.text(self);
     BOTXT_updateText(self, text);
     bb->id = registerControl((BO *)bb);
     return 1;
@@ -655,7 +654,7 @@ static void B_Button_setText(Button *self, const char *text)
 static void B_Button_destroy(Button *self)
 {
     if (!self) return;
-    B_Button *bb = defaultBackend->privateApi->backendObject(self);
+    B_Button *bb = winapiBackend->privateApi->backendObject(self);
     unregisterControl(bb->id);
     free(bb->botxt.text);
     free(bb);
@@ -668,9 +667,9 @@ static int B_TextBox_create(TextBox *self, TextBox_textChanged changed)
     bt->botxt.bo.w = INVALID_HANDLE_VALUE;
     bt->t = self;
     bt->changed = changed;
-    defaultBackend->privateApi->setBackendObject(self, bt);
+    winapiBackend->privateApi->setBackendObject(self, bt);
     bt->id = registerControl((BO *)bt);
-    defaultBackend->privateApi->control.setContentSize(
+    winapiBackend->privateApi->control.setContentSize(
                 self, textBoxWidth, bdata.textControlHeight);
     return 1;
 }
@@ -683,7 +682,7 @@ static void B_TextBox_setText(TextBox *self, const char *text)
 static void B_TextBox_destroy(TextBox *self)
 {
     if (!self) return;
-    B_TextBox *bt = defaultBackend->privateApi->backendObject(self);
+    B_TextBox *bt = winapiBackend->privateApi->backendObject(self);
     unregisterControl(bt->id);
     free(bt->botxt.text);
     free(bt);
@@ -691,7 +690,7 @@ static void B_TextBox_destroy(TextBox *self)
 
 static void B_Control_setBounds(void *self, const Bounds *b)
 {
-    BO *bo = defaultBackend->privateApi->backendObject(self);
+    BO *bo = winapiBackend->privateApi->backendObject(self);
     if (!bo) return;
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wswitch"
@@ -711,16 +710,16 @@ static void B_Control_setBounds(void *self, const Bounds *b)
 
 static HWND findParentControlWindow(void *control)
 {
-    void *container = defaultBackend->privateApi->control.container(control);
+    void *container = winapiBackend->privateApi->control.container(control);
     if (!container) return INVALID_HANDLE_VALUE;
-    BO *cbo = defaultBackend->privateApi->backendObject(container);
+    BO *cbo = winapiBackend->privateApi->backendObject(container);
     while (!cbo || cbo->w == INVALID_HANDLE_VALUE)
     {
-        void *cc = defaultBackend->privateApi->controlObject(container);
+        void *cc = winapiBackend->privateApi->controlObject(container);
         if (!cc) return INVALID_HANDLE_VALUE;
-        container = defaultBackend->privateApi->control.container(container);
+        container = winapiBackend->privateApi->control.container(container);
         if (!container) return INVALID_HANDLE_VALUE;
-        cbo = defaultBackend->privateApi->backendObject(container);
+        cbo = winapiBackend->privateApi->backendObject(container);
     }
     return cbo->w;
 }
@@ -765,9 +764,10 @@ static LRESULT CALLBACK textBoxProc(HWND w, UINT msg, WPARAM wp, LPARAM lp)
 static int createChildControlWindow(void *control,
         const wchar_t *wc, DWORD style, DWORD exStyle, HMENU id)
 {
-    BO *bo = defaultBackend->privateApi->backendObject(control);
+    const GuiPrivateApi *api = winapiBackend->privateApi;
+    BO *bo = api->backendObject(control);
     Bounds b;
-    Control_bounds(control, &b);
+    api->control.bounds(control, &b);
     HWND parent = findParentControlWindow(control);
     if (parent == INVALID_HANDLE_VALUE)
     {
@@ -775,7 +775,7 @@ static int createChildControlWindow(void *control,
         return 0;
     }
     style |= WS_CHILD;
-    if (Control_shown(control)) style |= WS_VISIBLE;
+    if (api->control.shown(control)) style |= WS_VISIBLE;
     bo->w = CreateWindowExW(exStyle, wc, L"", style, b.x, b.y, b.width, b.height,
             parent, id, GetModuleHandleW(0), 0);
     if (bo->t == BT_TextBox)
@@ -796,7 +796,8 @@ static int createTextControlWindow(void *control, HMENU id)
     DWORD style = 0;
     DWORD exStyle = 0;
 
-    BOTXT *bt = defaultBackend->privateApi->backendObject(control);
+    const GuiPrivateApi *api = winapiBackend->privateApi;
+    BOTXT *bt = api->backendObject(control);
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wswitch"
@@ -809,7 +810,7 @@ static int createTextControlWindow(void *control, HMENU id)
     case BT_Button:
         wc = L"Button";
         style = BS_TEXT|WS_TABSTOP|WS_GROUP;
-        switch (Button_style(control))
+        switch (api->button.style(control))
         {
         case BS_Normal:
             style |= BS_PUSHBUTTON;
@@ -848,7 +849,7 @@ static int createTextControlWindow(void *control, HMENU id)
 
 static void B_Control_setShown(void *self, int shown)
 {
-    BO *bo = defaultBackend->privateApi->backendObject(self);
+    BO *bo = winapiBackend->privateApi->backendObject(self);
     if (!bo) return;
     HMENU id = 0;
 
@@ -880,7 +881,7 @@ static void B_Control_setShown(void *self, int shown)
 
 static void B_Control_setEnabled(void *self, int enabled)
 {
-    BO *bo = defaultBackend->privateApi->backendObject(self);
+    BO *bo = winapiBackend->privateApi->backendObject(self);
     if (!bo) return;
     if (bo->w != INVALID_HANDLE_VALUE)
     {
@@ -890,7 +891,7 @@ static void B_Control_setEnabled(void *self, int enabled)
 
 static void B_Control_focus(void *self)
 {
-    BO *bo = defaultBackend->privateApi->backendObject(self);
+    BO *bo = winapiBackend->privateApi->backendObject(self);
     if (!bo) return;
     if (bo->w != INVALID_HANDLE_VALUE)
     {
@@ -904,7 +905,7 @@ static void B_Control_focus(void *self)
 
 static void setTextControlParent(void *self)
 {
-    BOTXT *bt = defaultBackend->privateApi->backendObject(self);
+    BOTXT *bt = winapiBackend->privateApi->backendObject(self);
     HMENU id = 0;
     if (bt->bo.t == BT_Button)
     {
@@ -933,7 +934,7 @@ static void setTextControlParent(void *self)
 static void B_Control_setContainer(void *self, void *container)
 {
     (void)container;
-    BO *bo = defaultBackend->privateApi->backendObject(self);
+    BO *bo = winapiBackend->privateApi->backendObject(self);
     if (!bo) return;
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wswitch"
@@ -948,7 +949,7 @@ static void B_Control_setContainer(void *self, void *container)
 #pragma GCC diagnostic pop
 }
 
-static Backend win32Backend = {
+static Backend backend_winapi = {
     .backendApi = {
         .name = B_name,
         .control = {
@@ -995,4 +996,4 @@ static Backend win32Backend = {
     .privateApi = 0,
 };
 
-SOLOCAL Backend *defaultBackend = &win32Backend;
+SOEXPORT Backend *winapiBackend = &backend_winapi;
