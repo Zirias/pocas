@@ -58,25 +58,23 @@ static int isAnsiTerm(void)
     return 0;
 }
 
-SOEXPORT void TextColor_use(TextColor color, ConsoleStream stream)
+SOEXPORT void TextColor_use(TextColor color, FILE *outStream)
 {
     int doColor = 0;
-    FILE *out = stream == ConsoleStream_ERROR ? stderr : stdout;
-    int outFd = fileno(out);
+    int outFd = fileno(outStream);
     struct stat st;
 
-    if (isatty(outFd) && isAnsiTerm())
-    {	
-	doColor = 1;
+    if (isatty(outStream) && isAnsiTerm())
+    {
+        doColor = 1;
     }
     else if (fstat(outFd, &st) >= 0 && S_ISFIFO(st.st_mode))
     {
-	doColor = 1;
+        doColor = 1;
     }
 
     if (doColor)
     {
-        fputs(ansi[color+1], out);
+        fputs(ansi[color+1], outStream);
     }
 }
-

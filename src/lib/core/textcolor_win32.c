@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <windows.h>
+#include <io.h>
 
 #include <pocas/core/textcolor.h>
 
@@ -43,11 +44,10 @@ static void getConsoleAttr(void)
     }
 }
 
-SOEXPORT void TextColor_use(TextColor color, ConsoleStream stream)
+SOEXPORT void TextColor_use(TextColor color, FILE *outStream)
 {
-    HANDLE out = GetStdHandle(
-                stream == ConsoleStream_ERROR ?
-                    STD_ERROR_HANDLE : STD_OUTPUT_HANDLE);
+    int outFd = fileno(outStream);
+    HANDLE out = (HANDLE)_get_osfhandle(outFd);
     DWORD outType = GetFileType(out);
     DWORD mode;
     if (outType == FILE_TYPE_CHAR && GetConsoleMode(out, &mode))
@@ -55,16 +55,25 @@ SOEXPORT void TextColor_use(TextColor color, ConsoleStream stream)
         // in native windows console use console API
 
         call_once(&getConsoleAttrFlag, getConsoleAttr);
-        if (color == TextColor_NORMAL) color =
-                stream == ConsoleStream_ERROR ?
-                    consoleErrDefaultColor : consoleOutDefaultColor;
+        if (color == TC_NORMAL)
+        {
+            HANDLE err = GetStdHandle(STD_ERROR_HANDLE);
+            if (out == err)
+            {
+                color = consoleErrDefaultColor;
+            }
+            else
+            {
+                color = consoleOutDefaultColor;
+            }
+        }
         SetConsoleTextAttribute(out, color);
     }
     else if (outType == FILE_TYPE_PIPE)
     {
         // through a pipe, hope the receiving end understands ANSI codes.
 
-        fputs(ansi[color+1], stream == ConsoleStream_ERROR ? stderr : stdout);
+        fputs(ansi[color+1], outStream);
     }
 
     // for output to files or other character devices,

@@ -50,12 +50,10 @@ static void consoleResultHandler(const TestCase *testCase,
     ListIterator *igni = TestResult_ignoredMessages(result);
     if (igni) while (ListIterator_moveNext(igni))
     {
-        TextColor_use(TextColor_YELLOW, ConsoleStream_ERROR);
-        fputs("   [IGN]  ", stderr);
-        TextColor_use(TextColor_BROWN, ConsoleStream_ERROR);
-        fprintf(stderr, "%s::%s %s\n", classname, testname,
+        TextColor_fprintf(stderr,
+                TCS_YELLOW "   [IGN]  " TCS_BROWN "%s::%s %s" TCS_NORMAL "\n",
+                classname, testname,
                 (const char *)ListIterator_current(igni));
-        TextColor_use(TextColor_NORMAL, ConsoleStream_ERROR);
     }
     ListIterator_destroy(igni);
 
@@ -64,27 +62,20 @@ static void consoleResultHandler(const TestCase *testCase,
     case TRC_NONE:
         break;
     case TRC_CRSH:
-        TextColor_use(TextColor_LIGHTRED, ConsoleStream_ERROR);
-        fprintf(stderr, "   [CRSH] %s::%s %s\n", classname, testname, message);
-        TextColor_use(TextColor_NORMAL, ConsoleStream_ERROR);
+        TextColor_fprintf(stderr, TCS_LIGHTRED "   [CRSH] %s::%s %s"
+                TCS_NORMAL "\n", classname, testname, message);
         break;
     case TRC_FAIL:
-        TextColor_use(TextColor_LIGHTRED, ConsoleStream_ERROR);
-        fputs("   [FAIL] ", stderr);
-        TextColor_use(TextColor_NORMAL, ConsoleStream_ERROR);
-        fprintf(stderr, "%s::%s %s\n", classname, testname, message);
+        TextColor_fprintf(stderr, TCS_LIGHTRED "   [FAIL] " TCS_NORMAL
+                "%s::%s %s\n", classname, testname, message);
         break;
     case TRC_PASS:
-        TextColor_use(TextColor_LIGHTGREEN, ConsoleStream_ERROR);
-        fputs("   [PASS] ", stderr);
-        TextColor_use(TextColor_NORMAL, ConsoleStream_ERROR);
-        fprintf(stderr, "%s::%s %s\n", classname, testname, message);
+        TextColor_fprintf(stderr, TCS_LIGHTGREEN "   [PASS] " TCS_NORMAL
+                "%s::%s %s\n", classname, testname, message);
         break;
     case TRC_UNKN:
-        TextColor_use(TextColor_YELLOW, ConsoleStream_ERROR);
-        fputs("   [UNKN] ", stderr);
-        TextColor_use(TextColor_NORMAL, ConsoleStream_ERROR);
-        fprintf(stderr, "%s::%s %s\n", classname, testname, message);
+        TextColor_fprintf(stderr, TCS_YELLOW "   [UNKN] " TCS_NORMAL
+                "%s::%s %s\n", classname, testname, message);
         break;
     }
 }
@@ -93,24 +84,18 @@ static int aggregateResult(int run, int passed, int failed, int unknown)
 {
     if (passed)
     {
-        fputs(", ", stderr);
-        TextColor_use(TextColor_LIGHTGREEN, ConsoleStream_ERROR);
-        fprintf(stderr, "passed: %d", passed);
-        TextColor_use(TextColor_NORMAL, ConsoleStream_ERROR);
+        TextColor_fprintf(stderr, ", " TCS_LIGHTGREEN "passed: %d" TCS_NORMAL,
+                passed);
     }
     if (failed)
     {
-        fputs(", ", stderr);
-        TextColor_use(TextColor_LIGHTRED, ConsoleStream_ERROR);
-        fprintf(stderr, "failed/crashed: %d", failed);
-        TextColor_use(TextColor_NORMAL, ConsoleStream_ERROR);
+        TextColor_fprintf(stderr, ", " TCS_LIGHTRED "failed/crashed: %d"
+                TCS_NORMAL, failed);
     }
     if (unknown)
     {
-        fputs(", ", stderr);
-        TextColor_use(TextColor_YELLOW, ConsoleStream_ERROR);
-        fprintf(stderr, "unknown: %d", unknown);
-        TextColor_use(TextColor_NORMAL, ConsoleStream_ERROR);
+        TextColor_fprintf(stderr, ", " TCS_YELLOW "unknown: %d" TCS_NORMAL,
+                unknown);
     }
     fputc('\n', stderr);
     return (passed == run) ? EXIT_SUCCESS : EXIT_FAILURE;
@@ -124,10 +109,8 @@ static void consoleClassResultHandler(const TestClass *testClass, void *args)
     int failed = TestClass_testsFailed(testClass);
     int unknown = TestClass_testsUnknown(testClass);
 
-    TextColor_use(TextColor_LIGHTCYAN, ConsoleStream_ERROR);
-    fprintf(stderr, "   [TEST] %s run: %d",
+    TextColor_fprintf(stderr, TCS_LIGHTCYAN "   [TEST] %s run: %d" TCS_NORMAL,
             Plugin_id(TestClass_plugin(testClass)), run);
-    TextColor_use(TextColor_NORMAL, ConsoleStream_ERROR);
 
     aggregateResult(run, passed, failed, unknown);
 
@@ -272,9 +255,8 @@ int main(int argc, char **argv)
     ListIterator_destroy(tci);
     List_destroy(testClasses);
 
-    TextColor_use(TextColor_LIGHTCYAN, ConsoleStream_ERROR);
-    fprintf(stderr, "   [TRES] total tests run: %d", result.run);
-    TextColor_use(TextColor_NORMAL, ConsoleStream_ERROR);
+    TextColor_fprintf(stderr, TCS_LIGHTCYAN "   [TRES] total tests run: %d"
+            TCS_NORMAL, result.run);
     return aggregateResult(result.run, result.passed, result.failed, result.unknown);
 
 usage:
