@@ -2,7 +2,7 @@
 
 #include <stdlib.h>
 
-#include <pocas/core/eventloop.h>
+#include "eventloop_internal.h"
 
 typedef struct EventLoop
 {
@@ -30,4 +30,16 @@ SOEXPORT void EventLoop_exit(int rc)
         loop.running = 0;
         loop.rc = rc;
     }
+}
+
+SOEXPORT int EventLoop_processEvents(int timeout)
+{
+    return eventProcessor(timeout);
+}
+
+SOEXPORT EventProcessor EventLoop_replaceEventProcessor(EventProcessor ep)
+{
+    EventProcessor oldEventProcessor = eventProcessor;
+    eventProcessor = ep;
+    return oldEventProcessor;
 }

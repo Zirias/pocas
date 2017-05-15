@@ -1,7 +1,8 @@
 #include "eventloop_internal.h"
 
-SOEXPORT int EventLoop_processEvents(int timeout)
+static int posixEventProcessor(int timeout)
 {
     return 0;
 }
 
+SOLOCAL EventProcessor eventProcessor = &posixEventProcessor;

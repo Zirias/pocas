@@ -215,7 +215,7 @@ static void updateWindowClientSize(B_Window *self)
     }
 }
 
-static void handleWin32RawMessageEvent(void *w, EventArgs *args)
+static void handleWin32MessageEvent(void *w, EventArgs *args)
 {
     B_Window *self = w;
     if (bdata.activeWindow != self->bo.w) return;
@@ -227,35 +227,32 @@ static void handleWin32RawMessageEvent(void *w, EventArgs *args)
     }
 }
 
-static void handleWin32MessageEvent(void *w, EventArgs *args)
+static LRESULT CALLBACK windowProc(HWND wnd, UINT msg, WPARAM wp, LPARAM lp)
 {
-    B_Window *self = w;
-    Win32MsgEvInfo *mei = args->evInfo;
+    B_Window *self = (B_Window *)GetPropW(wnd, L"B_Window");
     const GuiPrivateApi *api = winapiBackend->privateApi;
-    if (mei->wnd != self->bo.w) return;
-
     WORD id;
     HWND ctl;
 
-    switch (mei->msg)
+    if (!self) return DefWindowProcW(wnd, msg, wp, lp);
+
+    switch (msg)
     {
     case WM_SIZE:
         updateWindowClientSize(self);
-        args->handled = 1;
-        break;
+        return 1;
 
     case WM_CLOSE:
         api->window.close(self->w);
-        args->handled = 1;
-        break;
+        return 1;
 
     case WM_ACTIVATE:
-        if (mei->wp == 0) bdata.activeWindow = INVALID_HANDLE_VALUE;
-        else bdata.activeWindow = self->bo.w;
+        if (wp == 0) bdata.activeWindow = INVALID_HANDLE_VALUE;
+        else bdata.activeWindow = wnd;
         break;
 
     case DM_GETDEFID:
-        ctl = GetTopWindow(self->bo.w);
+        ctl = GetTopWindow(wnd);
         while (ctl)
         {
             wchar_t classname[16];
@@ -270,17 +267,12 @@ static void handleWin32MessageEvent(void *w, EventArgs *args)
         if (ctl)
         {
             id = (WORD) GetWindowLongW(ctl, GWL_ID);
-            mei->result = MAKELONG(id, DC_HASDEFID);
+            return MAKELONG(id, DC_HASDEFID);
         }
-        else
-        {
-            mei->result = 0;
-        }
-        args->handled = 1;
-        break;
+        return 0;
 
     case WM_COMMAND:
-        id = LOWORD(mei->wp);
+        id = LOWORD(wp);
         const BO *bo = HashTable_get(bdata.controls, &id);
         if (bo)
         {
@@ -290,14 +282,12 @@ static void handleWin32MessageEvent(void *w, EventArgs *args)
             {
             case BT_Button:
                 api->button.click(((B_Button *)bo)->b);
-		args->handled = 1;
-                break;
+                return 1;
             case BT_MenuItem:
                 api->menuItem.select(((B_MenuItem *)bo)->m);
-		args->handled = 1;
-                break;
+                return 1;
             case BT_TextBox:
-                if (HIWORD(mei->wp) == EN_CHANGE)
+                if (HIWORD(wp) == EN_CHANGE)
                 {
                     B_TextBox *bt = (B_TextBox *)bo;
                     free(bt->botxt.text);
@@ -308,7 +298,7 @@ static void handleWin32MessageEvent(void *w, EventArgs *args)
                     WideCharToMultiByte(CP_UTF8, 0, bt->botxt.text, -1, converted, 2 * textsize, 0, 0);
                     bt->changed(bt->t, converted);
                     free(converted);
-                    args->handled = 1;
+                    return 1;
                 }
                 break;
             }
@@ -328,9 +318,9 @@ static void handleWin32MessageEvent(void *w, EventArgs *args)
                 PostQuitMessage(0);
             }
         }
-	args->handled = 1;
-        break;
+        return 1;
     }
+    return DefWindowProcW(wnd, msg, wp, lp);
 }
 
 static int B_Window_create(Window *self)
@@ -357,7 +347,7 @@ static int B_Window_create(Window *self)
     bw->wc.cbSize = sizeof(WNDCLASSEXW);
     bw->wc.hInstance = GetModuleHandleW(0);
     bw->wc.lpszClassName = bw->name;
-    bw->wc.lpfnWndProc = EventLoop_win32WndProc;
+    bw->wc.lpfnWndProc = windowProc;
     bw->wc.hbrBackground = (HBRUSH) COLOR_WINDOW;
     bw->wc.hCursor = LoadCursorA(0, IDC_ARROW);
     RegisterClassExW(&bw->wc);
@@ -370,8 +360,8 @@ static int B_Window_create(Window *self)
             WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT,
             winrect.right - winrect.left, winrect.bottom - winrect.top,
             pw, 0, bw->wc.hInstance, 0);
+    SetPropW(bw->bo.w, L"B_Window", (HANDLE)bw);
     Event_register(EventLoop_win32MsgEvent(), bw, handleWin32MessageEvent);
-    Event_register(EventLoop_win32RawMsgEvent(), bw, handleWin32RawMessageEvent);
     EventLoop_setProcessMessages(++bdata.nWindows);
     return 1;
 }
@@ -396,7 +386,6 @@ static void B_Window_destroy(Window *self)
     B_Window *bw = winapiBackend->privateApi->backendObject(self);
     DestroyWindow(bw->bo.w);
     UnregisterClassW(bw->name, bw->wc.hInstance);
-    Event_unregister(EventLoop_win32RawMsgEvent(), bw, handleWin32RawMessageEvent);
     Event_unregister(EventLoop_win32MsgEvent(), bw, handleWin32MessageEvent);
     free(bw->name);
     free(bw);
