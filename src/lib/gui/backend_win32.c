@@ -282,7 +282,7 @@ static void handleWin32MessageEvent(void *w, EventArgs *args)
         {
             mei->result = 0;
         }
-        EventArgs_setHandled(args);
+        args->handled = 1;
         break;
 
     case WM_COMMAND:
