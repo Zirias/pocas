@@ -26,6 +26,6 @@ typedef struct GuiClass
 
 #define ISGCOBJ(gcobj) !strncmp(((const GuiClass*)gcobj)->id, GUICLASSID, 4)
 
-extern const GuiPrivateApi privateApi;
+extern const PG_PrivateApi privateApi;
 
 #endif // INTERNAL_H

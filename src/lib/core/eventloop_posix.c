@@ -5,4 +5,4 @@ static int posixEventProcessor(int timeout)
     return 0;
 }
 
-SOLOCAL EventProcessor eventProcessor = &posixEventProcessor;
+SOLOCAL PC_EventProcessor eventProcessor = &posixEventProcessor;

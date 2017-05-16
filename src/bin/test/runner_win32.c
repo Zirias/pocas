@@ -14,10 +14,10 @@
 #include "testmethod_internal.h"
 #include "runner_internal.h"
 
-SOLOCAL void Runner_mainHook(List *args, char *gdbPath)
+SOLOCAL void Runner_mainHook(PC_List *args, char *gdbPath)
 {
-    if (!List_length(args)) return;
-    if (strcmp("__pocastest__run", List_getStr(args, 0))) return;
+    if (!PC_List_length(args)) return;
+    if (strcmp("__pocastest__run", PC_List_getStr(args, 0))) return;
 
     if (gdbPath)
     {
@@ -25,10 +25,10 @@ SOLOCAL void Runner_mainHook(List *args, char *gdbPath)
         while (--i && !IsDebuggerPresent()) Sleep(10);
     }
 
-    if (List_length(args) != 4) exit(EXIT_FAILURE);
+    if (PC_List_length(args) != 4) exit(EXIT_FAILURE);
 
     uintptr_t testPipeHandleValue;
-    if (sscanf(List_getStr(args, 1), "%" SCNxPTR, &testPipeHandleValue) != 1)
+    if (sscanf(PC_List_getStr(args, 1), "%" SCNxPTR, &testPipeHandleValue) != 1)
     {
         exit(EXIT_FAILURE);
     }
@@ -38,14 +38,14 @@ SOLOCAL void Runner_mainHook(List *args, char *gdbPath)
     FILE *testPipe = _fdopen(testPipeFd, "a");
     setvbuf(testPipe, 0, _IONBF, 0);
 
-    Plugin *runningTest = Plugin_load(List_getStr(args, 2), TEST_PLUGIN_ID);
+    PC_Plugin *runningTest = PC_Plugin_load(PC_List_getStr(args, 2), TEST_PLUGIN_ID);
     if (!runningTest)
     {
-        fprintf(testPipe, "0Error loading test `%s'.i\n", List_getStr(args, 2));
+        fprintf(testPipe, "0Error loading test `%s'.i\n", PC_List_getStr(args, 2));
         fclose(testPipe);
         exit(EXIT_FAILURE);
     }
 
     SetErrorMode(SEM_FAILCRITICALERRORS|SEM_NOGPFAULTERRORBOX);
-    Runner_runTest(testPipe, runningTest, List_getStr(args, 3));
+    Runner_runTest(testPipe, runningTest, PC_List_getStr(args, 3));
 }

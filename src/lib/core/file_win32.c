@@ -5,52 +5,52 @@
 #include <pocas/core/event_win32.h>
 #include <pocas/core/file_win32.h>
 
-struct File
+struct PC_File
 {
     HANDLE handle;
-    Event *dataRead;
+    PC_Event *dataRead;
     OVERLAPPED ovwr;
 };
 
-SOEXPORT File *File_open(const char *path, FileMode mode)
+SOEXPORT PC_File *PC_File_open(const char *path, PC_FileMode mode)
 {
-    if (!(mode & FM_RW)) return 0;
+    if (!(mode & PC_FM_RW)) return 0;
     DWORD shareMode = FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE;
-    DWORD creationDisposition = (mode & FM_Create) ? OPEN_ALWAYS : OPEN_EXISTING;
+    DWORD creationDisposition = (mode & PC_FM_Create) ? OPEN_ALWAYS : OPEN_EXISTING;
     DWORD desiredAccess = 0;
-    if (mode & FM_Read) desiredAccess |= GENERIC_READ;
-    if (mode & FM_Write) desiredAccess |= GENERIC_WRITE;
+    if (mode & PC_FM_Read) desiredAccess |= GENERIC_READ;
+    if (mode & PC_FM_Write) desiredAccess |= GENERIC_WRITE;
     HANDLE handle = CreateFile(path, desiredAccess, shareMode, 0, creationDisposition, FILE_FLAG_OVERLAPPED, 0);
     if (handle == INVALID_HANDLE_VALUE) return 0;
-    if (mode & FM_Append)
+    if (mode & PC_FM_Append)
     {
         LARGE_INTEGER distance;
         distance.QuadPart = 0;
         SetFilePointerEx(handle, distance, 0, FILE_END);
     }
-    return File_openHandle(handle);
+    return PC_File_openHandle(handle);
 }
 
-SOEXPORT File *File_openHandle(HANDLE handle)
+SOEXPORT PC_File *PC_File_openHandle(HANDLE handle)
 {
-    File *self = calloc(1, sizeof(File));
+    PC_File *self = calloc(1, sizeof(PC_File));
     self->handle = handle;
-    self->dataRead = Event_create("Data");
+    self->dataRead = PC_Event_create("Data");
     self->ovwr.hEvent = CreateEvent(0, 1, 0, 0);
     return self;
 }
 
-SOEXPORT void File_startReading(File *self)
+SOEXPORT void PC_File_startReading(PC_File *self)
 {
     (void)self; // TODO
 }
 
-SOEXPORT void File_stopReading(File *self)
+SOEXPORT void PC_File_stopReading(PC_File *self)
 {
     (void)self; // TODO
 }
 
-SOEXPORT int File_write(File *self, void *buffer, size_t n, size_t *written)
+SOEXPORT int PC_File_write(PC_File *self, void *buffer, size_t n, size_t *written)
 {
     if (GetFileType(self->handle) == FILE_TYPE_DISK)
     {
@@ -90,21 +90,21 @@ SOEXPORT int File_write(File *self, void *buffer, size_t n, size_t *written)
     return 1;
 }
 
-SOEXPORT Event *File_dataReadEvent(const File *self)
+SOEXPORT PC_Event *PC_File_dataReadEvent(const PC_File *self)
 {
     return self->dataRead;
 }
 
-SOEXPORT void File_close(File *self)
+SOEXPORT void PC_File_close(PC_File *self)
 {
     if (!self) return;
-    Event_destroy(self->dataRead);
+    PC_Event_destroy(self->dataRead);
     CloseHandle(self->handle);
     CloseHandle(self->ovwr.hEvent);
     free(self);
 }
 
-SOEXPORT List *File_findInDir(const char *path, const char *pattern)
+SOEXPORT PC_List *PC_File_findInDir(const char *path, const char *pattern)
 {
     size_t pathlen = strlen(path);
     char *pat;
@@ -129,7 +129,7 @@ SOEXPORT List *File_findInDir(const char *path, const char *pattern)
         return 0;
     }
 
-    List *found = List_createStr(0);
+    PC_List *found = PC_List_createStr(0);
     do
     {
         char *f;
@@ -145,7 +145,7 @@ SOEXPORT List *File_findInDir(const char *path, const char *pattern)
             strcat(f, "\\");
         }
         strcat(f, findData.cFileName);
-        List_append(found, f);
+        PC_List_append(found, f);
     } while (FindNextFile(findHdl, &findData));
     FindClose(findHdl);
     free(pat);

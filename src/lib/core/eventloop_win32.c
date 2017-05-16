@@ -9,10 +9,10 @@
 struct win32EventLoopData
 {
     int initialized;
-    Win32HndlEvInfo hndlEvInfo;
-    Win32MsgEvInfo msgEvInfo;
-    Event *win32HndlEvent;
-    Event *win32MsgEvent;
+    PC_Win32HndlEvInfo hndlEvInfo;
+    PC_Win32MsgEvInfo msgEvInfo;
+    PC_Event *win32HndlEvent;
+    PC_Event *win32MsgEvent;
     HANDLE *handles;
     DWORD maxHandles;
     DWORD numHandles;
@@ -27,19 +27,19 @@ static void init(void)
     if (!data.initialized)
     {
         data.initialized = 1;
-        data.win32HndlEvent = Event_create("win32Hndl");
-        data.win32MsgEvent = Event_create("win32Msg");
+        data.win32HndlEvent = PC_Event_create("win32Hndl");
+        data.win32MsgEvent = PC_Event_create("win32Msg");
         data.processMessages = 0;
     }
 }
 
-SOEXPORT Event *EventLoop_win32HndlEvent()
+SOEXPORT PC_Event *PC_EventLoop_win32HndlEvent()
 {
     init();
     return data.win32HndlEvent;
 }
 
-SOEXPORT Event *EventLoop_win32MsgEvent()
+SOEXPORT PC_Event *PC_EventLoop_win32MsgEvent()
 {
     init();
     return data.win32MsgEvent;
@@ -51,7 +51,7 @@ static int win32EventProcessor(int timeout)
 
     if (!data.numHandles && !data.processMessages)
     {
-        EventLoop_exit(EXIT_FAILURE);
+        PC_EventLoop_exit(EXIT_FAILURE);
         return 0;
     }
 
@@ -79,12 +79,12 @@ static int win32EventProcessor(int timeout)
             ++nevents;
             if (data.msg.message == WM_QUIT)
             {
-                EventLoop_exit((int)data.msg.wParam);
+                PC_EventLoop_exit((int)data.msg.wParam);
                 return nevents;
             }
-            EventArgs args = EventArgs_init(data.win32MsgEvent,
+            PC_EventArgs args = PC_EventArgs_init(data.win32MsgEvent,
                     0, &data.msg);
-            Event_raise(data.win32MsgEvent, &args);
+            PC_Event_raise(data.win32MsgEvent, &args);
             if (!args.handled)
             {
                 TranslateMessage(&data.msg);
@@ -111,19 +111,19 @@ static int win32EventProcessor(int timeout)
 #pragma GCC diagnostic pop
 
         data.hndlEvInfo.hndl = data.handles[idx];
-        EventArgs args = EventArgs_init(data.win32HndlEvent,
-		0, &data.hndlEvInfo);
-        Event_raise(data.win32HndlEvent, &args);
+        PC_EventArgs args = PC_EventArgs_init(data.win32HndlEvent,
+                0, &data.hndlEvInfo);
+        PC_Event_raise(data.win32HndlEvent, &args);
         return 1;
     }
 }
 
-SOEXPORT void EventLoop_setProcessMessages(int processMessages)
+SOEXPORT void PC_EventLoop_setProcessMessages(int processMessages)
 {
     data.processMessages = !!processMessages;
 }
 
-SOLOCAL EventProcessor eventProcessor = &win32EventProcessor;
+SOLOCAL PC_EventProcessor eventProcessor = &win32EventProcessor;
 
 /*
 typedef struct WaitOvrdRecord

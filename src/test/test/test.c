@@ -2,51 +2,51 @@
 
 #include <pocas/test/test.h>
 
-TESTCLASS(pocastest::Test);
+PT_TESTCLASS(pocastest::Test);
 
-TESTMETHOD(test_pass_passes)
+PT_TESTMETHOD(test_pass_passes)
 {
-    Test_pass();
+    PT_Test_pass();
 }
 
-TESTMETHOD(test_fail_fails)
+PT_TESTMETHOD(test_fail_fails)
 {
-    Test_ignore(1);
+    PT_Test_ignore(1);
 
-    Test_fail("failed intentionally");
-    Test_pass();
+    PT_Test_fail("failed intentionally");
+    PT_Test_pass();
 }
 
-TESTMETHOD(test_default_is_used)
+PT_TESTMETHOD(test_default_is_used)
 {
-    Test_default(TRC_PASS);
+    PT_Test_default(PT_TRC_PASS);
 
     // doing nothing is inconclusive
 }
 
-TESTMETHOD(test_expected_crash)
+PT_TESTMETHOD(test_expected_crash)
 {
-    Test_expectCrash();
+    PT_Test_expectCrash();
 
     // crash intentionally
     int c = *((int *)0);
     printf("%d", c); // to prevent optimizing away the crash
 }
 
-TESTMETHOD(test_assert_not_null)
+PT_TESTMETHOD(test_assert_not_null)
 {
-    Test_ignore(1);
+    PT_Test_ignore(1);
 
     void *testpointer = 0;
-    Test_assertNotNull(testpointer, 0);
-    Test_pass();
+    PT_Test_assertNotNull(testpointer, 0);
+    PT_Test_pass();
 }
 
-TESTMETHOD(test_assert_not_equal)
+PT_TESTMETHOD(test_assert_not_equal)
 {
-    Test_ignore(1);
+    PT_Test_ignore(1);
 
     int answer = 23;
-    Test_assertIntEqual(42, answer, "just wrong!");
-    Test_pass();
+    PT_Test_assertIntEqual(42, answer, "just wrong!");
+    PT_Test_pass();
 }

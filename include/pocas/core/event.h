@@ -5,34 +5,35 @@
 
 #include <pocas/core/decl.h>
 
-typedef struct Event Event;
+C_CLASS_DECL(PC_Event);
 
-typedef struct EventArgs
+C_CLASS_DECL(PC_EventArgs);
+struct PC_EventArgs
 {
-    Event *const event;
+    PC_Event *const event;
     void *const sender;
     void *const evInfo;
     int handled;
-} EventArgs;
+};
 
-
-typedef struct DataEvInfo
+C_CLASS_DECL(PC_DataEvInfo);
+struct PC_DataEvInfo
 {
     size_t size;
     char data[];
-} DataEvInfo;
+};
 
-typedef void (*EventHandler)(void *self, EventArgs *args);
+typedef void (*PC_EventHandler)(void *self, PC_EventArgs *args);
 
-DECLEXPORT Event *Event_create(const char *name);
-DECLEXPORT void Event_register(Event *self, void *object, EventHandler handler);
-DECLEXPORT void Event_unregister(Event *self, void *object, EventHandler handler);
-DECLEXPORT int Event_count(const Event *self);
-DECLEXPORT void Event_clear(Event *self);
-DECLEXPORT void Event_raise(const Event *self, EventArgs *args);
-DECLEXPORT const char *Event_name(const Event *self);
-DECLEXPORT void Event_destroy(Event *self);
+DECLEXPORT PC_Event *PC_Event_create(const char *name);
+DECLEXPORT void PC_Event_register(PC_Event *self, void *object, PC_EventHandler handler);
+DECLEXPORT void PC_Event_unregister(PC_Event *self, void *object, PC_EventHandler handler);
+DECLEXPORT int PC_Event_count(const PC_Event *self);
+DECLEXPORT void PC_Event_clear(PC_Event *self);
+DECLEXPORT void PC_Event_raise(const PC_Event *self, PC_EventArgs *args);
+DECLEXPORT const char *PC_Event_name(const PC_Event *self);
+DECLEXPORT void PC_Event_destroy(PC_Event *self);
 
-#define EventArgs_init(event, sender, evInfo) {(event), (sender), (evInfo), 0}
+#define PC_EventArgs_init(event, sender, evInfo) {(event), (sender), (evInfo), 0}
 
 #endif

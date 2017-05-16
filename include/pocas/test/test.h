@@ -5,7 +5,7 @@
 #include <pocas/test/resultcode.h>
 #include <pocas/test/method.h>
 
-#define TESTCLASS(name) \
+#define PT_TESTCLASS(name) \
     SOEXPORT const char *pocastest__id = #name
 
 #endif

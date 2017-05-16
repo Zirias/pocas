@@ -3,12 +3,13 @@
 
 #include <pocas/gui/decl.h>
 
-typedef struct Bounds Bounds;
-typedef struct Event Event;
+C_CLASS_DECL(PC_Event);
 
-DECLEXPORT void *Container_control(const void *self);
-DECLEXPORT void Container_setControl(void *self, void *control);
-DECLEXPORT void Container_bounds(const void *self, Bounds *b);
-DECLEXPORT Event *Container_resizedEvent(const void *self);
+C_CLASS_DECL(PG_Bounds);
+
+DECLEXPORT void *PG_Container_control(const void *self);
+DECLEXPORT void PG_Container_setControl(void *self, void *control);
+DECLEXPORT void PG_Container_bounds(const void *self, PG_Bounds *b);
+DECLEXPORT PC_Event *PG_Container_resizedEvent(const void *self);
 
 #endif

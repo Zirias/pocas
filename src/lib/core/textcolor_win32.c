@@ -44,7 +44,7 @@ static void getConsoleAttr(void)
     }
 }
 
-SOEXPORT void TextColor_use(TextColor color, FILE *outStream)
+SOEXPORT void PC_TextColor_use(PC_TextColor color, FILE *outStream)
 {
     int outFd = fileno(outStream);
     HANDLE out = (HANDLE)_get_osfhandle(outFd);
@@ -55,7 +55,7 @@ SOEXPORT void TextColor_use(TextColor color, FILE *outStream)
         // in native windows console use console API
 
         call_once(&getConsoleAttrFlag, getConsoleAttr);
-        if (color == TC_NORMAL)
+        if (color == PC_TC_NORMAL)
         {
             HANDLE err = GetStdHandle(STD_ERROR_HANDLE);
             if (out == err)

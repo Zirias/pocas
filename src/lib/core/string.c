@@ -3,7 +3,7 @@
 
 #include <pocas/core/string.h>
 
-SOEXPORT char *String_copy(const char *self)
+SOEXPORT char *PC_String_copy(const char *self)
 {
     char *result = malloc(strlen(self) + 1);
     char *w = result;

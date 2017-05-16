@@ -6,74 +6,74 @@
 #include <pocas/core/plugin.h>
 #include <pocas/core/string.h>
 
-struct Plugin
+struct PC_Plugin
 {
     const char *id;
     char *path;
-    Dso *dso;
+    PC_Dso *dso;
 };
 
 extern const char *plugin_pattern;
 
-SOEXPORT Plugin *Plugin_load(const char *path, const char *idSymbolName)
+SOEXPORT PC_Plugin *PC_Plugin_load(const char *path, const char *idSymbolName)
 {
-    Dso *so = Dso_load(path);
+    PC_Dso *so = PC_Dso_load(path);
     if (!so) return 0;
-    const char *id = Dso_string(so, idSymbolName);
+    const char *id = PC_Dso_string(so, idSymbolName);
     if (!id)
     {
-        Dso_close(so);
+        PC_Dso_close(so);
         return 0;
     }
 
-    Plugin *self = malloc(sizeof(Plugin));
-    self->path = String_copy(path);
+    PC_Plugin *self = malloc(sizeof(PC_Plugin));
+    self->path = PC_String_copy(path);
     self->id = id;
     self->dso = so;
 
     return self;
 }
 
-SOEXPORT List *Plugin_loadDir(const char *path, const char *idSymbolName)
+SOEXPORT PC_List *PC_Plugin_loadDir(const char *path, const char *idSymbolName)
 {
-    List *pluginFiles = File_findInDir(path, plugin_pattern);
+    PC_List *pluginFiles = PC_File_findInDir(path, plugin_pattern);
     if (!pluginFiles) return 0;
-    List *plugins = List_create(0, 0, 0);
-    ListIterator *i = List_iterator(pluginFiles);
-    while (ListIterator_moveNext(i))
+    PC_List *plugins = PC_List_create(0, 0, 0);
+    PC_ListIterator *i = PC_List_iterator(pluginFiles);
+    while (PC_ListIterator_moveNext(i))
     {
-        Plugin *p = Plugin_load(ListIterator_current(i), idSymbolName);
-        if (p) List_append(plugins, p);
+        PC_Plugin *p = PC_Plugin_load(PC_ListIterator_current(i), idSymbolName);
+        if (p) PC_List_append(plugins, p);
     }
-    ListIterator_destroy(i);
-    List_destroy(pluginFiles);
-    if (!List_length(plugins))
+    PC_ListIterator_destroy(i);
+    PC_List_destroy(pluginFiles);
+    if (!PC_List_length(plugins))
     {
-        List_destroy(plugins);
+        PC_List_destroy(plugins);
         return 0;
     }
     return plugins;
 }
 
-SOEXPORT const char *Plugin_id(const Plugin *self)
+SOEXPORT const char *PC_Plugin_id(const PC_Plugin *self)
 {
     return self->id;
 }
 
-SOEXPORT const char *Plugin_path(const Plugin *self)
+SOEXPORT const char *PC_Plugin_path(const PC_Plugin *self)
 {
     return self->path;
 }
 
-SOEXPORT void *Plugin_symbol(const Plugin *self, const char *name)
+SOEXPORT void *PC_Plugin_symbol(const PC_Plugin *self, const char *name)
 {
-    return Dso_symbol(self->dso, name);
+    return PC_Dso_symbol(self->dso, name);
 }
 
-SOEXPORT void Plugin_close(Plugin *self)
+SOEXPORT void PC_Plugin_close(PC_Plugin *self)
 {
     if (!self) return;
-    Dso_close(self->dso);
+    PC_Dso_close(self->dso);
     free(self->path);
     free(self);
 }

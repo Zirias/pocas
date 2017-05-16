@@ -12,62 +12,12 @@
 #include "container_internal.h"
 
 #ifdef DEFAULT_GUI_BACKEND
-#define BACKENDPTR(x) x ## Backend
+#define BACKENDPTR(x) PG_ ## x ## Backend
 #define BACKENDPTRX(x) BACKENDPTR(x)
 #define DEFAULTBACKEND BACKENDPTRX(DEFAULT_GUI_BACKEND)
-extern Backend *DEFAULTBACKEND;
-static Backend *currentBackend = 0;
-
-#else
-static Backend backend_null = {
-    .backendApi = {
-        .name = 0,
-        .control = {
-            .setContainer = 0,
-            .setBounds = 0,
-            .setShown = 0,
-        .setEnabled = 0,
-        .focus = 0,
-        },
-        .window = {
-            .create = 0,
-            .setMenu = 0,
-            .close = 0,
-            .destroy = 0,
-        },
-        .menu = {
-            .create = 0,
-            .addItem = 0,
-        .removeItem = 0,
-            .destroy = 0,
-        },
-        .menuItem = {
-            .create = 0,
-            .destroy = 0,
-        },
-        .messageBox = {
-            .show = 0,
-        },
-        .label = {
-            .create = 0,
-            .setText = 0,
-            .destroy = 0,
-        },
-        .button = {
-            .create = 0,
-            .setText = 0,
-            .destroy = 0,
-        },
-        .textBox = {
-            .create = 0,
-            .setText = 0,
-            .destroy = 0,
-        },
-    },
-    .privateApi = 0,
-};
-static Backend *currentBackend = &backend_null;
+extern PG_Backend *DEFAULTBACKEND;
 #endif
+static PG_Backend *currentBackend = 0;
 
 static void *backendObject(const void *frontendObject)
 {
@@ -114,7 +64,7 @@ static int setContainerObject(void *frontendObject, void *containerObject)
     return 1;
 }
 
-SOLOCAL const GuiPrivateApi privateApi =
+SOLOCAL const PG_PrivateApi privateApi =
 {
     .backendObject = backendObject,
     .setBackendObject = setBackendObject,
@@ -124,60 +74,62 @@ SOLOCAL const GuiPrivateApi privateApi =
     .setContainerObject = setContainerObject,
 
     .control = {
-        .create = Control_create,
-        .container = Control_container,
-        .bounds = Control_bounds,
-        .shown = Control_shown,
-        .setContainer = Control_setContainer,
-        .setContentSize = Control_setContentSize,
-        .destroy = Control_destroy
+        .create = PG_Control_create,
+        .container = PG_Control_container,
+        .bounds = PG_Control_bounds,
+        .shown = PG_Control_shown,
+        .setContainer = PG_Control_setContainer,
+        .setContentSize = PG_Control_setContentSize,
+        .destroy = PG_Control_destroy
     },
 
     .container =
     {
-        .create = Container_create,
-        .setBounds = Container_setBounds,
-        .destroy = Container_destroy
+        .create = PG_Container_create,
+        .setBounds = PG_Container_setBounds,
+        .destroy = PG_Container_destroy
     },
 
     .window =
     {
-        .close = Window_close,
-        .title = Window_title,
-        .parent = Window_parent,
-        .width = Window_width,
-        .height = Window_height,
-        .lastWindowClosedEvent = Window_lastWindowClosedEvent
+        .close = PG_Window_close,
+        .title = PG_Window_title,
+        .parent = PG_Window_parent,
+        .width = PG_Window_width,
+        .height = PG_Window_height,
+        .lastWindowClosedEvent = PG_Window_lastWindowClosedEvent
     },
 
     .menuItem =
     {
-        .subMenu = MenuItem_subMenu,
-        .text = MenuItem_text,
-        .select = MenuItem_select
+        .subMenu = PG_MenuItem_subMenu,
+        .text = PG_MenuItem_text,
+        .select = PG_MenuItem_select
     },
 
     .label =
     {
-        .text = Label_text
+        .text = PG_Label_text
     },
 
     .button =
     {
-        .text = Button_text,
-        .style = Button_style,
-        .click = Button_click
+        .text = PG_Button_text,
+        .style = PG_Button_style,
+        .click = PG_Button_click
     }
 };
 
-SOEXPORT const Backend *Backend_current()
+SOEXPORT const PG_Backend *PG_Backend_current()
 {
-#ifdef DEFAULTBACKEND
     if (!currentBackend)
     {
+#ifdef DEFAULTBACKEND
         currentBackend = DEFAULTBACKEND;
-    }
+#else
+        return 0;
 #endif
+    }
     if (!currentBackend->privateApi)
     {
         currentBackend->privateApi = &privateApi;
@@ -185,7 +137,7 @@ SOEXPORT const Backend *Backend_current()
     return currentBackend;
 }
 
-SOEXPORT void Backend_setCurrent(Backend *backend)
+SOEXPORT void PG_Backend_setCurrent(PG_Backend *backend)
 {
     currentBackend = backend;
 }

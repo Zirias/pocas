@@ -5,14 +5,14 @@
 
 #include <pocas/core/dso.h>
 
-struct Dso
+struct PC_Dso
 {
     uintptr_t so;
 };
 
-SOEXPORT Dso *Dso_load(const char *path)
+SOEXPORT PC_Dso *PC_Dso_load(const char *path)
 {
-    Dso *self = dlopen(path, RTLD_NOW);
+    PC_Dso *self = dlopen(path, RTLD_NOW);
 #ifdef DEBUG
     if (!self) fprintf(stderr, "error loading dso `%s': %s\n",
 	    path, dlerror());
@@ -20,17 +20,17 @@ SOEXPORT Dso *Dso_load(const char *path)
     return self;
 }
 
-SOEXPORT void *Dso_symbol(Dso *self, const char *name)
+SOEXPORT void *PC_Dso_symbol(PC_Dso *self, const char *name)
 {
     return dlsym(&self->so, name);
 }
 
-SOEXPORT const char *Dso_string(Dso *self, const char *name)
+SOEXPORT const char *PC_Dso_string(PC_Dso *self, const char *name)
 {
     return *((const char **) dlsym(&self->so, name));
 }
 
-SOEXPORT void Dso_close(Dso *self)
+SOEXPORT void PC_Dso_close(PC_Dso *self)
 {
     dlclose(&self->so);
 }

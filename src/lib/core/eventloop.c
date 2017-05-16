@@ -4,26 +4,26 @@
 
 #include "eventloop_internal.h"
 
-typedef struct EventLoop
+typedef struct PC_EventLoop
 {
     int running;
     int rc;
-} EventLoop;
+} PC_EventLoop;
 
-static thread_local EventLoop loop = { 0, 0 };
+static thread_local PC_EventLoop loop = { 0, 0 };
 
-SOEXPORT int EventLoop_run(void)
+SOEXPORT int PC_EventLoop_run(void)
 {
     if (loop.running) return EXIT_FAILURE;
     loop.running = 1;
     while (loop.running)
     {
-        EventLoop_processEvents(-1);
+        PC_EventLoop_processEvents(-1);
     }
     return loop.rc;
 }
 
-SOEXPORT void EventLoop_exit(int rc)
+SOEXPORT void PC_EventLoop_exit(int rc)
 {
     if (loop.running)
     {
@@ -32,14 +32,14 @@ SOEXPORT void EventLoop_exit(int rc)
     }
 }
 
-SOEXPORT int EventLoop_processEvents(int timeout)
+SOEXPORT int PC_EventLoop_processEvents(int timeout)
 {
     return eventProcessor(timeout);
 }
 
-SOEXPORT EventProcessor EventLoop_replaceEventProcessor(EventProcessor ep)
+SOEXPORT PC_EventProcessor PC_EventLoop_replaceEventProcessor(PC_EventProcessor ep)
 {
-    EventProcessor oldEventProcessor = eventProcessor;
+    PC_EventProcessor oldEventProcessor = eventProcessor;
     eventProcessor = ep;
     return oldEventProcessor;
 }

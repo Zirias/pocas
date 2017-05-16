@@ -10,34 +10,34 @@
 #include <pocas/core/list.h>
 #include <pocas/core/string.h>
 
-struct File
+struct PC_File
 {
     int fd;
-    Event *dataRead;
+    PC_Event *dataRead;
 };
 
-SOEXPORT File *File_open(const char *path, FileMode mode)
+SOEXPORT PC_File *PC_File_open(const char *path, PC_FileMode mode)
 {
     int flags = 0;
-    if ((mode & FM_RW) == FM_RW) flags |= O_RDWR;
-    else if (mode & FM_Read) flags |= O_RDONLY;
-    else if (mode & FM_Write) flags |= O_WRONLY;
-    if (mode & FM_Create) flags |= O_CREAT;
-    if (mode & FM_Append) flags |= O_APPEND;
+    if ((mode & PC_FM_RW) == PC_FM_RW) flags |= O_RDWR;
+    else if (mode & PC_FM_Read) flags |= O_RDONLY;
+    else if (mode & PC_FM_Write) flags |= O_WRONLY;
+    if (mode & PC_FM_Create) flags |= O_CREAT;
+    if (mode & PC_FM_Append) flags |= O_APPEND;
     int fd = open(path, flags, S_IRWXU);
     if (fd < 0) return 0;
-    return File_openFd(fd);
+    return PC_File_openFd(fd);
 }
 
-SOEXPORT File *File_openFd(int fd)
+SOEXPORT PC_File *PC_File_openFd(int fd)
 {
-    File *self = malloc(sizeof(File));
+    PC_File *self = malloc(sizeof(PC_File));
     self->fd = fd;
-    self->dataRead = Event_create("Data");
+    self->dataRead = PC_Event_create("Data");
     return self;
 }
 
-SOEXPORT List *File_findInDir(const char *path, const char *pattern)
+SOEXPORT PC_List *PC_File_findInDir(const char *path, const char *pattern)
 {
     size_t pathlen = strlen(path);
     char *pat;
@@ -59,10 +59,10 @@ SOEXPORT List *File_findInDir(const char *path, const char *pattern)
 
     free(pat);
 
-    List *found = List_createStr(0);
+    PC_List *found = PC_List_createStr(0);
     for (char **pathvp = glb.gl_pathv; pathvp && *pathvp; ++pathvp)
     {
-	List_append(found, String_copy(*pathvp));
+        PC_List_append(found, PC_String_copy(*pathvp));
     }
 
     globfree(&glb);

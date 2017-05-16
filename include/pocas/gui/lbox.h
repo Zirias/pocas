@@ -3,22 +3,23 @@
 
 #include <pocas/gui/decl.h>
 
-typedef struct LBox LBox;
+C_CLASS_DECL(PC_ListIterator);
 
-typedef struct ListIterator ListIterator;
+C_CLASS_DECL(PG_LBox);
 
-typedef enum BoxOrientation
+enum PG_BoxOrientation
 {
-    BO_Horizontal = 0,
-    BO_Vertical
-} BoxOrientation;
+    PG_BO_Horizontal = 0,
+    PG_BO_Vertical
+};
+C_ENUM_DECL(PG_BoxOrientation);
 
-DECLEXPORT LBox *LBox_create(BoxOrientation orientation);
+DECLEXPORT PG_LBox *PG_LBox_create(PG_BoxOrientation orientation);
 
-DECLEXPORT ListIterator *LBox_controls(const LBox *self);
-DECLEXPORT void LBox_addControl(LBox *self, void *control);
-DECLEXPORT void LBox_removeControl(LBox *self, void *control);
+DECLEXPORT PC_ListIterator *PG_LBox_controls(const PG_LBox *self);
+DECLEXPORT void PG_LBox_addControl(PG_LBox *self, void *control);
+DECLEXPORT void PG_LBox_removeControl(PG_LBox *self, void *control);
 
-DECLEXPORT void LBox_destroy(LBox *self);
+DECLEXPORT void PG_LBox_destroy(PG_LBox *self);
 
 #endif

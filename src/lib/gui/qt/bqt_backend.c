@@ -1,8 +1,8 @@
 #include <pocas/gui/private/backend.h>
 
-#include "decl.h"
+#include "bqt_backend.h"
 
-static Backend backend_qt = {
+static PG_Backend backend_qt = {
     .backendApi = {
         .name = 0,
         .control = {
@@ -13,7 +13,7 @@ static Backend backend_qt = {
 	    .focus = 0,
         },
         .window = {
-            .create = 0,
+            .create = Bqt_Window_create,
             .setMenu = 0,
             .close = 0,
             .destroy = 0,
@@ -50,5 +50,5 @@ static Backend backend_qt = {
     .privateApi = 0,
 };
 
-SOEXPORT Backend *qtBackend = &backend_qt;
+SOEXPORT PG_Backend *PG_qtBackend = &backend_qt;
 

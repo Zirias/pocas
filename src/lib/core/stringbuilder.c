@@ -4,7 +4,7 @@
 
 #include <pocas/core/stringbuilder.h>
 
-struct StringBuilder
+struct PC_StringBuilder
 {
     size_t initial_capacity;
     size_t capacity;
@@ -13,18 +13,18 @@ struct StringBuilder
     char *writepos;
 };
 
-SOEXPORT StringBuilder *StringBuilder_create(size_t capacity)
+SOEXPORT PC_StringBuilder *PC_StringBuilder_create(size_t capacity)
 {
     if (!capacity) capacity = 256;
 
-    StringBuilder *self = malloc(sizeof(StringBuilder));
+    PC_StringBuilder *self = malloc(sizeof(PC_StringBuilder));
     self->initial_capacity = capacity;
     self->content = 0;
     self->length = 0;
     return self;
 }
 
-SOEXPORT void StringBuilder_appendChar(StringBuilder *self, char character)
+SOEXPORT void PC_StringBuilder_appendChar(PC_StringBuilder *self, char character)
 {
     if (!self->content)
     {
@@ -44,42 +44,42 @@ SOEXPORT void StringBuilder_appendChar(StringBuilder *self, char character)
     *(self->writepos)++ = character;
 }
 
-SOEXPORT void StringBuilder_appendStr(StringBuilder *self, const char *string)
+SOEXPORT void PC_StringBuilder_appendStr(PC_StringBuilder *self, const char *string)
 {
     char c;
     while ((c = *string++))
     {
-        StringBuilder_appendChar(self, c);
+        PC_StringBuilder_appendChar(self, c);
     }
 }
 
-SOEXPORT void StringBuilder_appendInt(StringBuilder *self, long value)
+SOEXPORT void PC_StringBuilder_appendInt(PC_StringBuilder *self, long value)
 {
     char buf[64];
     snprintf(buf, 64, "%ld", value);
-    StringBuilder_appendStr(self, buf);
+    PC_StringBuilder_appendStr(self, buf);
 }
 
-SOEXPORT void StringBuilder_appendUInt(StringBuilder *self, unsigned long value)
+SOEXPORT void PC_StringBuilder_appendUInt(PC_StringBuilder *self, unsigned long value)
 {
     char buf[64];
     snprintf(buf, 64, "%lu", value);
-    StringBuilder_appendStr(self, buf);
+    PC_StringBuilder_appendStr(self, buf);
 }
 
-SOEXPORT void StringBuilder_clear(StringBuilder *self)
+SOEXPORT void PC_StringBuilder_clear(PC_StringBuilder *self)
 {
     free(self->content);
     self->content = 0;
     self->length = 0;
 }
 
-SOEXPORT size_t StringBuilder_length(const StringBuilder *self)
+SOEXPORT size_t PC_StringBuilder_length(const PC_StringBuilder *self)
 {
     return self->length;
 }
 
-SOEXPORT char *StringBuilder_toString(const StringBuilder *self)
+SOEXPORT char *PC_StringBuilder_toString(const PC_StringBuilder *self)
 {
     char *result = malloc(self->length + 1);
     memcpy(result, self->content, self->length);
@@ -87,7 +87,7 @@ SOEXPORT char *StringBuilder_toString(const StringBuilder *self)
     return result;
 }
 
-SOEXPORT void StringBuilder_destroy(StringBuilder *self)
+SOEXPORT void PC_StringBuilder_destroy(PC_StringBuilder *self)
 {
     free(self->content);
     free(self);

@@ -6,7 +6,7 @@
 #include "runner_internal.h"
 #include "testmethod_internal.h"
 
-struct TestMethod
+struct PT_TestMethod
 {
     FILE *output;
     jmp_buf jmp;
@@ -14,26 +14,26 @@ struct TestMethod
     int expectCrash;
 };
 
-SOLOCAL TestMethod *TestMethod_create(FILE *output)
+SOLOCAL PT_TestMethod *PT_TestMethod_create(FILE *output)
 {
-    TestMethod* self = malloc(sizeof(TestMethod));
+    PT_TestMethod* self = malloc(sizeof(PT_TestMethod));
     self->output = output;
     self->ignore = 0;
     self->expectCrash = 0;
     return self;
 }
 
-SOLOCAL void TestMethod_destroy(TestMethod *self)
+SOLOCAL void PT_TestMethod_destroy(PT_TestMethod *self)
 {
     free(self);
 }
 
-SOLOCAL jmp_buf *TestMethod_jmp(TestMethod *self)
+SOLOCAL jmp_buf *PT_TestMethod_jmp(PT_TestMethod *self)
 {
     return &(self->jmp);
 }
 
-static void i_Test__stopIfNotIgnored(TestMethod *self)
+static void i_Test__stopIfNotIgnored(PT_TestMethod *self)
 {
     if (self->ignore)
     {
@@ -45,7 +45,7 @@ static void i_Test__stopIfNotIgnored(TestMethod *self)
     }
 }
 
-SOEXPORT void i_Test__assertNotNull(TestMethod *self, const char *file, unsigned line, const char *pointerName,
+SOEXPORT void i_Test__assertNotNull(PT_TestMethod *self, const char *file, unsigned line, const char *pointerName,
                                   const void *pointer, const char *message)
 {
     if (!pointer)
@@ -62,7 +62,7 @@ SOEXPORT void i_Test__assertNotNull(TestMethod *self, const char *file, unsigned
     }
 }
 
-SOEXPORT void i_Test__assertRefEqual(TestMethod *self, const char *file, unsigned line, const char *actualName,
+SOEXPORT void i_Test__assertRefEqual(PT_TestMethod *self, const char *file, unsigned line, const char *actualName,
                                    const void *expected, const void *actual, const char *message)
 {
     if (expected != actual)
@@ -81,7 +81,7 @@ SOEXPORT void i_Test__assertRefEqual(TestMethod *self, const char *file, unsigne
     }
 }
 
-SOEXPORT void i_Test__assertStrEqual(TestMethod *self, const char *file, unsigned line, const char *actualName,
+SOEXPORT void i_Test__assertStrEqual(PT_TestMethod *self, const char *file, unsigned line, const char *actualName,
                                    const char *expected, const char *actual, const char *message)
 {
     if (!expected) expected = "(null)";
@@ -102,7 +102,7 @@ SOEXPORT void i_Test__assertStrEqual(TestMethod *self, const char *file, unsigne
     }
 }
 
-SOEXPORT void i_Test__assertIntEqual(TestMethod *self, const char *file, unsigned line, const char *actualName,
+SOEXPORT void i_Test__assertIntEqual(PT_TestMethod *self, const char *file, unsigned line, const char *actualName,
                                    long expected, long actual, const char *message)
 {
     if (expected != actual)
@@ -121,7 +121,7 @@ SOEXPORT void i_Test__assertIntEqual(TestMethod *self, const char *file, unsigne
     }
 }
 
-SOEXPORT void i_Test__fail(TestMethod *self, const char *file, unsigned line, const char *message)
+SOEXPORT void i_Test__fail(PT_TestMethod *self, const char *file, unsigned line, const char *message)
 {
     if (message)
     {
@@ -134,25 +134,25 @@ SOEXPORT void i_Test__fail(TestMethod *self, const char *file, unsigned line, co
     i_Test__stopIfNotIgnored(self);
 }
 
-SOEXPORT void i_Test__pass(TestMethod *self)
+SOEXPORT void i_Test__pass(PT_TestMethod *self)
 {
     fputs("1\n", self->output);
     longjmp(self->jmp, 1);
 }
 
-SOEXPORT void i_Test__default(TestMethod *self, TestResultCode result)
+SOEXPORT void i_Test__default(PT_TestMethod *self, PT_TestResultCode result)
 {
     (void)self;
     fprintf(self->output, "2%d\n", result);
 }
 
-SOEXPORT void i_Test__ignore(TestMethod *self, int num)
+SOEXPORT void i_Test__ignore(PT_TestMethod *self, int num)
 {
     self->ignore = num;
     fprintf(self->output, "3%d\n", num);
 }
 
-SOEXPORT void i_Test__expectCrash(TestMethod *self)
+SOEXPORT void i_Test__expectCrash(PT_TestMethod *self)
 {
     self->expectCrash = 1;
     fputs("4\n", self->output);

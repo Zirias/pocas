@@ -3,6 +3,6 @@
 
 #include <pocas/core/file.h>
 
-DECLEXPORT File *File_openFd(int fd);
+DECLEXPORT PC_File *PC_File_openFd(int fd);
 
 #endif

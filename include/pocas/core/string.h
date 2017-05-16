@@ -3,6 +3,6 @@
 
 #include <pocas/core/decl.h>
 
-DECLEXPORT char *String_copy(const char *self);
+DECLEXPORT char *PC_String_copy(const char *self);
 
 #endif

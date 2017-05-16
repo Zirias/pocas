@@ -3,25 +3,27 @@
 
 #include <pocas/gui/decl.h>
 
-typedef struct Button Button;
+C_CLASS_DECL(PC_Event);
 
-typedef struct Command Command;
-typedef struct Event Event;
+C_CLASS_DECL(PG_Command);
 
-typedef enum ButtonStyle
+C_CLASS_DECL(PG_Button);
+
+enum PG_ButtonStyle
 {
-    BS_Normal,
-    BS_Default
-} ButtonStyle;
+    PG_BS_Normal,
+    PG_BS_Default
+};
+C_ENUM_DECL(PG_ButtonStyle);
 
-DECLEXPORT Button *Button_create(ButtonStyle style, const char *text);
-DECLEXPORT ButtonStyle Button_style(const Button *self);
-DECLEXPORT const char *Button_text(const Button *self);
-DECLEXPORT void Button_setText(Button *self, const char *text);
-DECLEXPORT Command *Button_command(const Button *self);
-DECLEXPORT void Button_setCommand(Button *self, Command *command);
-DECLEXPORT void Button_click(Button *self);
-DECLEXPORT Event *Button_clickedEvent(const Button *self);
-DECLEXPORT void Button_destroy(Button *self);
+DECLEXPORT PG_Button *PG_Button_create(PG_ButtonStyle style, const char *text);
+DECLEXPORT PG_ButtonStyle PG_Button_style(const PG_Button *self);
+DECLEXPORT const char *PG_Button_text(const PG_Button *self);
+DECLEXPORT void PG_Button_setText(PG_Button *self, const char *text);
+DECLEXPORT PG_Command *PG_Button_command(const PG_Button *self);
+DECLEXPORT void PG_Button_setCommand(PG_Button *self, PG_Command *command);
+DECLEXPORT void PG_Button_click(PG_Button *self);
+DECLEXPORT PC_Event *PG_Button_clickedEvent(const PG_Button *self);
+DECLEXPORT void PG_Button_destroy(PG_Button *self);
 
 #endif

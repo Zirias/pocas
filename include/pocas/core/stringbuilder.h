@@ -5,16 +5,16 @@
 
 #include <pocas/core/decl.h>
 
-typedef struct StringBuilder StringBuilder;
+C_CLASS_DECL(PC_StringBuilder);
 
-DECLEXPORT StringBuilder *StringBuilder_create(size_t capacity);
-DECLEXPORT void StringBuilder_appendChar(StringBuilder *self, char character);
-DECLEXPORT void StringBuilder_appendStr(StringBuilder *self, const char *string);
-DECLEXPORT void StringBuilder_appendInt(StringBuilder *self, long value);
-DECLEXPORT void StringBuilder_appendUInt(StringBuilder *self, unsigned long value);
-DECLEXPORT void StringBuilder_clear(StringBuilder *self);
-DECLEXPORT size_t StringBuilder_length(const StringBuilder *self);
-DECLEXPORT char *StringBuilder_toString(const StringBuilder *self);
-DECLEXPORT void StringBuilder_destroy(StringBuilder *self);
+DECLEXPORT PC_StringBuilder *PC_StringBuilder_create(size_t capacity);
+DECLEXPORT void PC_StringBuilder_appendChar(PC_StringBuilder *self, char character);
+DECLEXPORT void PC_StringBuilder_appendStr(PC_StringBuilder *self, const char *string);
+DECLEXPORT void PC_StringBuilder_appendInt(PC_StringBuilder *self, long value);
+DECLEXPORT void PC_StringBuilder_appendUInt(PC_StringBuilder *self, unsigned long value);
+DECLEXPORT void PC_StringBuilder_clear(PC_StringBuilder *self);
+DECLEXPORT size_t PC_StringBuilder_length(const PC_StringBuilder *self);
+DECLEXPORT char *PC_StringBuilder_toString(const PC_StringBuilder *self);
+DECLEXPORT void PC_StringBuilder_destroy(PC_StringBuilder *self);
 
 #endif

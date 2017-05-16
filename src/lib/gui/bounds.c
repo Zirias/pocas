@@ -1,6 +1,6 @@
 #include <pocas/gui/bounds.h>
 
-SOEXPORT int Bounds_equals(const Bounds *self, const Bounds *other)
+SOEXPORT int PG_Bounds_equals(const PG_Bounds *self, const PG_Bounds *other)
 {
     return (self->height == other->height
             && self->width == other->width
@@ -8,7 +8,7 @@ SOEXPORT int Bounds_equals(const Bounds *self, const Bounds *other)
             && self->y == other->y);
 }
 
-SOEXPORT void Bounds_fitInto(Bounds *self, const Bounds *into)
+SOEXPORT void PG_Bounds_fitInto(PG_Bounds *self, const PG_Bounds *into)
 {
         if (self->width > into->width)
         {

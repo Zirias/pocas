@@ -10,83 +10,83 @@
 
 #include <pocas/gui/button.h>
 
-struct Button
+struct PG_Button
 {
     GuiClass gc;
-    ButtonStyle style;
+    PG_ButtonStyle style;
     char *text;
-    Command *command;
-    Event *clicked;
+    PG_Command *command;
+    PC_Event *clicked;
 };
 
-SOEXPORT Button *Button_create(ButtonStyle style, const char *text)
+SOEXPORT PG_Button *PG_Button_create(PG_ButtonStyle style, const char *text)
 {
-    Button *self = malloc(sizeof(Button));
+    PG_Button *self = malloc(sizeof(PG_Button));
     GCINIT(self);
     privateApi.control.create(self);
     self->style = style;
-    self->text = text ? String_copy(text) : 0;
+    self->text = text ? PC_String_copy(text) : 0;
     self->command = 0;
-    self->clicked = Event_create("clicked");
+    self->clicked = PC_Event_create("clicked");
 
-    const Backend *b = Backend_current();
+    const PG_Backend *b = PG_Backend_current();
     if (b->backendApi.button.create)
         b->backendApi.button.create(self);
     return self;
 }
 
-SOEXPORT ButtonStyle Button_style(const Button *self)
+SOEXPORT PG_ButtonStyle PG_Button_style(const PG_Button *self)
 {
     return self->style;
 }
 
-SOEXPORT const char *Button_text(const Button *self)
+SOEXPORT const char *PG_Button_text(const PG_Button *self)
 {
     return self->text;
 }
 
-SOEXPORT void Button_setText(Button *self, const char *text)
+SOEXPORT void PG_Button_setText(PG_Button *self, const char *text)
 {
     free(self->text);
-    self->text = text ? String_copy(text) : 0;
+    self->text = text ? PC_String_copy(text) : 0;
 
-    const Backend *b = Backend_current();
+    const PG_Backend *b = PG_Backend_current();
     if (b->backendApi.button.setText)
         b->backendApi.button.setText(self, text);
 }
 
-SOEXPORT Command *Button_command(const Button *self)
+SOEXPORT PG_Command *PG_Button_command(const PG_Button *self)
 {
     return self->command;
 }
 
-SOEXPORT void Button_setCommand(Button *self, Command *command)
+SOEXPORT void PG_Button_setCommand(PG_Button *self, PG_Command *command)
 {
     self->command = command;
 }
 
-SOEXPORT void Button_click(Button *self)
+SOEXPORT void PG_Button_click(PG_Button *self)
 {
-    EventArgs args = EventArgs_init(self->clicked, self, 0);
-    Event_raise(self->clicked, &args);
+    PC_EventArgs args = PC_EventArgs_init(self->clicked, self, 0);
+    PC_Event_raise(self->clicked, &args);
     if (!args.handled && self->command)
     {
-        Command_invoke(self->command);
+        PG_Command_invoke(self->command);
     }
 }
 
-SOEXPORT Event *Button_clickedEvent(const Button *self)
+SOEXPORT PC_Event *PG_Button_clickedEvent(const PG_Button *self)
 {
     return self->clicked;
 }
 
-SOEXPORT void Button_destroy(Button *self)
+SOEXPORT void PG_Button_destroy(PG_Button *self)
 {
     if (!self) return;
-    const Backend *b = Backend_current();
+    const PG_Backend *b = PG_Backend_current();
     if (b->backendApi.button.destroy)
         b->backendApi.button.destroy(self);
-    Event_destroy(self->clicked);
+    PC_Event_destroy(self->clicked);
     privateApi.control.destroy(self);
     free(self->text);
     free(self);

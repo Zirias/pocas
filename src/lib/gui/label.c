@@ -6,40 +6,40 @@
 #include "internal.h"
 #include <pocas/gui/label.h>
 
-struct Label
+struct PG_Label
 {
     GuiClass gc;
     char *text;
 };
 
-SOEXPORT Label *Label_create(const char *text)
+SOEXPORT PG_Label *PG_Label_create(const char *text)
 {
-    Label *self = malloc(sizeof(Label));
+    PG_Label *self = malloc(sizeof(PG_Label));
     GCINIT(self);
     privateApi.control.create(self);
-    self->text = text ? String_copy(text) : 0;
-    const Backend *b = Backend_current();
+    self->text = text ? PC_String_copy(text) : 0;
+    const PG_Backend *b = PG_Backend_current();
     if (b->backendApi.label.create) b->backendApi.label.create(self);
     return self;
 }
 
-SOEXPORT const char *Label_text(const Label *self)
+SOEXPORT const char *PG_Label_text(const PG_Label *self)
 {
     return self->text;
 }
 
-SOEXPORT void Label_setText(Label *self, const char *text)
+SOEXPORT void PG_Label_setText(PG_Label *self, const char *text)
 {
     free(self->text);
-    self->text = text ? String_copy(text) : 0;
-    const Backend *b = Backend_current();
+    self->text = text ? PC_String_copy(text) : 0;
+    const PG_Backend *b = PG_Backend_current();
     if (b->backendApi.label.setText) b->backendApi.label.setText(self, text);
 }
 
-SOEXPORT void Label_destroy(Label *self)
+SOEXPORT void PG_Label_destroy(PG_Label *self)
 {
     if (!self) return;
-    const Backend *b = Backend_current();
+    const PG_Backend *b = PG_Backend_current();
     if (b->backendApi.label.destroy) b->backendApi.label.destroy(self);
     privateApi.control.destroy(self);
     free(self->text);

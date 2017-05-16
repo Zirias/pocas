@@ -5,11 +5,10 @@
 
 #include <pocas/core/eventloop.h>
 
-typedef struct Event Event;
+C_CLASS_DECL(PC_Event);
 
-DECLEXPORT Event *EventLoop_win32HndlEvent(void);
-DECLEXPORT Event *EventLoop_win32MsgEvent(void);
-DECLEXPORT LRESULT CALLBACK EventLoop_win32WndProc(HWND wnd, UINT msg, WPARAM wp, LPARAM lp);
-DECLEXPORT void EventLoop_setProcessMessages(int processMessages);
+DECLEXPORT PC_Event *PC_EventLoop_win32HndlEvent(void);
+DECLEXPORT PC_Event *PC_EventLoop_win32MsgEvent(void);
+DECLEXPORT void PC_EventLoop_setProcessMessages(int processMessages);
 
 #endif // EVENTLOOP_WIN32_H

@@ -5,27 +5,27 @@
 
 #include <pocas/core/mtwaitqueue.h>
 
-typedef struct MtWaitQueueEntry MtWaitQueueEntry;
+typedef struct PC_MtWaitQueueEntry PC_MtWaitQueueEntry;
 
-struct MtWaitQueueEntry
+struct PC_MtWaitQueueEntry
 {
-    MtWaitQueueEntry *prev;
+    PC_MtWaitQueueEntry *prev;
     void *element;
 };
 
-struct MtWaitQueue
+struct PC_MtWaitQueue
 {
     mtx_t lock;
     cnd_t cv;
     int waiting;
-    MtWaitQueueElementDeleter deleter;
-    MtWaitQueueEntry *back;
-    MtWaitQueueEntry *front;
+    PC_MtWaitQueueElementDeleter deleter;
+    PC_MtWaitQueueEntry *back;
+    PC_MtWaitQueueEntry *front;
 };
 
-SOEXPORT MtWaitQueue *MtWaitQueue_create(MtWaitQueueElementDeleter deleter)
+SOEXPORT PC_MtWaitQueue *PC_MtWaitQueue_create(PC_MtWaitQueueElementDeleter deleter)
 {
-    MtWaitQueue *self = malloc(sizeof(MtWaitQueue));
+    PC_MtWaitQueue *self = malloc(sizeof(PC_MtWaitQueue));
     if (!self) return 0;
     if (mtx_init(&self->lock, mtx_plain) != 0)
     {
@@ -44,9 +44,9 @@ SOEXPORT MtWaitQueue *MtWaitQueue_create(MtWaitQueueElementDeleter deleter)
     return self;
 }
 
-SOEXPORT void MtWaitQueue_enqueue(MtWaitQueue *self, void *element)
+SOEXPORT void PC_MtWaitQueue_enqueue(PC_MtWaitQueue *self, void *element)
 {
-    MtWaitQueueEntry *entry = malloc(sizeof(MtWaitQueueEntry));
+    PC_MtWaitQueueEntry *entry = malloc(sizeof(PC_MtWaitQueueEntry));
     entry->element = element;
     entry->prev = 0;
     mtx_lock(&self->lock);
@@ -56,14 +56,14 @@ SOEXPORT void MtWaitQueue_enqueue(MtWaitQueue *self, void *element)
     if (self->waiting) cnd_signal(&self->cv);
 }
 
-SOEXPORT void *MtWaitQueue_dequeue(MtWaitQueue *self, int timeout)
+SOEXPORT void *PC_MtWaitQueue_dequeue(PC_MtWaitQueue *self, int timeout)
 {
     if (!timeout && !self->front) return 0;
     mtx_lock(&self->lock);
 getfront:
     if (self->front)
     {
-        MtWaitQueueEntry *front = self->front->prev;
+        PC_MtWaitQueueEntry *front = self->front->prev;
         void *element = self->front->element;
         free(self->front);
         self->front = front;
@@ -100,7 +100,7 @@ empty:
     return 0;
 }
 
-SOEXPORT void MtWaitQueue_destroy(MtWaitQueue *self)
+SOEXPORT void PC_MtWaitQueue_destroy(PC_MtWaitQueue *self)
 {
     mtx_lock(&self->lock);
     cnd_destroy(&self->cv);
@@ -108,7 +108,7 @@ SOEXPORT void MtWaitQueue_destroy(MtWaitQueue *self)
 
     while (self->front)
     {
-        MtWaitQueueEntry *front = self->front->prev;
+        PC_MtWaitQueueEntry *front = self->front->prev;
         if (self->deleter) self->deleter(self->front->element);
         free(self->front);
         self->front = front;

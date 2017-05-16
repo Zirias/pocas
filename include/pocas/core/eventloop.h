@@ -3,11 +3,11 @@
 
 #include <pocas/core/decl.h>
 
-typedef int (*EventProcessor)(int timeout);
+typedef int (*PC_EventProcessor)(int timeout);
 
-DECLEXPORT int EventLoop_run(void);
-DECLEXPORT void EventLoop_exit(int exitCode);
-DECLEXPORT int EventLoop_processEvents(int timeout);
-DECLEXPORT EventProcessor EventLoop_replaceEventProcessor(EventProcessor ep);
+DECLEXPORT int PC_EventLoop_run(void);
+DECLEXPORT void PC_EventLoop_exit(int exitCode);
+DECLEXPORT int PC_EventLoop_processEvents(int timeout);
+DECLEXPORT PC_EventProcessor PC_EventLoop_replaceEventProcessor(PC_EventProcessor ep);
 
 #endif

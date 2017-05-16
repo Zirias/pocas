@@ -3,15 +3,17 @@
 
 #include <pocas/core/event.h>
 
-typedef enum PlatformEventType
+enum PC_PlatformEventType
 {
-    PET_Fd
-} PlatformEventType;
+    PC_PET_Fd
+};
+C_ENUM_DECL(PC_PlatformEventType);
 
-typedef enum PlatformEventHandleAction
+enum PC_PlatformEventHandleAction
 {
-    PEFD_SelectRead
-} PlatformEventHandleAction;
+    PC_PEFD_SelectRead
+};
+C_ENUM_DECL(PC_PlatformEventHandleAction);
 
 
 #endif

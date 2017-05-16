@@ -24,7 +24,7 @@ SOLOCAL TestCase *TestCase_create(TestClass *testClass, const char *testMethod)
 {
     TestCase *self = malloc(sizeof(TestCase));
     self->testClass = testClass;
-    self->testMethod = String_copy(testMethod);
+    self->testMethod = PC_String_copy(testMethod);
     self->enabled = 1;
     self->result = TestResult_create();
     self->message = 0;
@@ -72,7 +72,7 @@ SOLOCAL const char *TestCase_message(const TestCase *self)
 SOLOCAL void TestCase_setMessage(TestCase *self, const char *message)
 {
     free(self->message);
-    if (message) self->message = String_copy(message);
+    if (message) self->message = PC_String_copy(message);
     else self->message = 0;
 }
 
@@ -84,7 +84,7 @@ SOLOCAL void TestCase_reset(TestCase *self)
     self->result = TestResult_create();
 }
 
-SOLOCAL void TestCase_evaluate(TestCase *self, int exitCode, List *output)
+SOLOCAL void TestCase_evaluate(TestCase *self, int exitCode, PC_List *output)
 {
     char buf[256];
     TestCase_reset(self);
@@ -92,12 +92,12 @@ SOLOCAL void TestCase_evaluate(TestCase *self, int exitCode, List *output)
     int expectCrash = 0;
     int ignore = 0;
 
-    TestResultCode defaultResult = TRC_UNKN;
+    PT_TestResultCode defaultResult = PT_TRC_UNKN;
 
-    ListIterator *i = List_iterator(output);
-    while (ListIterator_moveNext(i))
+    PC_ListIterator *i = PC_List_iterator(output);
+    while (PC_ListIterator_moveNext(i))
     {
-        const char *line = ListIterator_current(i);
+        const char *line = PC_ListIterator_current(i);
         switch (*line)
         {
             case '0':
@@ -109,7 +109,7 @@ SOLOCAL void TestCase_evaluate(TestCase *self, int exitCode, List *output)
                 }
                 else
                 {
-                    TestResult_setCode(self->result, TRC_FAIL);
+                    TestResult_setCode(self->result, PT_TRC_FAIL);
                     TestResult_setMessage(self->result, line+1);
                     TestClass_addFailed(self->testClass);
                     goto done;
@@ -118,13 +118,13 @@ SOLOCAL void TestCase_evaluate(TestCase *self, int exitCode, List *output)
             case '1':
                 if (expectCrash)
                 {
-                    TestResult_setCode(self->result, TRC_FAIL);
+                    TestResult_setCode(self->result, PT_TRC_FAIL);
                     TestResult_setMessage(self->result, "expected crash, but passed instead.");
                     TestClass_addFailed(self->testClass);
                 }
                 else
                 {
-                    TestResult_setCode(self->result, TRC_PASS);
+                    TestResult_setCode(self->result, PT_TRC_PASS);
                     TestResult_setMessage(self->result, line+1);
                     TestClass_addPassed(self->testClass);
                 }
@@ -148,14 +148,14 @@ SOLOCAL void TestCase_evaluate(TestCase *self, int exitCode, List *output)
         if (expectCrash)
         {
             snprintf(buf, 256, "expectedly failed to run (exit code was %d)", exitCode);
-            TestResult_setCode(self->result, TRC_PASS);
+            TestResult_setCode(self->result, PT_TRC_PASS);
             TestResult_setMessage(self->result, buf);
             TestClass_addPassed(self->testClass);
         }
         else
         {
             snprintf(buf, 256, "failed to run (exit code was %d)", exitCode);
-            TestResult_setCode(self->result, TRC_CRSH);
+            TestResult_setCode(self->result, PT_TRC_CRSH);
             TestResult_setMessage(self->result, buf);
             TestClass_addFailed(self->testClass);
         }
@@ -164,29 +164,29 @@ SOLOCAL void TestCase_evaluate(TestCase *self, int exitCode, List *output)
 
     switch (defaultResult)
     {
-    case TRC_FAIL:
-        TestResult_setCode(self->result, TRC_FAIL);
+    case PT_TRC_FAIL:
+        TestResult_setCode(self->result, PT_TRC_FAIL);
         TestResult_setMessage(self->result, "no test result, defaulted to FAIL");
         TestClass_addFailed(self->testClass);
         break;
-    case TRC_PASS:
-        TestResult_setCode(self->result, TRC_PASS);
+    case PT_TRC_PASS:
+        TestResult_setCode(self->result, PT_TRC_PASS);
         TestResult_setMessage(self->result, "no test result, defaulted to PASS");
         TestClass_addPassed(self->testClass);
         break;
 
     // other values not supported, default to UNKN
-    case TRC_CRSH:
-    case TRC_NONE:
+    case PT_TRC_CRSH:
+    case PT_TRC_NONE:
     default:
-        TestResult_setCode(self->result, TRC_UNKN);
+        TestResult_setCode(self->result, PT_TRC_UNKN);
         TestResult_setMessage(self->result, "no test result");
         TestClass_addUnknown(self->testClass);
         break;
     }
 
 done:
-    List_destroy(output);
+    PC_List_destroy(output);
     if (self->resultHandler)
     {
         self->resultHandler(self, self->result, self->resultHandlerArgs);

@@ -4,46 +4,46 @@
 #include <pocas/core/string.h>
 #include <pocas/core/hashtable.h>
 
-typedef struct HashTableEntry HashTableEntry;
-typedef struct HashTableSizeParams HashTableSizeParams;
+typedef struct PC_HashTableEntry PC_HashTableEntry;
+typedef struct PC_HashTableSizeParams PC_HashTableSizeParams;
 
-struct HashKey
+struct PC_HashKey
 {
     size_t size;
     void *data;
 };
 
-struct HashTableEntry
+struct PC_HashTableEntry
 {
-    HashKey key;
+    PC_HashKey key;
     const void *keyObject;
     void *valObject;
-    HashTableEntry* next;
+    PC_HashTableEntry* next;
 };
 
-struct HashTableSizeParams
+struct PC_HashTableSizeParams
 {
     const size_t buckets;
     const size_t hashmask;
 };
 
-struct KeyValPair
+struct PC_KeyValPair
 {
     const void *key;
     const void *val;
 };
 
-struct HashTable
+struct PC_HashTable
 {
-    const HashTableSizeParams *sizeParams;
-    HashKeyProvider keyProvider;
-    HashTableEntryCloner entryCloner;
-    HashTableEntryDeleter entryDeleter;
+    const PC_HashTableSizeParams *sizeParams;
+    PC_HashKeyProvider keyProvider;
+    PC_HashTableEntryCloner entryCloner;
+    PC_HashTableEntryDeleter entryDeleter;
     size_t count;
-    HashTableEntry* buckets[];
+    PC_HashTableEntry* buckets[];
 };
 
-static const HashTableSizeParams sizes[] = {
+static const PC_HashTableSizeParams sizes[] = {
     { 1024, 0x3ff },
     { 512, 0x1ff },
     { 256, 0xff },
@@ -53,7 +53,7 @@ static const HashTableSizeParams sizes[] = {
     { 16, 0xf }
 };
 
-static size_t hash(const HashKey *key, size_t hashmask)
+static size_t hash(const PC_HashKey *key, size_t hashmask)
 {
     size_t h = 5381;
 
@@ -65,21 +65,21 @@ static size_t hash(const HashKey *key, size_t hashmask)
     return h & hashmask;
 }
 
-static int keysAreEqual(const HashKey *lhs, const HashKey *rhs)
+static int keysAreEqual(const PC_HashKey *lhs, const PC_HashKey *rhs)
 {
     if (lhs->size != rhs->size) return 0;
     return !memcmp(lhs->data, rhs->data, lhs->size);
 }
 
-static void stringKeyProvider(HashKey *key, const void *string)
+static void stringKeyProvider(PC_HashKey *key, const void *string)
 {
-    HashKey_set(key, strlen(string), string);
+    PC_HashKey_set(key, strlen(string), string);
 }
 
-static HashTableEntry *HashTableEntry_create(const HashKey *key,
+static PC_HashTableEntry *PC_HashTableEntry_create(const PC_HashKey *key,
         const void *keyObject, void *valObject)
 {
-    HashTableEntry *self = malloc(sizeof(HashTableEntry));
+    PC_HashTableEntry *self = malloc(sizeof(PC_HashTableEntry));
     self->key.size = key->size;
     self->key.data = key->data;
     self->keyObject = keyObject;
@@ -88,7 +88,7 @@ static HashTableEntry *HashTableEntry_create(const HashKey *key,
     return self;
 }
 
-SOEXPORT void HashKey_set(HashKey *self, size_t size, const void *data)
+SOEXPORT void PC_HashKey_set(PC_HashKey *self, size_t size, const void *data)
 {
     free(self->data);
     self->data = malloc(size);
@@ -96,13 +96,13 @@ SOEXPORT void HashKey_set(HashKey *self, size_t size, const void *data)
     self->size = size;
 }
 
-SOEXPORT HashTable *HashTable_create(HashTableSize size,
-        HashKeyProvider keyProvider, HashTableEntryCloner cloner,
-        HashTableEntryDeleter deleter)
+SOEXPORT PC_HashTable *PC_HashTable_create(PC_HashTableSize size,
+        PC_HashKeyProvider keyProvider, PC_HashTableEntryCloner cloner,
+        PC_HashTableEntryDeleter deleter)
 {
-    const HashTableSizeParams *sizeParams = sizes + size;
-    HashTable *self = calloc(1, sizeof(HashTable)
-            + sizeParams->buckets * sizeof(HashTableEntry *));
+    const PC_HashTableSizeParams *sizeParams = sizes + size;
+    PC_HashTable *self = calloc(1, sizeof(PC_HashTable)
+            + sizeParams->buckets * sizeof(PC_HashTableEntry *));
     self->sizeParams = sizeParams;
     self->keyProvider = keyProvider;
     self->entryCloner = cloner;
@@ -111,32 +111,32 @@ SOEXPORT HashTable *HashTable_create(HashTableSize size,
     return self;
 }
 
-SOEXPORT HashTable *HashTable_createStrKey(HashTableSize size,
-        HashTableEntryCloner cloner, HashTableEntryDeleter deleter)
+SOEXPORT PC_HashTable *PC_HashTable_createStrKey(PC_HashTableSize size,
+        PC_HashTableEntryCloner cloner, PC_HashTableEntryDeleter deleter)
 {
-    return HashTable_create(size, stringKeyProvider, cloner, deleter);
+    return PC_HashTable_create(size, stringKeyProvider, cloner, deleter);
 }
 
-SOEXPORT HashTable *HashTable_createStrKeyVal(HashTableSize size)
+SOEXPORT PC_HashTable *PC_HashTable_createStrKeyVal(PC_HashTableSize size)
 {
-    return HashTable_createStrKey(size,
-            (HashTableEntryCloner)String_copy, free);
+    return PC_HashTable_createStrKey(size,
+            (PC_HashTableEntryCloner)PC_String_copy, free);
 }
 
-SOEXPORT size_t HashTable_count(const HashTable *self)
+SOEXPORT size_t PC_HashTable_count(const PC_HashTable *self)
 {
     return self->count;
 }
 
-SOEXPORT void HashTable_set(HashTable *self, const void *key, void *val)
+SOEXPORT void PC_HashTable_set(PC_HashTable *self, const void *key, void *val)
 {
-    HashKey hkey;
+    PC_HashKey hkey;
     hkey.data = 0;
     self->keyProvider(&hkey, key);
     size_t bucket = hash(&hkey, self->sizeParams->hashmask);
 
-    HashTableEntry *entry = self->buckets[bucket];
-    HashTableEntry *prev = 0;
+    PC_HashTableEntry *entry = self->buckets[bucket];
+    PC_HashTableEntry *prev = 0;
     while (entry)
     {
         prev = entry;
@@ -153,7 +153,7 @@ SOEXPORT void HashTable_set(HashTable *self, const void *key, void *val)
     }
     else
     {
-        entry = HashTableEntry_create(&hkey, key,
+        entry = PC_HashTableEntry_create(&hkey, key,
                 self->entryCloner ? self->entryCloner(val) : val);
         if (prev) prev->next = entry;
         else self->buckets[bucket] = entry;
@@ -161,15 +161,15 @@ SOEXPORT void HashTable_set(HashTable *self, const void *key, void *val)
     }
 }
 
-SOEXPORT const void *HashTable_get(const HashTable *self, const void *key)
+SOEXPORT const void *PC_HashTable_get(const PC_HashTable *self, const void *key)
 {
-    HashKey hkey;
+    PC_HashKey hkey;
     hkey.data = 0;
     self->keyProvider(&hkey, key);
     size_t bucket = hash(&hkey, self->sizeParams->hashmask);
     const void *result = 0;
 
-    HashTableEntry *entry = self->buckets[bucket];
+    PC_HashTableEntry *entry = self->buckets[bucket];
     while (entry)
     {
         if (keysAreEqual(&hkey, &entry->key))
@@ -184,15 +184,15 @@ SOEXPORT const void *HashTable_get(const HashTable *self, const void *key)
     return result;
 }
 
-SOEXPORT int HashTable_remove(HashTable *self, const void *key)
+SOEXPORT int PC_HashTable_remove(PC_HashTable *self, const void *key)
 {
-    HashKey hkey;
+    PC_HashKey hkey;
     hkey.data = 0;
     self->keyProvider(&hkey, key);
     size_t bucket = hash(&hkey, self->sizeParams->hashmask);
 
-    HashTableEntry *entry = self->buckets[bucket];
-    HashTableEntry *prev = 0;
+    PC_HashTableEntry *entry = self->buckets[bucket];
+    PC_HashTableEntry *prev = 0;
     while (entry)
     {
         if (keysAreEqual(&hkey, &entry->key))
@@ -214,16 +214,16 @@ SOEXPORT int HashTable_remove(HashTable *self, const void *key)
     return 0;
 }
 
-SOEXPORT void HashTable_destroy(HashTable *self)
+SOEXPORT void PC_HashTable_destroy(PC_HashTable *self)
 {
     if (!self) return;
 
     for (size_t i = 0; i < self->sizeParams->buckets; ++i)
     {
-        HashTableEntry *entry = self->buckets[i];
+        PC_HashTableEntry *entry = self->buckets[i];
         while (entry)
         {
-            HashTableEntry *next = entry->next;
+            PC_HashTableEntry *next = entry->next;
             if (self->entryDeleter) self->entryDeleter(entry->valObject);
             free(entry->key.data);
             free(entry);

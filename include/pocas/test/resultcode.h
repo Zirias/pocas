@@ -1,13 +1,16 @@
 #ifndef POCAS_TEST_RESULTCODE_H
 #define POCAS_TEST_RESULTCODE_H
 
-typedef enum TestResultCode
+#include <pocas/test/decl.h>
+
+enum PT_TestResultCode
 {
-    TRC_CRSH = -2,
-    TRC_FAIL = -1,
-    TRC_UNKN = 0,
-    TRC_PASS = 1,
-    TRC_NONE = 2
-} TestResultCode;
+    PT_TRC_CRSH = -2,
+    PT_TRC_FAIL = -1,
+    PT_TRC_UNKN = 0,
+    PT_TRC_PASS = 1,
+    PT_TRC_NONE = 2
+};
+C_ENUM_DECL(PT_TestResultCode);
 
 #endif

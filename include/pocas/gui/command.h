@@ -3,13 +3,13 @@
 
 #include <pocas/gui/decl.h>
 
-typedef struct Event Event;
+C_CLASS_DECL(PC_Event);
 
-typedef struct Command Command;
+C_CLASS_DECL(PG_Command);
 
-DECLEXPORT Command *Command_create(void);
-DECLEXPORT void Command_invoke(Command *self);
-DECLEXPORT Event *Command_invokedEvent(const Command *self);
-DECLEXPORT void Command_destroy(Command *self);
+DECLEXPORT PG_Command *PG_Command_create(void);
+DECLEXPORT void PG_Command_invoke(PG_Command *self);
+DECLEXPORT PC_Event *PG_Command_invokedEvent(const PG_Command *self);
+DECLEXPORT void PG_Command_destroy(PG_Command *self);
 
 #endif

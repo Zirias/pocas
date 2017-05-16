@@ -5,6 +5,6 @@
 
 #include <pocas/core/file.h>
 
-DECLEXPORT File *File_openHandle(HANDLE handle);
+DECLEXPORT PC_File *PC_File_openHandle(HANDLE handle);
 
 #endif

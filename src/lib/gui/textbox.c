@@ -8,74 +8,74 @@
 #include <pocas/gui/control.h>
 #include <pocas/gui/textbox.h>
 
-struct TextBox
+struct PG_TextBox
 {
     GuiClass gc;
-    TextBoxStyle style;
+    PG_TextBoxStyle style;
     char *text;
-    Event *textChanged;
+    PC_Event *textChanged;
 };
 
-static void updateText(TextBox *self, const char *text)
+static void updateText(PG_TextBox *self, const char *text)
 {
     char *oldText = self->text;
-    self->text = text ? String_copy(text) : 0;
+    self->text = text ? PC_String_copy(text) : 0;
     if ((text && !oldText) || (oldText && !text)
         || (oldText && text && strcmp(oldText, text)))
     {
-        EventArgs args = EventArgs_init(
+        PC_EventArgs args = PC_EventArgs_init(
                 self->textChanged, self, self->text);
-        Event_raise(self->textChanged, &args);
+        PC_Event_raise(self->textChanged, &args);
     }
     free(oldText);
 }
 
-SOEXPORT TextBox *TextBox_create(TextBoxStyle style)
+SOEXPORT PG_TextBox *PG_TextBox_create(PG_TextBoxStyle style)
 {
-    TextBox *self = malloc(sizeof(TextBox));
+    PG_TextBox *self = malloc(sizeof(PG_TextBox));
     GCINIT(self);
     privateApi.control.create(self);
     self->style = style;
     self->text = 0;
-    self->textChanged = Event_create("textChanged");
+    self->textChanged = PC_Event_create("textChanged");
 
-    const Backend *b = Backend_current();
+    const PG_Backend *b = PG_Backend_current();
     if (b->backendApi.textBox.create)
         b->backendApi.textBox.create(self, updateText);
 
     return self;
 }
 
-SOEXPORT TextBoxStyle TextBox_style(const TextBox *self)
+SOEXPORT PG_TextBoxStyle PG_TextBox_style(const PG_TextBox *self)
 {
     return self->style;
 }
 
-SOEXPORT const char *TextBox_text(const TextBox *self)
+SOEXPORT const char *PG_TextBox_text(const PG_TextBox *self)
 {
     return self->text;
 }
 
-SOEXPORT void TextBox_setText(TextBox *self, const char *text)
+SOEXPORT void PG_TextBox_setText(PG_TextBox *self, const char *text)
 {
     updateText(self, text);
-    const Backend *b = Backend_current();
+    const PG_Backend *b = PG_Backend_current();
     if (b->backendApi.textBox.setText)
         b->backendApi.textBox.setText(self, text);
 }
 
-SOEXPORT Event *TextBox_textChangedEvent(const TextBox *self)
+SOEXPORT PC_Event *PG_TextBox_textChangedEvent(const PG_TextBox *self)
 {
     return self->textChanged;
 }
 
-SOEXPORT void TextBox_destroy(TextBox *self)
+SOEXPORT void PG_TextBox_destroy(PG_TextBox *self)
 {
     if (!self) return;
-    const Backend *b = Backend_current();
+    const PG_Backend *b = PG_Backend_current();
     if (b->backendApi.textBox.destroy)
         b->backendApi.textBox.destroy(self);
-    Event_destroy(self->textChanged);
+    PC_Event_destroy(self->textChanged);
     free(self->text);
     privateApi.control.destroy(self);
     free(self);

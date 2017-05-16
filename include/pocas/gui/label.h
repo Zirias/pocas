@@ -3,11 +3,11 @@
 
 #include <pocas/gui/decl.h>
 
-typedef struct Label Label;
+C_CLASS_DECL(PG_Label);
 
-Label *Label_create(const char *text);
-const char *Label_text(const Label *self);
-void Label_setText(Label *self, const char *text);
-void Label_destroy(Label *self);
+PG_Label *PG_Label_create(const char *text);
+const char *PG_Label_text(const PG_Label *self);
+void PG_Label_setText(PG_Label *self, const char *text);
+void PG_Label_destroy(PG_Label *self);
 
 #endif

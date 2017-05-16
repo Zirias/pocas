@@ -6,50 +6,51 @@
 
 #include <pocas/core/decl.h>
 
-typedef enum TextColor
+enum PC_TextColor
 {
-    TCI_NORMAL = -1,
-    TCI_BLACK = 0,
-    TCI_BLUE = 1,
-    TCI_GREEN = 2,
-    TCI_CYAN = 3,
-    TCI_RED = 4,
-    TCI_MAGENTA = 5,
-    TCI_BROWN = 6,
-    TCI_LIGHTGRAY = 7,
-    TCI_DARKGRAY = 8,
-    TCI_LIGHTBLUE = 9,
-    TCI_LIGHTGREEN = 10,
-    TCI_LIGHTCYAN = 11,
-    TCI_LIGHTRED = 12,
-    TCI_LIGHTMAGENTA = 13,
-    TCI_YELLOW = 14,
-    TCI_WHITE = 15
-} TextColor;
+    PC_TC_NORMAL = -1,
+    PC_TC_BLACK = 0,
+    PC_TC_BLUE = 1,
+    PC_TC_GREEN = 2,
+    PC_TC_CYAN = 3,
+    PC_TC_RED = 4,
+    PC_TC_MAGENTA = 5,
+    PC_TC_BROWN = 6,
+    PC_TC_LIGHTGRAY = 7,
+    PC_TC_DARKGRAY = 8,
+    PC_TC_LIGHTBLUE = 9,
+    PC_TC_LIGHTGREEN = 10,
+    PC_TC_LIGHTCYAN = 11,
+    PC_TC_LIGHTRED = 12,
+    PC_TC_LIGHTMAGENTA = 13,
+    PC_TC_YELLOW = 14,
+    PC_TC_WHITE = 15
+};
+C_ENUM_DECL(PC_TextColor);
 
-#define TCS_NORMAL "~\xff"
-#define TCS_BLACK "~\x00"
-#define TCS_BLUE "~\x01"
-#define TCS_GREEN "~\x02"
-#define TCS_CYAN "~\x03"
-#define TCS_RED "~\x04"
-#define TCS_MAGENTA "~\x05"
-#define TCS_BROWN "~\x06"
-#define TCS_LIGHTGRAY "~\x07"
-#define TCS_DARKGRAY "~\x08"
-#define TCS_LIGHTBLUE "~\x09"
-#define TCS_LIGHTGREEN "~\x0a"
-#define TCS_LIGHTCYAN "~\x0b"
-#define TCS_LIGHTRED "~\x0c"
-#define TCS_LIGHTMAGENTA "~\x0d"
-#define TCS_YELLOW "~\x0e"
-#define TCS_WHITE "~\x0f"
+#define PC_TCS_NORMAL "~\xff"
+#define PC_TCS_BLACK "~\x00"
+#define PC_TCS_BLUE "~\x01"
+#define PC_TCS_GREEN "~\x02"
+#define PC_TCS_CYAN "~\x03"
+#define PC_TCS_RED "~\x04"
+#define PC_TCS_MAGENTA "~\x05"
+#define PC_TCS_BROWN "~\x06"
+#define PC_TCS_LIGHTGRAY "~\x07"
+#define PC_TCS_DARKGRAY "~\x08"
+#define PC_TCS_LIGHTBLUE "~\x09"
+#define PC_TCS_LIGHTGREEN "~\x0a"
+#define PC_TCS_LIGHTCYAN "~\x0b"
+#define PC_TCS_LIGHTRED "~\x0c"
+#define PC_TCS_LIGHTMAGENTA "~\x0d"
+#define PC_TCS_YELLOW "~\x0e"
+#define PC_TCS_WHITE "~\x0f"
 
-DECLEXPORT void TextColor_use(TextColor color, FILE *outStream);
-DECLEXPORT int TextColor_fputs(const char *s, FILE *outStream);
-DECLEXPORT int TextColor_vfprintf(FILE *outStream, const char *format, va_list ap);
-DECLEXPORT int TextColor_fprintf(FILE *outStream, const char *format, ...);
-DECLEXPORT int TextColor_vprintf(const char *format, va_list ap);
-DECLEXPORT int TextColor_printf(const char *format, ...);
+DECLEXPORT void PC_TextColor_use(PC_TextColor color, FILE *outStream);
+DECLEXPORT int PC_TextColor_fputs(const char *s, FILE *outStream);
+DECLEXPORT int PC_TextColor_vfprintf(FILE *outStream, const char *format, va_list ap);
+DECLEXPORT int PC_TextColor_fprintf(FILE *outStream, const char *format, ...);
+DECLEXPORT int PC_TextColor_vprintf(const char *format, va_list ap);
+DECLEXPORT int PC_TextColor_printf(const char *format, ...);
 
 #endif

@@ -3,32 +3,33 @@
 
 #include <pocas/core/decl.h>
 
-typedef struct Event Event;
-typedef struct List List;
+C_CLASS_DECL(PC_Event);
+C_CLASS_DECL(PC_List);
 
-typedef struct ProcessHost ProcessHost;
+C_CLASS_DECL(PC_ProcessHost);
 
-typedef enum ProcessHostFlags
+enum PC_ProcessHostFlags
 {
-    PH_NONE = 0,
-    PH_REDIR_STDIN = 1 << 0,
-    PH_REDIR_STDOUT = 1 << 1,
-    PH_REDIR_STDERR = 1 << 2,
-    PH_REDIR_STDIO = PH_REDIR_STDIN | PH_REDIR_STDOUT | PH_REDIR_STDERR,
-    PH_REDIR_STDERR_IS_STDOUT = 1 << 3,
-    PH_NO_STDIN = 1 << 4,
-    PH_NO_STDOUT = 1 << 5,
-    PH_NO_STDERR = 1 << 6,
-    PH_NO_STDIO = PH_NO_STDIN | PH_NO_STDOUT | PH_NO_STDERR
-} ProcessHostFlags;
+    PC_PH_NONE = 0,
+    PC_PH_REDIR_STDIN = 1 << 0,
+    PC_PH_REDIR_STDOUT = 1 << 1,
+    PC_PH_REDIR_STDERR = 1 << 2,
+    PC_PH_REDIR_STDIO = PC_PH_REDIR_STDIN | PC_PH_REDIR_STDOUT | PC_PH_REDIR_STDERR,
+    PC_PH_REDIR_STDERR_IS_STDOUT = 1 << 3,
+    PC_PH_NO_STDIN = 1 << 4,
+    PC_PH_NO_STDOUT = 1 << 5,
+    PC_PH_NO_STDERR = 1 << 6,
+    PC_PH_NO_STDIO = PC_PH_NO_STDIN | PC_PH_NO_STDOUT | PC_PH_NO_STDERR
+};
+C_ENUM_DECL(PC_ProcessHostFlags);
 
-DECLEXPORT ProcessHost *ProcessHost_create(const char *executable);
-DECLEXPORT int ProcessHost_start(ProcessHost *self, ProcessHostFlags flags, ...);
-DECLEXPORT int ProcessHost_startv(ProcessHost *self, ProcessHostFlags flags, const List *args);
+DECLEXPORT PC_ProcessHost *PC_ProcessHost_create(const char *executable);
+DECLEXPORT int PC_ProcessHost_start(PC_ProcessHost *self, PC_ProcessHostFlags flags, ...);
+DECLEXPORT int PC_ProcessHost_startv(PC_ProcessHost *self, PC_ProcessHostFlags flags, const PC_List *args);
 
-DECLEXPORT Event *ProcessHost_stdoutDataEvent(const ProcessHost *self);
-DECLEXPORT Event *ProcessHost_stderrDataEvent(const ProcessHost *self);
+DECLEXPORT PC_Event *ProcessHost_stdoutDataEvent(const PC_ProcessHost *self);
+DECLEXPORT PC_Event *ProcessHost_stderrDataEvent(const PC_ProcessHost *self);
 
-DECLEXPORT void ProcessHost_destroy(ProcessHost *self);
+DECLEXPORT void PC_ProcessHost_destroy(PC_ProcessHost *self);
 
 #endif

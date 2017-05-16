@@ -3,25 +3,26 @@
 
 #include <pocas/gui/decl.h>
 
-typedef struct Event Event;
-typedef struct Menu Menu;
+C_CLASS_DECL(PC_Event);
 
-typedef struct Window Window;
+C_CLASS_DECL(PG_Menu);
 
-DECLEXPORT Window *Window_create(Window *parent, const char *title, int width, int height);
-DECLEXPORT Window *Window_parent(const Window *self);
-DECLEXPORT const char *Window_title(const Window *self);
-DECLEXPORT int Window_width(const Window *self);
-DECLEXPORT int Window_height(const Window *self);
-DECLEXPORT Menu *Window_menu(const Window *self);
-DECLEXPORT void Window_setMenu(Window *self, Menu *menu);
-DECLEXPORT void Window_close(Window *self);
-DECLEXPORT void *Window_showDialog(Window *self);
-DECLEXPORT void Window_closeDialog(Window *self, void *result);
-DECLEXPORT Event *Window_dialogShownEvent(const Window *self);
-DECLEXPORT Event *Window_closingEvent(const Window *self);
-DECLEXPORT void Window_destroy(Window *self);
+C_CLASS_DECL(PG_Window);
 
-DECLEXPORT Event *Window_lastWindowClosedEvent(void);
+DECLEXPORT PG_Window *PG_Window_create(PG_Window *parent, const char *title, int width, int height);
+DECLEXPORT PG_Window *PG_Window_parent(const PG_Window *self);
+DECLEXPORT const char *PG_Window_title(const PG_Window *self);
+DECLEXPORT int PG_Window_width(const PG_Window *self);
+DECLEXPORT int PG_Window_height(const PG_Window *self);
+DECLEXPORT PG_Menu *PG_Window_menu(const PG_Window *self);
+DECLEXPORT void PG_Window_setMenu(PG_Window *self, PG_Menu *menu);
+DECLEXPORT void PG_Window_close(PG_Window *self);
+DECLEXPORT void *PG_Window_showDialog(PG_Window *self);
+DECLEXPORT void PG_Window_closeDialog(PG_Window *self, void *result);
+DECLEXPORT PC_Event *PG_Window_dialogShownEvent(const PG_Window *self);
+DECLEXPORT PC_Event *PG_Window_closingEvent(const PG_Window *self);
+DECLEXPORT void PG_Window_destroy(PG_Window *self);
+
+DECLEXPORT PC_Event *PG_Window_lastWindowClosedEvent(void);
 
 #endif

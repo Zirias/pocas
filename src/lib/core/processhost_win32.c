@@ -10,15 +10,15 @@
 
 #include <pocas/core/processhost.h>
 
-struct ProcessHost
+struct PC_ProcessHost
 {
-    List *executable;
+    PC_List *executable;
     HANDLE process;
-    File *in;
-    File *out;
-    File *err;
-    Event *stdoutData;
-    Event *stderrData;
+    PC_File *in;
+    PC_File *out;
+    PC_File *err;
+    PC_Event *stdoutData;
+    PC_Event *stderrData;
 };
 
 static int mkpipe(HANDLE *read, HANDLE *write,
@@ -50,37 +50,37 @@ static int mkpipe(HANDLE *read, HANDLE *write,
     return 1;
 }
 
-static void onStdoutData(void *selfptr, EventArgs *args)
+static void onStdoutData(void *selfptr, PC_EventArgs *args)
 {
-    ProcessHost *self = selfptr;
-    EventArgs stdoutArgs = EventArgs_init(
+    PC_ProcessHost *self = selfptr;
+    PC_EventArgs stdoutArgs = PC_EventArgs_init(
                 self->stdoutData, self, args->evInfo);
-    Event_raise(self->stdoutData, &stdoutArgs);
+    PC_Event_raise(self->stdoutData, &stdoutArgs);
 }
 
-static void onStderrData(void *selfptr, EventArgs *args)
+static void onStderrData(void *selfptr, PC_EventArgs *args)
 {
-    ProcessHost *self = selfptr;
-    EventArgs stderrArgs = EventArgs_init(
+    PC_ProcessHost *self = selfptr;
+    PC_EventArgs stderrArgs = PC_EventArgs_init(
                 self->stderrData, self, args->evInfo);
-    Event_raise(self->stderrData, &stderrArgs);
+    PC_Event_raise(self->stderrData, &stderrArgs);
 }
 
-SOEXPORT ProcessHost *ProcessHost_create(const char *executable)
+SOEXPORT PC_ProcessHost *PC_ProcessHost_create(const char *executable)
 {
-    ProcessHost *self = malloc(sizeof(ProcessHost));
-    self->executable = List_createStr(1);
-    List_append(self->executable, String_copy(executable));
+    PC_ProcessHost *self = malloc(sizeof(PC_ProcessHost));
+    self->executable = PC_List_createStr(1);
+    PC_List_append(self->executable, PC_String_copy(executable));
     self->process = INVALID_HANDLE_VALUE;
     self->in = 0;
     self->out = 0;
     self->err = 0;
-    self->stdoutData = Event_create("Data");
-    self->stderrData = Event_create("Data");
+    self->stdoutData = PC_Event_create("Data");
+    self->stderrData = PC_Event_create("Data");
     return self;
 }
 
-SOEXPORT int ProcessHost_startv(ProcessHost *self, ProcessHostFlags flags, const List *args)
+SOEXPORT int PC_ProcessHost_startv(PC_ProcessHost *self, PC_ProcessHostFlags flags, const PC_List *args)
 {
     char windir[MAX_PATH];
     SECURITY_ATTRIBUTES sa;
@@ -92,7 +92,7 @@ SOEXPORT int ProcessHost_startv(ProcessHost *self, ProcessHostFlags flags, const
     sa.bInheritHandle = 1;
     sa.lpSecurityDescriptor = 0;
 
-    if (flags & PH_NO_STDIO)
+    if (flags & PC_PH_NO_STDIO)
     {
         nul = CreateFile("nul", GENERIC_READ|GENERIC_WRITE, 0, &sa, 0, 0, 0);
     }
@@ -100,24 +100,24 @@ SOEXPORT int ProcessHost_startv(ProcessHost *self, ProcessHostFlags flags, const
     {
         nul = INVALID_HANDLE_VALUE;
     }
-    in = flags & PH_NO_STDIN ? nul : INVALID_HANDLE_VALUE;
+    in = flags & PC_PH_NO_STDIN ? nul : INVALID_HANDLE_VALUE;
     pin = INVALID_HANDLE_VALUE;
-    out = flags & PH_NO_STDOUT ? nul : INVALID_HANDLE_VALUE;
+    out = flags & PC_PH_NO_STDOUT ? nul : INVALID_HANDLE_VALUE;
     pout = INVALID_HANDLE_VALUE;
-    err = flags & PH_NO_STDERR ? nul : INVALID_HANDLE_VALUE;
+    err = flags & PC_PH_NO_STDERR ? nul : INVALID_HANDLE_VALUE;
     perr = INVALID_HANDLE_VALUE;
 
-    if (flags & PH_REDIR_STDIN && in == INVALID_HANDLE_VALUE)
+    if (flags & PC_PH_REDIR_STDIN && in == INVALID_HANDLE_VALUE)
     {
         mkpipe(&in, &pin, &sa, 0, 0, 0);
     }
 
-    if (flags & PH_REDIR_STDOUT && out == INVALID_HANDLE_VALUE)
+    if (flags & PC_PH_REDIR_STDOUT && out == INVALID_HANDLE_VALUE)
     {
         mkpipe(&pout, &out, 0, &sa, FILE_FLAG_OVERLAPPED, 0);
     }
 
-    if (flags & PH_REDIR_STDERR && !(flags & PH_REDIR_STDERR_IS_STDOUT)
+    if (flags & PC_PH_REDIR_STDERR && !(flags & PC_PH_REDIR_STDERR_IS_STDOUT)
             && err == INVALID_HANDLE_VALUE)
     {
         mkpipe(&perr, &err, 0, &sa, FILE_FLAG_OVERLAPPED, 0);
@@ -130,29 +130,29 @@ SOEXPORT int ProcessHost_startv(ProcessHost *self, ProcessHostFlags flags, const
     si.hStdOutput = out == INVALID_HANDLE_VALUE ?
                 GetStdHandle(STD_OUTPUT_HANDLE) : out;
     si.hStdError = err == INVALID_HANDLE_VALUE ?
-                flags & PH_REDIR_STDERR_IS_STDOUT ?
+                flags & PC_PH_REDIR_STDERR_IS_STDOUT ?
                     si.hStdOutput :
                     GetStdHandle(STD_ERROR_HANDLE)
                   : err;
     si.dwFlags |= STARTF_USESTDHANDLES;
 
-    if (pin != INVALID_HANDLE_VALUE) self->in = File_openHandle(pin);
+    if (pin != INVALID_HANDLE_VALUE) self->in = PC_File_openHandle(pin);
     if (pout != INVALID_HANDLE_VALUE)
     {
-        self->out = File_openHandle(pout);
-        Event_register(File_dataReadEvent(self->out), self, onStdoutData);
-        File_startReading(self->out);
+        self->out = PC_File_openHandle(pout);
+        PC_Event_register(PC_File_dataReadEvent(self->out), self, onStdoutData);
+        PC_File_startReading(self->out);
     }
     if (perr != INVALID_HANDLE_VALUE)
     {
-        self->err = File_openHandle(perr);
-        Event_register(File_dataReadEvent(self->err), self, onStderrData);
-        File_startReading(self->err);
+        self->err = PC_File_openHandle(perr);
+        PC_Event_register(PC_File_dataReadEvent(self->err), self, onStderrData);
+        PC_File_startReading(self->err);
     }
 
-    List *cmdline = List_concat(self->executable, args);
-    char *cmd = List_joinStr(cmdline, " ");
-    List_destroy(cmdline);
+    PC_List *cmdline = PC_List_concat(self->executable, args);
+    char *cmd = PC_List_joinStr(cmdline, " ");
+    PC_List_destroy(cmdline);
 
     memset(&pi, 0, sizeof(pi));
     GetEnvironmentVariable("windir", windir, MAX_PATH);
@@ -167,48 +167,48 @@ SOEXPORT int ProcessHost_startv(ProcessHost *self, ProcessHostFlags flags, const
     return 1;
 }
 
-SOEXPORT int ProcessHost_start(ProcessHost *self, ProcessHostFlags flags, ...)
+SOEXPORT int PC_ProcessHost_start(PC_ProcessHost *self, PC_ProcessHostFlags flags, ...)
 {
     va_list ap;
     char *arg;
-    List *args = List_create(0, 0, 0);
+    PC_List *args = PC_List_create(0, 0, 0);
 
     va_start(ap, flags);
     while ((arg = va_arg(ap, char *)))
     {
-        List_append(args, arg);
+        PC_List_append(args, arg);
     }
     va_end(ap);
 
-    int rc = ProcessHost_startv(self, flags, args);
-    List_destroy(args);
+    int rc = PC_ProcessHost_startv(self, flags, args);
+    PC_List_destroy(args);
     return rc;
 }
 
-SOEXPORT Event *ProcessHost_stdoutDataEvent(const ProcessHost *self)
+SOEXPORT PC_Event *PC_ProcessHost_stdoutDataEvent(const PC_ProcessHost *self)
 {
     return self->stdoutData;
 }
 
-SOEXPORT Event *ProcessHost_stderrDataEvent(const ProcessHost *self)
+SOEXPORT PC_Event *PC_ProcessHost_stderrDataEvent(const PC_ProcessHost *self)
 {
     return self->stderrData;
 }
 
-SOEXPORT void ProcessHost_destroy(ProcessHost *self)
+SOEXPORT void PC_ProcessHost_destroy(PC_ProcessHost *self)
 {
     if (!self) return;
-    File_close(self->in);
-    File_close(self->out);
-    File_close(self->err);
-    Event_destroy(self->stdoutData);
-    Event_destroy(self->stderrData);
+    PC_File_close(self->in);
+    PC_File_close(self->out);
+    PC_File_close(self->err);
+    PC_Event_destroy(self->stdoutData);
+    PC_Event_destroy(self->stderrData);
     if (self->process != INVALID_HANDLE_VALUE)
     {
         TerminateProcess(self->process, 0);
         WaitForSingleObject(self->process, INFINITE);
         CloseHandle(self->process);
     }
-    List_destroy(self->executable);
+    PC_List_destroy(self->executable);
     free(self);
 }

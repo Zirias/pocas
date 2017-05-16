@@ -4,24 +4,24 @@
 
 #include <pocas/core/list.h>
 
-struct List
+struct PC_List
 {
     void **items;
     int itercount;
     int disposed;
     size_t capacity;
     size_t length;
-    ListElementDeleter deleter;
-    ListElementCloner cloner;
+    PC_ListElementDeleter deleter;
+    PC_ListElementCloner cloner;
 };
 
-struct ListIterator
+struct PC_ListIterator
 {
-    const List *list;
+    const PC_List *list;
     size_t index;
 };
 
-static void checkAndgrow(List *self, size_t index)
+static void checkAndgrow(PC_List *self, size_t index)
 {
     if (index >= self->capacity)
     {
@@ -30,11 +30,11 @@ static void checkAndgrow(List *self, size_t index)
     }
 }
 
-SOEXPORT List *List_create(size_t capacity, ListElementDeleter deleter,
-                           ListElementCloner cloner)
+SOEXPORT PC_List *PC_List_create(size_t capacity, PC_ListElementDeleter deleter,
+                           PC_ListElementCloner cloner)
 {
     if (!capacity) capacity = 32;
-    List *self = malloc(sizeof(List));
+    PC_List *self = malloc(sizeof(PC_List));
     self->items = malloc(capacity * sizeof(void *));
     self->itercount = 0;
     self->disposed = 0;
@@ -45,12 +45,12 @@ SOEXPORT List *List_create(size_t capacity, ListElementDeleter deleter,
     return self;
 }
 
-SOEXPORT List *List_createStr(size_t capacity)
+SOEXPORT PC_List *PC_List_createStr(size_t capacity)
 {
-    return List_create(capacity, free, (ListElementCloner)String_copy);
+    return PC_List_create(capacity, free, (PC_ListElementCloner)PC_String_copy);
 }
 
-SOEXPORT void List_append(List *self, void *item)
+SOEXPORT void PC_List_append(PC_List *self, void *item)
 {
     size_t index = self->length;
     checkAndgrow(self, index);
@@ -58,7 +58,7 @@ SOEXPORT void List_append(List *self, void *item)
     ++self->length;
 }
 
-SOEXPORT void List_set(List *self, size_t index, void *item)
+SOEXPORT void PC_List_set(PC_List *self, size_t index, void *item)
 {
     checkAndgrow(self, index);
     if (index >= self->length)
@@ -76,11 +76,11 @@ SOEXPORT void List_set(List *self, size_t index, void *item)
     self->items[index] = item;
 }
 
-SOEXPORT void List_insert(List *self, size_t index, void *item)
+SOEXPORT void PC_List_insert(PC_List *self, size_t index, void *item)
 {
     if (index >= self->length)
     {
-        List_set(self, index, item);
+        PC_List_set(self, index, item);
     }
     else
     {
@@ -92,15 +92,15 @@ SOEXPORT void List_insert(List *self, size_t index, void *item)
     }
 }
 
-SOEXPORT void List_remove(List *self, void *item)
+SOEXPORT void PC_List_remove(PC_List *self, void *item)
 {
     for (size_t i = 0; i < self->length; ++i)
     {
-        if (self->items[i] == item) List_removeAt(self, i);
+        if (self->items[i] == item) PC_List_removeAt(self, i);
     }
 }
 
-SOEXPORT void List_removeAt(List *self, size_t index)
+SOEXPORT void PC_List_removeAt(PC_List *self, size_t index)
 {
     if (self->deleter)
     {
@@ -111,35 +111,35 @@ SOEXPORT void List_removeAt(List *self, size_t index)
     --self->length;
 }
 
-SOEXPORT void List_removeMatching(
-        List *self, ListElementSelector selector, void *selectArgs)
+SOEXPORT void PC_List_removeMatching(
+        PC_List *self, PC_ListElementSelector selector, void *selectArgs)
 {
     for (size_t i = 0; i < self->length; ++i)
     {
         while (i < self->length && selector(self->items[i], selectArgs))
         {
-            List_removeAt(self, i);
+            PC_List_removeAt(self, i);
         }
     }
 }
 
-SOEXPORT void *List_get(const List *self, size_t index)
+SOEXPORT void *PC_List_get(const PC_List *self, size_t index)
 {
     if (index >= self->length) return 0;
     return self->items[index];
 }
 
-SOEXPORT char *List_getStr(const List *self, size_t index)
+SOEXPORT char *PC_List_getStr(const PC_List *self, size_t index)
 {
-    return List_get(self, index);
+    return PC_List_get(self, index);
 }
 
-SOEXPORT size_t List_length(const List *self)
+SOEXPORT size_t PC_List_length(const PC_List *self)
 {
     return self->length;
 }
 
-SOEXPORT void List_clear(List *self)
+SOEXPORT void PC_List_clear(PC_List *self)
 {
     if (self->deleter)
     {
@@ -151,19 +151,19 @@ SOEXPORT void List_clear(List *self)
     self->length = 0;
 }
 
-SOEXPORT List *List_clone(const List *self)
+SOEXPORT PC_List *PC_List_clone(const PC_List *self)
 {
-    List *result = List_create(0, self->deleter, self->cloner);
+    PC_List *result = PC_List_create(0, self->deleter, self->cloner);
     for (size_t i = 0; i < self->length; ++i)
     {
         void *item = self->items[i];
         if (self->cloner) item = self->cloner(item);
-        List_append(result, item);
+        PC_List_append(result, item);
     }
     return result;
 }
 
-SOEXPORT void *List_join(const List *self, ListElementSize getElementSize,
+SOEXPORT void *PC_List_join(const PC_List *self, PC_ListElementSize getElementSize,
                          const void *delim, size_t delimSize,
                          size_t *resultSize,
                          size_t reserveStart, size_t reserveEnd)
@@ -193,71 +193,71 @@ SOEXPORT void *List_join(const List *self, ListElementSize getElementSize,
     return result;
 }
 
-SOEXPORT char *List_joinStr(const List *self, const char *delim)
+SOEXPORT char *PC_List_joinStr(const PC_List *self, const char *delim)
 {
-    return List_join(self, (ListElementSize)strlen, delim, strlen(delim),
+    return PC_List_join(self, (PC_ListElementSize)strlen, delim, strlen(delim),
                      0, 0, 1);
 }
 
-SOEXPORT List *List_transform(const List *self, ListElementDeleter deleter,
-                              ListElementCloner cloner,
-                              ListElementTransform transformElement,
+SOEXPORT PC_List *PC_List_transform(const PC_List *self, PC_ListElementDeleter deleter,
+                              PC_ListElementCloner cloner,
+                              PC_ListElementTransform transformElement,
                               void *transformArgs)
 {
-    List *result = List_create(0, deleter, cloner);
+    PC_List *result = PC_List_create(0, deleter, cloner);
     for (size_t i = 0; i < self->length; ++i)
     {
-        List_append(result, transformElement(self->items[i], transformArgs));
+        PC_List_append(result, transformElement(self->items[i], transformArgs));
     }
     return result;
 }
 
-SOEXPORT List *List_transformSameType(const List *self,
-                                 ListElementTransform transformElement,
+SOEXPORT PC_List *PC_List_transformSameType(const PC_List *self,
+                                 PC_ListElementTransform transformElement,
                                  void *transformArgs)
 {
-    return List_transform(self, self->deleter, self->cloner,
+    return PC_List_transform(self, self->deleter, self->cloner,
                           transformElement, transformArgs);
 }
 
-SOEXPORT List *List_concat(const List *self, const List *append)
+SOEXPORT PC_List *PC_List_concat(const PC_List *self, const PC_List *append)
 {
-    List *result = List_clone(self);
+    PC_List *result = PC_List_clone(self);
     for (size_t i = 0; i < append->length; ++i)
     {
         void *item = append->items[i];
         if (self->cloner) item = self->cloner(item);
-        List_append(result, item);
+        PC_List_append(result, item);
     }
     return result;
 }
 
-SOEXPORT List *List_select(const List *self, ListElementSelector selector,
+SOEXPORT PC_List *PC_List_select(const PC_List *self, PC_ListElementSelector selector,
                            void *selectArgs)
 {
-    List *result = List_create(0, self->deleter, self->cloner);
+    PC_List *result = PC_List_create(0, self->deleter, self->cloner);
     for (size_t i = 0; i < self->length; ++i)
     {
         if (selector(self->items[i], selectArgs))
         {
             void *item = self->items[i];
             if (self->cloner) item = self->cloner(item);
-            List_append(result, item);
+            PC_List_append(result, item);
         }
     }
     return result;
 }
 
-SOEXPORT ListIterator *List_iterator(const List *self)
+SOEXPORT PC_ListIterator *PC_List_iterator(const PC_List *self)
 {
-    ListIterator *iter = malloc(sizeof(ListIterator));
+    PC_ListIterator *iter = malloc(sizeof(PC_ListIterator));
     iter->list = self;
-    ((List *)self)->itercount++;
+    ((PC_List *)self)->itercount++;
     iter->index = -1;
     return iter;
 }
 
-SOEXPORT int ListIterator_moveNext(ListIterator *self)
+SOEXPORT int PC_ListIterator_moveNext(PC_ListIterator *self)
 {
     if (++self->index >= self->list->length)
     {
@@ -267,7 +267,7 @@ SOEXPORT int ListIterator_moveNext(ListIterator *self)
     return 1;
 }
 
-SOEXPORT void *ListIterator_current(const ListIterator *self)
+SOEXPORT void *PC_ListIterator_current(const PC_ListIterator *self)
 {
     if (self->index < self->list->length)
     {
@@ -276,22 +276,22 @@ SOEXPORT void *ListIterator_current(const ListIterator *self)
     return 0;
 }
 
-SOEXPORT char *ListIterator_currentStr(const ListIterator *self)
+SOEXPORT char *PC_ListIterator_currentStr(const PC_ListIterator *self)
 {
-    return ListIterator_current(self);
+    return PC_ListIterator_current(self);
 }
 
-SOEXPORT void ListIterator_destroy(ListIterator *self)
+SOEXPORT void PC_ListIterator_destroy(PC_ListIterator *self)
 {
     if (!self) return;
-    if (!--((List *)self->list)->itercount && self->list->disposed)
+    if (!--((PC_List *)self->list)->itercount && self->list->disposed)
     {
-        List_destroy((List *)self->list);
+        PC_List_destroy((PC_List *)self->list);
     }
     free(self);
 }
 
-SOEXPORT void List_destroy(List *self)
+SOEXPORT void PC_List_destroy(PC_List *self)
 {
     if (!self) return;
     if (self->itercount)

@@ -5,19 +5,21 @@
 
 #include <pocas/core/event.h>
 
-typedef struct Win32HndlEvInfo
+C_CLASS_DECL(PC_Win32HndlEvInfo);
+struct PC_Win32HndlEvInfo
 {
     HANDLE hndl;
     void *owner;
-} Win32HndlEvInfo;
+};
 
-typedef struct Win32MsgEvInfo
+C_CLASS_DECL(PC_Win32MsgEvInfo);
+struct PC_Win32MsgEvInfo
 {
     HWND wnd;
     UINT msg;
     WPARAM wp;
     LPARAM lp;
     LRESULT result;
-} Win32MsgEvInfo;
+};
 
 #endif

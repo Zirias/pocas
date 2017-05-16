@@ -31,7 +31,7 @@ struct result
 static void *pluginToTestClass(const void *plugin, void *args)
 {
     (void)args;
-    return TestClass_create((Plugin *)plugin);
+    return TestClass_create((PC_Plugin *)plugin);
 }
 
 static void deleteTestClass(void *testclass)
@@ -44,37 +44,37 @@ static void consoleResultHandler(const TestCase *testCase,
 {
     (void)args;
     const char *testname = TestCase_method(testCase);
-    const char *classname = Plugin_id(TestClass_plugin(TestCase_class(testCase)));
+    const char *classname = PC_Plugin_id(TestClass_plugin(TestCase_class(testCase)));
     const char *message = TestResult_message(result);
 
-    ListIterator *igni = TestResult_ignoredMessages(result);
-    if (igni) while (ListIterator_moveNext(igni))
+    PC_ListIterator *igni = TestResult_ignoredMessages(result);
+    if (igni) while (PC_ListIterator_moveNext(igni))
     {
-        TextColor_fprintf(stderr,
-                TCS_YELLOW "   [IGN]  " TCS_BROWN "%s::%s %s" TCS_NORMAL "\n",
+        PC_TextColor_fprintf(stderr,
+                PC_TCS_YELLOW "   [IGN]  " PC_TCS_BROWN "%s::%s %s" PC_TCS_NORMAL "\n",
                 classname, testname,
-                (const char *)ListIterator_current(igni));
+                (const char *)PC_ListIterator_current(igni));
     }
-    ListIterator_destroy(igni);
+    PC_ListIterator_destroy(igni);
 
     switch (TestResult_code(result))
     {
-    case TRC_NONE:
+    case PT_TRC_NONE:
         break;
-    case TRC_CRSH:
-        TextColor_fprintf(stderr, TCS_LIGHTRED "   [CRSH] %s::%s %s"
-                TCS_NORMAL "\n", classname, testname, message);
+    case PT_TRC_CRSH:
+        PC_TextColor_fprintf(stderr, PC_TCS_LIGHTRED "   [CRSH] %s::%s %s"
+                PC_TCS_NORMAL "\n", classname, testname, message);
         break;
-    case TRC_FAIL:
-        TextColor_fprintf(stderr, TCS_LIGHTRED "   [FAIL] " TCS_NORMAL
+    case PT_TRC_FAIL:
+        PC_TextColor_fprintf(stderr, PC_TCS_LIGHTRED "   [FAIL] " PC_TCS_NORMAL
                 "%s::%s %s\n", classname, testname, message);
         break;
-    case TRC_PASS:
-        TextColor_fprintf(stderr, TCS_LIGHTGREEN "   [PASS] " TCS_NORMAL
+    case PT_TRC_PASS:
+        PC_TextColor_fprintf(stderr, PC_TCS_LIGHTGREEN "   [PASS] " PC_TCS_NORMAL
                 "%s::%s %s\n", classname, testname, message);
         break;
-    case TRC_UNKN:
-        TextColor_fprintf(stderr, TCS_YELLOW "   [UNKN] " TCS_NORMAL
+    case PT_TRC_UNKN:
+        PC_TextColor_fprintf(stderr, PC_TCS_YELLOW "   [UNKN] " PC_TCS_NORMAL
                 "%s::%s %s\n", classname, testname, message);
         break;
     }
@@ -84,17 +84,17 @@ static int aggregateResult(int run, int passed, int failed, int unknown)
 {
     if (passed)
     {
-        TextColor_fprintf(stderr, ", " TCS_LIGHTGREEN "passed: %d" TCS_NORMAL,
+        PC_TextColor_fprintf(stderr, ", " PC_TCS_LIGHTGREEN "passed: %d" PC_TCS_NORMAL,
                 passed);
     }
     if (failed)
     {
-        TextColor_fprintf(stderr, ", " TCS_LIGHTRED "failed/crashed: %d"
-                TCS_NORMAL, failed);
+        PC_TextColor_fprintf(stderr, ", " PC_TCS_LIGHTRED "failed/crashed: %d"
+                PC_TCS_NORMAL, failed);
     }
     if (unknown)
     {
-        TextColor_fprintf(stderr, ", " TCS_YELLOW "unknown: %d" TCS_NORMAL,
+        PC_TextColor_fprintf(stderr, ", " PC_TCS_YELLOW "unknown: %d" PC_TCS_NORMAL,
                 unknown);
     }
     fputc('\n', stderr);
@@ -109,8 +109,8 @@ static void consoleClassResultHandler(const TestClass *testClass, void *args)
     int failed = TestClass_testsFailed(testClass);
     int unknown = TestClass_testsUnknown(testClass);
 
-    TextColor_fprintf(stderr, TCS_LIGHTCYAN "   [TEST] %s run: %d" TCS_NORMAL,
-            Plugin_id(TestClass_plugin(testClass)), run);
+    PC_TextColor_fprintf(stderr, PC_TCS_LIGHTCYAN "   [TEST] %s run: %d" PC_TCS_NORMAL,
+            PC_Plugin_id(TestClass_plugin(testClass)), run);
 
     aggregateResult(run, passed, failed, unknown);
 
@@ -126,26 +126,26 @@ int main(int argc, char **argv)
     int interactive = 0;
     char *outFilename = 0;
     char *gdbPath = 0;
-    List *positionalArgs = List_createStr(0);
+    PC_List *positionalArgs = PC_List_createStr(0);
 
-    Cmdline *cmdline = Cmdline_create(CLS_Unix);
-    Cmdline_addFromArgv(cmdline, argc, argv);
+    PC_Cmdline *cmdline = PC_Cmdline_create(PC_CLS_Unix);
+    PC_Cmdline_addFromArgv(cmdline, argc, argv);
 
-    CmdlineParser *parser = CmdlineParser_create();
-    CmdlineParser_register(parser, OPTID_PREPROCESS, 'p', 0, COM_Switch);
-    CmdlineParser_register(parser, OPTID_OUTPUT, 'o', 0, COM_ArgRequired);
-    CmdlineParser_register(parser, OPTID_GDB, 'g', 0, COM_ArgRequired);
-    CmdlineParser_register(parser, OPTID_INTERACTIVE, 'i', 0, COM_Switch);
+    PC_CmdlineParser *parser = PC_CmdlineParser_create();
+    PC_CmdlineParser_register(parser, OPTID_PREPROCESS, 'p', 0, PC_COM_Switch);
+    PC_CmdlineParser_register(parser, OPTID_OUTPUT, 'o', 0, PC_COM_ArgRequired);
+    PC_CmdlineParser_register(parser, OPTID_GDB, 'g', 0, PC_COM_ArgRequired);
+    PC_CmdlineParser_register(parser, OPTID_INTERACTIVE, 'i', 0, PC_COM_Switch);
 
-    const CmdlineItem *item;
+    const PC_CmdlineItem *item;
 
-    while ((item = CmdlineParser_next(parser, cmdline)))
+    while ((item = PC_CmdlineParser_next(parser, cmdline)))
     {
-        switch (CmdlineItem_id(item))
+        switch (PC_CmdlineItem_id(item))
         {
         case OPTID_POSITIONALARG:
-            List_append(positionalArgs,
-                    String_copy(CmdlineItem_arg(item)));
+            PC_List_append(positionalArgs,
+                    PC_String_copy(PC_CmdlineItem_arg(item)));
             break;
 
         case OPTID_PREPROCESS:
@@ -154,12 +154,12 @@ int main(int argc, char **argv)
 
         case OPTID_OUTPUT:
             free(outFilename);
-            outFilename = String_copy(CmdlineItem_arg(item));
+            outFilename = PC_String_copy(PC_CmdlineItem_arg(item));
             break;
 
         case OPTID_GDB:
             free(gdbPath);
-            gdbPath = String_copy(CmdlineItem_arg(item));
+            gdbPath = PC_String_copy(PC_CmdlineItem_arg(item));
             break;
 
         case OPTID_INTERACTIVE:
@@ -168,14 +168,14 @@ int main(int argc, char **argv)
         }
     }
 
-    CmdlineParser_destroy(parser);
-    Cmdline_destroy(cmdline);
+    PC_CmdlineParser_destroy(parser);
+    PC_Cmdline_destroy(cmdline);
 
     exeName = argv[0];
 
     if (interactive)
     {
-        List_destroy(positionalArgs);
+        PC_List_destroy(positionalArgs);
         Gui *gui = Gui_create();
         int rc = Gui_run(gui);
         Gui_destroy(gui);
@@ -185,46 +185,46 @@ int main(int argc, char **argv)
     if (preprocess)
     {
         if (gdbPath) goto usage;
-        if (List_length(positionalArgs) != 1) goto usage;
-        int success = preproc(List_getStr(positionalArgs, 0), outFilename);
+        if (PC_List_length(positionalArgs) != 1) goto usage;
+        int success = preproc(PC_List_getStr(positionalArgs, 0), outFilename);
         free(outFilename);
-        List_destroy(positionalArgs);
+        PC_List_destroy(positionalArgs);
         return success ? EXIT_SUCCESS : EXIT_FAILURE;
     }
 
     if (outFilename) goto usage;
     Runner_mainHook(positionalArgs, gdbPath);
 
-    ListIterator *pai = List_iterator(positionalArgs);
-    if (!ListIterator_moveNext(pai))
+    PC_ListIterator *pai = PC_List_iterator(positionalArgs);
+    if (!PC_ListIterator_moveNext(pai))
     {
-        ListIterator_destroy(pai);
+        PC_ListIterator_destroy(pai);
         goto usage;
     }
 
-    List *testClasses = 0;
-    List *plugins = Plugin_loadDir(ListIterator_current(pai), TEST_PLUGIN_ID);
+    PC_List *testClasses = 0;
+    PC_List *plugins = PC_Plugin_loadDir(PC_ListIterator_current(pai), TEST_PLUGIN_ID);
     if (plugins)
     {
-        testClasses = List_transform(plugins, deleteTestClass, 0, pluginToTestClass, 0);
-        List_destroy(plugins);
+        testClasses = PC_List_transform(plugins, deleteTestClass, 0, pluginToTestClass, 0);
+        PC_List_destroy(plugins);
     }
-    while (ListIterator_moveNext(pai))
+    while (PC_ListIterator_moveNext(pai))
     {
-        plugins = Plugin_loadDir(ListIterator_current(pai), TEST_PLUGIN_ID);
+        plugins = PC_Plugin_loadDir(PC_ListIterator_current(pai), TEST_PLUGIN_ID);
         if (testClasses && plugins)
         {
-            List *moreTests = List_transform(plugins, deleteTestClass, 0, pluginToTestClass, 0);
-            List *newTests = List_concat(testClasses, moreTests);
-            List_destroy(testClasses);
-            List_destroy(moreTests);
-            List_destroy(plugins);
+            PC_List *moreTests = PC_List_transform(plugins, deleteTestClass, 0, pluginToTestClass, 0);
+            PC_List *newTests = PC_List_concat(testClasses, moreTests);
+            PC_List_destroy(testClasses);
+            PC_List_destroy(moreTests);
+            PC_List_destroy(plugins);
             testClasses = newTests;
         }
         else if (plugins)
         {
-            testClasses = List_transform(plugins, deleteTestClass, 0, pluginToTestClass, 0);
-            List_destroy(plugins);
+            testClasses = PC_List_transform(plugins, deleteTestClass, 0, pluginToTestClass, 0);
+            PC_List_destroy(plugins);
         }
     }
 
@@ -237,32 +237,32 @@ int main(int argc, char **argv)
     struct result result;
     memset(&result, 0, sizeof(result));
 
-    ListIterator *tci = List_iterator(testClasses);
-    while (ListIterator_moveNext(tci))
+    PC_ListIterator *tci = PC_List_iterator(testClasses);
+    while (PC_ListIterator_moveNext(tci))
     {
-        TestClass *tc = ListIterator_current(tci);
-        ListIterator *ti = List_iterator(TestClass_testCases(tc));
-        while (ListIterator_moveNext(ti))
+        TestClass *tc = PC_ListIterator_current(tci);
+        PC_ListIterator *ti = PC_List_iterator(TestClass_testCases(tc));
+        while (PC_ListIterator_moveNext(ti))
         {
-            TestCase *t = ListIterator_current(ti);
+            TestCase *t = PC_ListIterator_current(ti);
             TestCase_setResultHandler(t, consoleResultHandler, 0);
         }
-        ListIterator_destroy(ti);
+        PC_ListIterator_destroy(ti);
         TestClass_setResultHandler(tc, consoleClassResultHandler, &result);
         TestClass_run(tc, gdbPath);
     }
 
-    ListIterator_destroy(tci);
-    List_destroy(testClasses);
+    PC_ListIterator_destroy(tci);
+    PC_List_destroy(testClasses);
 
-    TextColor_fprintf(stderr, TCS_LIGHTCYAN "   [TRES] total tests run: %d"
-            TCS_NORMAL, result.run);
+    PC_TextColor_fprintf(stderr, PC_TCS_LIGHTCYAN "   [TRES] total tests run: %d"
+            PC_TCS_NORMAL, result.run);
     return aggregateResult(result.run, result.passed, result.failed, result.unknown);
 
 usage:
     free(outFilename);
     free(gdbPath);
-    List_destroy(positionalArgs);
+    PC_List_destroy(positionalArgs);
     fprintf(stderr, "\nPOCAS Testrunner\n"
                     "\n"
                     "USAGE: %s [-g {gdb path}] path [path ...]\n"

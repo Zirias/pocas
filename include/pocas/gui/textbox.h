@@ -3,21 +3,22 @@
 
 #include <pocas/gui/decl.h>
 
-typedef struct Event Event;
+C_CLASS_DECL(PC_Event);
 
-typedef struct TextBox TextBox;
+C_CLASS_DECL(PG_TextBox);
 
-typedef enum TextBoxStyle
+enum PG_TextBoxStyle
 {
-    TBS_Normal = 0,
-    TBS_Multiline = 1 << 0,
-} TextBoxStyle;
+    PG_TBS_Normal = 0,
+    PG_TBS_Multiline = 1 << 0,
+};
+C_ENUM_DECL(PG_TextBoxStyle);
 
-DECLEXPORT TextBox *TextBox_create(TextBoxStyle style);
-DECLEXPORT TextBoxStyle TextBox_style(const TextBox *self);
-DECLEXPORT const char *TextBox_text(const TextBox *self);
-DECLEXPORT void TextBox_setText(TextBox *self, const char *text);
-DECLEXPORT Event *TextBox_textChangedEvent(const TextBox *self);
-DECLEXPORT void TextBox_destroy(TextBox *self);
+DECLEXPORT PG_TextBox *PG_TextBox_create(PG_TextBoxStyle style);
+DECLEXPORT PG_TextBoxStyle PG_TextBox_style(const PG_TextBox *self);
+DECLEXPORT const char *PG_TextBox_text(const PG_TextBox *self);
+DECLEXPORT void PG_TextBox_setText(PG_TextBox *self, const char *text);
+DECLEXPORT PC_Event *PG_TextBox_textChangedEvent(const PG_TextBox *self);
+DECLEXPORT void PG_TextBox_destroy(PG_TextBox *self);
 
 #endif

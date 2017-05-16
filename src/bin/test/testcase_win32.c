@@ -60,22 +60,22 @@ void TestCase_run(TestCase *self, const char *gdbPath)
 
     snprintf(buf, 1024, "%" PRIxPTR, (uintptr_t)pout);
 
-    StringBuilder *cmdLineBuilder = StringBuilder_create(0);
-    StringBuilder_appendChar(cmdLineBuilder, '"');
-    StringBuilder_appendStr(cmdLineBuilder, exeName);
+    PC_StringBuilder *cmdLineBuilder = PC_StringBuilder_create(0);
+    PC_StringBuilder_appendChar(cmdLineBuilder, '"');
+    PC_StringBuilder_appendStr(cmdLineBuilder, exeName);
     if (gdbPath)
     {
-        StringBuilder_appendStr(cmdLineBuilder, "\" -g \"");
-        StringBuilder_appendStr(cmdLineBuilder, gdbPath);
+        PC_StringBuilder_appendStr(cmdLineBuilder, "\" -g \"");
+        PC_StringBuilder_appendStr(cmdLineBuilder, gdbPath);
     }
-    StringBuilder_appendStr(cmdLineBuilder, "\" __pocastest__run ");
-    StringBuilder_appendStr(cmdLineBuilder, buf);
-    StringBuilder_appendStr(cmdLineBuilder, " \"");
-    StringBuilder_appendStr(cmdLineBuilder, Plugin_path(TestClass_plugin(TestCase_class(self))));
-    StringBuilder_appendStr(cmdLineBuilder, "\" ");
-    StringBuilder_appendStr(cmdLineBuilder, TestCase_method(self));
-    char *cmdline = StringBuilder_toString(cmdLineBuilder);
-    StringBuilder_destroy(cmdLineBuilder);
+    PC_StringBuilder_appendStr(cmdLineBuilder, "\" __pocastest__run ");
+    PC_StringBuilder_appendStr(cmdLineBuilder, buf);
+    PC_StringBuilder_appendStr(cmdLineBuilder, " \"");
+    PC_StringBuilder_appendStr(cmdLineBuilder, PC_Plugin_path(TestClass_plugin(TestCase_class(self))));
+    PC_StringBuilder_appendStr(cmdLineBuilder, "\" ");
+    PC_StringBuilder_appendStr(cmdLineBuilder, TestCase_method(self));
+    char *cmdline = PC_StringBuilder_toString(cmdLineBuilder);
+    PC_StringBuilder_destroy(cmdLineBuilder);
 
     if (!CreateProcess(0, cmdline, 0, 0, 1, 0, 0, 0, &si, &pi))
     {
@@ -98,16 +98,16 @@ void TestCase_run(TestCase *self, const char *gdbPath)
         gsi.cb = sizeof(gsi);
         gsi.dwFlags |= STARTF_USESTDHANDLES;
 
-        cmdLineBuilder = StringBuilder_create(0);
-        StringBuilder_appendChar(cmdLineBuilder, '"');
-        StringBuilder_appendStr(cmdLineBuilder, gdbPath);
-        StringBuilder_appendStr(cmdLineBuilder, "\" -p ");
-        StringBuilder_appendUInt(cmdLineBuilder, GetProcessId(pi.hProcess));
-        StringBuilder_appendStr(cmdLineBuilder, " -ex \"set breakpoint pending on\" -ex \"break pocastest__method_");
-        StringBuilder_appendStr(cmdLineBuilder, TestCase_method(self));
-        StringBuilder_appendStr(cmdLineBuilder, "\" -ex c");
-        cmdline = StringBuilder_toString(cmdLineBuilder);
-        StringBuilder_destroy(cmdLineBuilder);
+        cmdLineBuilder = PC_StringBuilder_create(0);
+        PC_StringBuilder_appendChar(cmdLineBuilder, '"');
+        PC_StringBuilder_appendStr(cmdLineBuilder, gdbPath);
+        PC_StringBuilder_appendStr(cmdLineBuilder, "\" -p ");
+        PC_StringBuilder_appendUInt(cmdLineBuilder, GetProcessId(pi.hProcess));
+        PC_StringBuilder_appendStr(cmdLineBuilder, " -ex \"set breakpoint pending on\" -ex \"break pocastest__method_");
+        PC_StringBuilder_appendStr(cmdLineBuilder, TestCase_method(self));
+        PC_StringBuilder_appendStr(cmdLineBuilder, "\" -ex c");
+        cmdline = PC_StringBuilder_toString(cmdLineBuilder);
+        PC_StringBuilder_destroy(cmdLineBuilder);
         if (CreateProcess(0, cmdline, 0, 0, 1, CREATE_NEW_CONSOLE, 0, 0, &gsi, &gpi))
         {
             CloseHandle(gpi.hThread);
@@ -125,11 +125,11 @@ void TestCase_run(TestCase *self, const char *gdbPath)
     CloseHandle(pi.hThread);
 
     char *line;
-    List *output = List_createStr(0);
+    PC_List *output = PC_List_createStr(0);
     while ((line = fgets(buf, 1024, runnerPipe)))
     {
         stripNewline(line);
-        List_append(output, String_copy(line));
+        PC_List_append(output, PC_String_copy(line));
     }
 
     if (WaitForSingleObject(pi.hProcess, 1000) == WAIT_TIMEOUT)

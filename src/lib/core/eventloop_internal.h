@@ -3,6 +3,6 @@
 
 #include <pocas/core/eventloop.h>
 
-extern EventProcessor eventProcessor;
+extern PC_EventProcessor eventProcessor;
 
 #endif

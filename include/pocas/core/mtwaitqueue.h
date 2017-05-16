@@ -3,15 +3,15 @@
 
 #include <pocas/core/decl.h>
 
-typedef struct MtWaitQueue MtWaitQueue;
+C_CLASS_DECL(PC_MtWaitQueue);
 
-typedef void (*MtWaitQueueElementDeleter)(void *element);
+typedef void (*PC_MtWaitQueueElementDeleter)(void *element);
 
-DECLEXPORT MtWaitQueue *MtWaitQueue_create(MtWaitQueueElementDeleter deleter);
+DECLEXPORT PC_MtWaitQueue *PC_MtWaitQueue_create(PC_MtWaitQueueElementDeleter deleter);
 
-DECLEXPORT void MtWaitQueue_enqueue(MtWaitQueue *self, void *element);
-DECLEXPORT void *MtWaitQueue_dequeue(MtWaitQueue *self, int timeout);
+DECLEXPORT void PC_MtWaitQueue_enqueue(PC_MtWaitQueue *self, void *element);
+DECLEXPORT void *PC_MtWaitQueue_dequeue(PC_MtWaitQueue *self, int timeout);
 
-DECLEXPORT void MtWaitQueue_destroy(MtWaitQueue *self);
+DECLEXPORT void PC_MtWaitQueue_destroy(PC_MtWaitQueue *self);
 
 #endif

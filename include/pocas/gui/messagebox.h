@@ -3,31 +3,33 @@
 
 #include <pocas/gui/decl.h>
 
-typedef struct Window Window;
+C_CLASS_DECL(PG_Window);
 
-typedef enum MessageBoxButton
+enum PG_MessageBoxButton
 {
-    MBB_Unsupported = 0,
-    MBB_Cancel = 1 << 0,
-    MBB_OK = 1 << 1,
-    MBB_Yes = 1 << 2,
-    MBB_No = 1 << 3,
-    MBB_Retry = 1 << 4,
-    MBB_Again = 1 << 5,
-    MBB_Continue = 1 << 6,
-    MBB_Help = 1 << 7
-} MessageBoxButton;
+    PG_MBB_Unsupported = 0,
+    PG_MBB_Cancel = 1 << 0,
+    PG_MBB_OK = 1 << 1,
+    PG_MBB_Yes = 1 << 2,
+    PG_MBB_No = 1 << 3,
+    PG_MBB_Retry = 1 << 4,
+    PG_MBB_Again = 1 << 5,
+    PG_MBB_Continue = 1 << 6,
+    PG_MBB_Help = 1 << 7
+};
+C_ENUM_DECL(PG_MessageBoxButton);
 
-typedef enum MessageBoxStyle
+enum PG_MessageBoxStyle
 {
-    MBS_None = 0,
-    MBS_Warning,
-    MBS_Info,
-    MBS_Error,
-    MBS_Question
-} MessageBoxStyle;
+    PG_MBS_None = 0,
+    PG_MBS_Warning,
+    PG_MBS_Info,
+    PG_MBS_Error,
+    PG_MBS_Question
+};
+C_ENUM_DECL(PG_MessageBoxStyle);
 
-DECLEXPORT MessageBoxButton MessageBox_show(const Window *w, const char *title,
-        const char *text, MessageBoxButton buttons, MessageBoxStyle style);
+DECLEXPORT PG_MessageBoxButton PG_MessageBox_show(const PG_Window *w, const char *title,
+        const char *text, PG_MessageBoxButton buttons, PG_MessageBoxStyle style);
 
 #endif

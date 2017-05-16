@@ -3,9 +3,9 @@
 
 #include <pocas/gui/decl.h>
 
-typedef struct Backend Backend;
+C_CLASS_DECL(PG_Backend);
 
-DECLEXPORT const Backend *Backend_current(void);
-DECLEXPORT void Backend_setCurrent(Backend *backend);
+DECLEXPORT const PG_Backend *PG_Backend_current(void);
+DECLEXPORT void PG_Backend_setCurrent(PG_Backend *backend);
 
 #endif

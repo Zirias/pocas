@@ -11,47 +11,47 @@
 #include <pocas/gui/extents.h>
 #include <pocas/gui/lbox.h>
 
-struct LBox
+struct PG_LBox
 {
     GuiClass gc;
-    BoxOrientation orientation;
-    List *elements;
-    List *controls;
+    PG_BoxOrientation orientation;
+    PC_List *elements;
+    PC_List *controls;
 };
 
-typedef struct LBoxElement
+typedef struct PG_LBoxElement
 {
     GuiClass gc;
-    LBox *box;
-} LBoxElement;
+    PG_LBox *box;
+} PG_LBoxElement;
 
-static void updateElementsBounds(LBox *self, Bounds *b)
+static void updateElementsBounds(PG_LBox *self, PG_Bounds *b)
 {
-    if (!List_length(self->elements)) return;
-    Bounds eb;
+    if (!PC_List_length(self->elements)) return;
+    PG_Bounds eb;
     eb.x = b->x;
     eb.y = b->y;
-    Extents em;
-    ListIterator *ei = List_iterator(self->elements);
-    while (ListIterator_moveNext(ei))
+    PG_Extents em;
+    PC_ListIterator *ei = PC_List_iterator(self->elements);
+    while (PC_ListIterator_moveNext(ei))
     {
-        GuiClass *lbe = ListIterator_current(ei);
-        void *control = Container_control(lbe);
-        Control_margin(control, &em);
-        eb.width = Control_minWidth(control) + em.left + em.right;
+        GuiClass *lbe = PC_ListIterator_current(ei);
+        void *control = PG_Container_control(lbe);
+        PG_Control_margin(control, &em);
+        eb.width = PG_Control_minWidth(control) + em.left + em.right;
         if (eb.x + eb.width > b->x + b->width)
         {
             if (eb.x >= b->x + b->width) eb.width = 0;
             else eb.width = b->x + b->width - eb.x;
         }
-        eb.height = Control_minHeight(control) + em.top + em.bottom;
+        eb.height = PG_Control_minHeight(control) + em.top + em.bottom;
         if (eb.y + eb.height > b->y + b->height)
         {
             if (eb.y >= b->y + b->height) eb.height = 0;
             else eb.height = b->y + b->height - eb.y;
         }
         privateApi.container.setBounds(lbe, &eb);
-        if (self->orientation == BO_Horizontal)
+        if (self->orientation == PG_BO_Horizontal)
         {
             eb.x += eb.width;
         }
@@ -60,146 +60,146 @@ static void updateElementsBounds(LBox *self, Bounds *b)
             eb.y += eb.height;
         }
     }
-    ListIterator_destroy(ei);
+    PC_ListIterator_destroy(ei);
 }
 
-static void updateContentSize(LBox *self)
+static void updateContentSize(PG_LBox *self)
 {
     unsigned int minWidth = 0;
     unsigned int minHeight = 0;
-    ListIterator *ci = List_iterator(self->controls);
-    while (ListIterator_moveNext(ci))
+    PC_ListIterator *ci = PC_List_iterator(self->controls);
+    while (PC_ListIterator_moveNext(ci))
     {
-        void *c = ListIterator_current(ci);
-        Extents cm;
-        Control_margin(c, &cm);
-        if (self->orientation == BO_Horizontal)
+        void *c = PC_ListIterator_current(ci);
+        PG_Extents cm;
+        PG_Control_margin(c, &cm);
+        if (self->orientation == PG_BO_Horizontal)
         {
-            minWidth += Control_minWidth(c) + cm.left + cm.right;
-            unsigned int cmh = Control_minHeight(c) + cm.top + cm.bottom;
+            minWidth += PG_Control_minWidth(c) + cm.left + cm.right;
+            unsigned int cmh = PG_Control_minHeight(c) + cm.top + cm.bottom;
             minHeight = cmh > minHeight ? cmh : minHeight;
         }
         else
         {
-            minHeight += Control_minHeight(c) + cm.top + cm.bottom;
-            unsigned int cmw = Control_minWidth(c) + cm.left + cm.right;
+            minHeight += PG_Control_minHeight(c) + cm.top + cm.bottom;
+            unsigned int cmw = PG_Control_minWidth(c) + cm.left + cm.right;
             minWidth = cmw > minWidth ? cmw : minWidth;
         }
     }
-    ListIterator_destroy(ci);
+    PC_ListIterator_destroy(ci);
     privateApi.control.setContentSize(self, minWidth, minHeight);
 }
 
-static void onElementMinSizeChanged(void *selfPtr, EventArgs *args)
+static void onElementMinSizeChanged(void *selfPtr, PC_EventArgs *args)
 {
     (void)args;
-    LBox *self = selfPtr;
+    PG_LBox *self = selfPtr;
     updateContentSize(self);
-    Bounds b;
-    Control_bounds(self, &b);
+    PG_Bounds b;
+    PG_Control_bounds(self, &b);
     updateElementsBounds(self, &b);
 }
 
-static void *lboxElementCreator(LBox *self, void *control)
+static void *lboxElementCreator(PG_LBox *self, void *control)
 {
-    LBoxElement *lbe = malloc(sizeof(LBoxElement));
+    PG_LBoxElement *lbe = malloc(sizeof(PG_LBoxElement));
     GCINIT(lbe);
     privateApi.container.create(lbe);
     privateApi.setControlObject(lbe, privateApi.controlObject(self));
-    Container_setControl(lbe, control);
+    PG_Container_setControl(lbe, control);
     lbe->box = self;
-    Event_register(Control_minSizeChangedEvent(control),
+    PC_Event_register(PG_Control_minSizeChangedEvent(control),
             self, onElementMinSizeChanged);
     return lbe;
 }
 
 static void lboxElementDeleter(void *element)
 {
-    LBoxElement *lbe = element;
-    void *control = Container_control(lbe);
-    Event_unregister(Control_minSizeChangedEvent(control),
+    PG_LBoxElement *lbe = element;
+    void *control = PG_Container_control(lbe);
+    PC_Event_unregister(PG_Control_minSizeChangedEvent(control),
             lbe->box, onElementMinSizeChanged);
-    Container_setControl(lbe, 0);
+    PG_Container_setControl(lbe, 0);
     privateApi.container.destroy(lbe);
     free(lbe);
 }
 
 static int lboxElementMatcher(const void *element, void *control)
 {
-    return Container_control(element) == control;
+    return PG_Container_control(element) == control;
 }
 
-static void onContainerChanged(void *selfPtr, EventArgs *args)
+static void onContainerChanged(void *selfPtr, PC_EventArgs *args)
 {
     (void)args;
-    LBox *self = selfPtr;
-    ListIterator *ci = List_iterator(self->controls);
-    while (ListIterator_moveNext(ci))
+    PG_LBox *self = selfPtr;
+    PC_ListIterator *ci = PC_List_iterator(self->controls);
+    while (PC_ListIterator_moveNext(ci))
     {
-        void *control = ListIterator_current(ci);
+        void *control = PC_ListIterator_current(ci);
         void *container = privateApi.control.container(control);
         privateApi.control.setContainer(control, 0);
         privateApi.control.setContainer(control, container);
     }
-    ListIterator_destroy(ci);
+    PC_ListIterator_destroy(ci);
 }
 
-static void onResized(void *selfPtr, EventArgs *args)
+static void onResized(void *selfPtr, PC_EventArgs *args)
 {
-    LBox *self = selfPtr;
-    Bounds *b = args->evInfo;
+    PG_LBox *self = selfPtr;
+    PG_Bounds *b = args->evInfo;
     updateElementsBounds(self, b);
 }
 
-SOEXPORT LBox *LBox_create(BoxOrientation orientation)
+SOEXPORT PG_LBox *PG_LBox_create(PG_BoxOrientation orientation)
 {
-    LBox *self = malloc(sizeof(LBox));
+    PG_LBox *self = malloc(sizeof(PG_LBox));
     GCINIT(self);
     privateApi.control.create(self);
     self->orientation = orientation;
-    self->elements = List_create(0, lboxElementDeleter, 0);
-    self->controls = List_create(0, 0, 0);
-    Event_register(Control_containerChangedEvent(self),
+    self->elements = PC_List_create(0, lboxElementDeleter, 0);
+    self->controls = PC_List_create(0, 0, 0);
+    PC_Event_register(PG_Control_containerChangedEvent(self),
             self, onContainerChanged);
-    Event_register(Control_resizedEvent(self),
+    PC_Event_register(PG_Control_resizedEvent(self),
             self, onResized);
     return self;
 }
 
-SOEXPORT ListIterator *LBox_controls(const LBox *self)
+SOEXPORT PC_ListIterator *PG_LBox_controls(const PG_LBox *self)
 {
-    return List_iterator(self->controls);
+    return PC_List_iterator(self->controls);
 }
 
-SOEXPORT void LBox_removeControl(LBox *self, void *control)
+SOEXPORT void PG_LBox_removeControl(PG_LBox *self, void *control)
 {
-    List_removeMatching(self->elements, lboxElementMatcher, control);
-    List_remove(self->controls, control);
-    Bounds b;
-    Control_bounds(self, &b);
+    PC_List_removeMatching(self->elements, lboxElementMatcher, control);
+    PC_List_remove(self->controls, control);
+    PG_Bounds b;
+    PG_Control_bounds(self, &b);
     updateElementsBounds(self, &b);
 }
 
-SOEXPORT void LBox_addControl(LBox *self, void *control)
+SOEXPORT void PG_LBox_addControl(PG_LBox *self, void *control)
 {
-    List_removeMatching(self->elements, lboxElementMatcher, control);
-    List_remove(self->controls, control);
-    List_append(self->controls, control);
-    List_append(self->elements, lboxElementCreator(self, control));
-    Bounds b;
-    Control_bounds(self, &b);
+    PC_List_removeMatching(self->elements, lboxElementMatcher, control);
+    PC_List_remove(self->controls, control);
+    PC_List_append(self->controls, control);
+    PC_List_append(self->elements, lboxElementCreator(self, control));
+    PG_Bounds b;
+    PG_Control_bounds(self, &b);
     updateElementsBounds(self, &b);
 }
 
-SOEXPORT void LBox_destroy(LBox *self)
+SOEXPORT void PG_LBox_destroy(PG_LBox *self)
 {
     if (!self) return;
-    Event_unregister(Control_resizedEvent(self),
+    PC_Event_unregister(PG_Control_resizedEvent(self),
             self, onResized);
-    Event_unregister(Control_containerChangedEvent(self),
+    PC_Event_unregister(PG_Control_containerChangedEvent(self),
             self, onContainerChanged);
-    List_destroy(self->elements);
-    List_destroy(self->controls);
+    PC_List_destroy(self->elements);
+    PC_List_destroy(self->controls);
     privateApi.control.destroy(self);
     free(self);
 }

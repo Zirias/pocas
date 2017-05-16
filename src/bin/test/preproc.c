@@ -19,14 +19,14 @@ static void skipWs(char **p)
 
 static char *findTestMethod(char *s)
 {
-    static const char *signature = "TESTMETHOD";
+    static const char *signature = "PT_TESTMETHOD";
 
     while (*s)
     {
         skipWs(&s);
-        if (!strncmp(s, signature, 10))
+        if (!strncmp(s, signature, 13))
         {
-            char *f = s + 10;
+            char *f = s + 13;
             skipWs(&f);
             if (*f == '(')
             {
@@ -72,19 +72,19 @@ SOLOCAL int preproc(const char *inFileName, const char *outFileName)
     }
 
     char buf[1024];
-    List *testMethods = List_createStr(0);
+    PC_List *testMethods = PC_List_createStr(0);
     while (fgets(buf, 1024, in))
     {
         char *method = findTestMethod(buf);
-        if (method) List_append(testMethods, String_copy(method));
+        if (method) PC_List_append(testMethods, PC_String_copy(method));
     }
 
-    ListIterator *i = List_iterator(testMethods);
+    PC_ListIterator *i = PC_List_iterator(testMethods);
     fputs("\n\n// pocastest -p generated:\n\n#include <pocas/test/test.h>\n\n"
           "SOEXPORT const char *pocastest__methods[] = {", out);
-    while (ListIterator_moveNext(i))
+    while (PC_ListIterator_moveNext(i))
     {
-        fprintf(out, "\"%s\",",(char *)ListIterator_current(i));
+        fprintf(out, "\"%s\",",(char *)PC_ListIterator_current(i));
     }
     fputs("0};\n\n", out);
 

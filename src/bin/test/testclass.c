@@ -9,8 +9,8 @@
 
 struct TestClass
 {
-    Plugin *plugin;
-    List *testCases;
+    PC_Plugin *plugin;
+    PC_List *testCases;
     int enabled;
     int run;
     int passed;
@@ -33,22 +33,22 @@ static void TestClass_reset(TestClass *self)
     self->unknown = 0;
 }
 
-TestClass *TestClass_create(Plugin *plugin)
+TestClass *TestClass_create(PC_Plugin *plugin)
 {
-    const char **testmethods = Plugin_symbol(plugin, TEST_METHODS);
+    const char **testmethods = PC_Plugin_symbol(plugin, TEST_METHODS);
     if (!testmethods)
     {
-        Plugin_close(plugin);
+        PC_Plugin_close(plugin);
         return 0;
     }
 
     TestClass *self = malloc(sizeof(TestClass));
     self->plugin = plugin;
-    self->testCases = List_create(0, deleteTestCase, 0);
+    self->testCases = PC_List_create(0, deleteTestCase, 0);
     while (*testmethods)
     {
         TestCase *testCase = TestCase_create(self, *testmethods);
-        List_append(self->testCases, testCase);
+        PC_List_append(self->testCases, testCase);
         ++testmethods;
     }
     self->enabled = 1;
@@ -57,7 +57,7 @@ TestClass *TestClass_create(Plugin *plugin)
     return self;
 }
 
-const Plugin *TestClass_plugin(const TestClass *self)
+const PC_Plugin *TestClass_plugin(const TestClass *self)
 {
     return self->plugin;
 }
@@ -82,19 +82,19 @@ void TestClass_setResultHandler(TestClass *self,
 void TestClass_run(TestClass *self, const char *gdbPath)
 {
     TestClass_reset(self);
-    ListIterator *ci = List_iterator(self->testCases);
-    while (ListIterator_moveNext(ci))
+    PC_ListIterator *ci = PC_List_iterator(self->testCases);
+    while (PC_ListIterator_moveNext(ci))
     {
-        TestCase_run(ListIterator_current(ci), gdbPath);
+        TestCase_run(PC_ListIterator_current(ci), gdbPath);
     }
-    ListIterator_destroy(ci);
+    PC_ListIterator_destroy(ci);
     if (self->resultHandler)
     {
         self->resultHandler(self, self->resultHandlerArgs);
     }
 }
 
-const List *TestClass_testCases(const TestClass *self)
+const PC_List *TestClass_testCases(const TestClass *self)
 {
     return self->testCases;
 }
@@ -140,7 +140,7 @@ void TestClass_addUnknown(TestClass *self)
 void TestClass_destroy(TestClass *self)
 {
     if (!self) return;
-    List_destroy(self->testCases);
-    Plugin_close(self->plugin);
+    PC_List_destroy(self->testCases);
+    PC_Plugin_close(self->plugin);
     free(self);
 }

@@ -58,7 +58,7 @@ static int isAnsiTerm(void)
     return 0;
 }
 
-SOEXPORT void TextColor_use(TextColor color, FILE *outStream)
+SOEXPORT void PC_TextColor_use(PC_TextColor color, FILE *outStream)
 {
     int doColor = 0;
     int outFd = fileno(outStream);

@@ -11,36 +11,36 @@
 
 SOLOCAL char *exeName;
 
-SOLOCAL void Runner_runTest(FILE *output, const Plugin *testPlugin,
+SOLOCAL void Runner_runTest(FILE *output, const PC_Plugin *testPlugin,
 	const char *methodName)
 {
     char *methodSymbol = malloc(19 + strlen(methodName));
     strcpy(methodSymbol, "pocastest__method_");
     strcpy(methodSymbol + 18, methodName);
-    void (*testMethod)(TestMethod *) = (void (*)(TestMethod *))
-            (uintptr_t)Plugin_symbol(testPlugin, methodSymbol);
+    void (*testMethod)(PT_TestMethod *) = (void (*)(PT_TestMethod *))
+            (uintptr_t)PC_Plugin_symbol(testPlugin, methodSymbol);
     free(methodSymbol);
 
     if (!testMethod)
     {
         fprintf(output, "0Error in test `%s': test method `%s' not found.\n",
-                Plugin_id(testPlugin), methodName);
+                PC_Plugin_id(testPlugin), methodName);
         goto done;
     }
 
-    void (*testInit)(TestMethod *) = (void (*)(TestMethod *))
-            (uintptr_t)Plugin_symbol(testPlugin, "pocastest__init");
-    void (*testDone)(TestMethod *) = (void (*)(TestMethod *))
-            (uintptr_t)Plugin_symbol(testPlugin, "pocastest__done");
+    void (*testInit)(PT_TestMethod *) = (void (*)(PT_TestMethod *))
+            (uintptr_t)PC_Plugin_symbol(testPlugin, "pocastest__init");
+    void (*testDone)(PT_TestMethod *) = (void (*)(PT_TestMethod *))
+            (uintptr_t)PC_Plugin_symbol(testPlugin, "pocastest__done");
 
-    TestMethod *t = TestMethod_create(output);
-    if (!setjmp(*TestMethod_jmp(t)))
+    PT_TestMethod *t = PT_TestMethod_create(output);
+    if (!setjmp(*PT_TestMethod_jmp(t)))
     {
         if (testInit) testInit(t);
         testMethod(t);
     }
     if (testDone) testDone(t);
-    TestMethod_destroy(t);
+    PT_TestMethod_destroy(t);
 
 done:
     fclose(output);

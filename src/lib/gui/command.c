@@ -5,35 +5,35 @@
 #include "internal.h"
 #include <pocas/gui/command.h>
 
-struct Command
+struct PG_Command
 {
     GuiClass gc;
-    Event *invoked;
+    PC_Event *invoked;
 };
 
-SOEXPORT Command *Command_create(void)
+SOEXPORT PG_Command *PG_Command_create(void)
 {
-    Command *self = malloc(sizeof(Command));
+    PG_Command *self = malloc(sizeof(PG_Command));
     GCINIT(self);
-    self->invoked = Event_create("invoked");
+    self->invoked = PC_Event_create("invoked");
     return self;
 }
 
-SOEXPORT void Command_invoke(Command *self)
+SOEXPORT void PG_Command_invoke(PG_Command *self)
 {
-    EventArgs args = EventArgs_init(self->invoked, self, 0);
-    Event_raise(self->invoked, &args);
+    PC_EventArgs args = PC_EventArgs_init(self->invoked, self, 0);
+    PC_Event_raise(self->invoked, &args);
 }
 
 
-SOEXPORT Event *Command_invokedEvent(const Command *self)
+SOEXPORT PC_Event *PG_Command_invokedEvent(const PG_Command *self)
 {
     return self->invoked;
 }
 
-SOEXPORT void Command_destroy(Command *self)
+SOEXPORT void PG_Command_destroy(PG_Command *self)
 {
     if (!self) return;
-    Event_destroy(self->invoked);
+    PC_Event_destroy(self->invoked);
     free(self);
 }

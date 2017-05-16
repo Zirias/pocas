@@ -9,8 +9,8 @@
 #define TEST_PLUGIN_ID "pocastest__id"
 #define TEST_METHODS "pocastest__methods"
 
-TestMethod *TestMethod_create(FILE *output);
-jmp_buf *TestMethod_jmp(TestMethod *self);
-void TestMethod_destroy(TestMethod *self);
+PT_TestMethod *PT_TestMethod_create(FILE *output);
+jmp_buf *PT_TestMethod_jmp(PT_TestMethod *self);
+void PT_TestMethod_destroy(PT_TestMethod *self);
 
 #endif

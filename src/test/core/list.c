@@ -7,131 +7,131 @@
 #include <pocas/core/string.h>
 #include <pocas/test/test.h>
 
-TESTCLASS(pocascore::List);
+PT_TESTCLASS(pocascore::List);
 
-static List *notOwningList;
-static List *stringList1;
-static List *stringList2;
+static PC_List *notOwningPC_List;
+static PC_List *stringPC_List1;
+static PC_List *stringPC_List2;
 
-static List *tmpList1;
+static PC_List *tmpPC_List1;
 static char *tmpStr1;
 
-TESTINIT()
+PT_TESTINIT()
 {
-    notOwningList = List_create(0, 0, 0);
-    stringList1 = List_createStr(0);
-    stringList2 = List_createStr(0);
-    tmpList1 = 0;
+    notOwningPC_List = PC_List_create(0, 0, 0);
+    stringPC_List1 = PC_List_createStr(0);
+    stringPC_List2 = PC_List_createStr(0);
+    tmpPC_List1 = 0;
     tmpStr1 = 0;
 }
 
-TESTDONE()
+PT_TESTDONE()
 {
-    List_destroy(notOwningList);
-    List_destroy(stringList1);
-    List_destroy(stringList2);
-    List_destroy(tmpList1);
+    PC_List_destroy(notOwningPC_List);
+    PC_List_destroy(stringPC_List1);
+    PC_List_destroy(stringPC_List2);
+    PC_List_destroy(tmpPC_List1);
     free(tmpStr1);
 }
 
-TESTMETHOD(append_three_items)
+PT_TESTMETHOD(append_three_items)
 {
     char *items[] = { "one", "two", "three" };
 
-    List_append(notOwningList, items[0]);
-    List_append(notOwningList, items[1]);
-    List_append(notOwningList, items[2]);
+    PC_List_append(notOwningPC_List, items[0]);
+    PC_List_append(notOwningPC_List, items[1]);
+    PC_List_append(notOwningPC_List, items[2]);
 
-    Test_assertIntEqual(3, List_length(notOwningList), "wrong item count");
-    Test_assertStrEqual(items[0], List_get(notOwningList, 0), "unexpected item");
-    Test_assertStrEqual(items[1], List_get(notOwningList, 1), "unexpected item");
-    Test_assertStrEqual(items[2], List_get(notOwningList, 2), "unexpected item");
+    PT_Test_assertIntEqual(3, PC_List_length(notOwningPC_List), "wrong item count");
+    PT_Test_assertStrEqual(items[0], PC_List_get(notOwningPC_List, 0), "unexpected item");
+    PT_Test_assertStrEqual(items[1], PC_List_get(notOwningPC_List, 1), "unexpected item");
+    PT_Test_assertStrEqual(items[2], PC_List_get(notOwningPC_List, 2), "unexpected item");
 
-    Test_pass();
+    PT_Test_pass();
 }
 
-TESTMETHOD(clone_list)
+PT_TESTMETHOD(clone_list)
 {
-    List_append(stringList1, String_copy("foo"));
-    List_append(stringList1, String_copy("bar"));
-    List_append(stringList1, String_copy("baz"));
+    PC_List_append(stringPC_List1, PC_String_copy("foo"));
+    PC_List_append(stringPC_List1, PC_String_copy("bar"));
+    PC_List_append(stringPC_List1, PC_String_copy("baz"));
 
-    tmpList1 = List_clone(stringList1);
+    tmpPC_List1 = PC_List_clone(stringPC_List1);
 
-    Test_assertIntEqual(3, List_length(tmpList1), "wrong item count");
-    Test_assertStrEqual("bar", List_get(tmpList1, 1), "unexpected item");
-    if (List_get(tmpList1, 1) == List_get(stringList1, 1))
+    PT_Test_assertIntEqual(3, PC_List_length(tmpPC_List1), "wrong item count");
+    PT_Test_assertStrEqual("bar", PC_List_get(tmpPC_List1, 1), "unexpected item");
+    if (PC_List_get(tmpPC_List1, 1) == PC_List_get(stringPC_List1, 1))
     {
-        Test_fail("Cloned list references same object");
+        PT_Test_fail("Cloned list references same object");
     }
 
-    Test_pass();
+    PT_Test_pass();
 }
 
-TESTMETHOD(join_strings)
+PT_TESTMETHOD(join_strings)
 {
-    List_append(notOwningList, "This");
-    List_append(notOwningList, "is");
-    List_append(notOwningList, "a");
-    List_append(notOwningList, "test");
+    PC_List_append(notOwningPC_List, "This");
+    PC_List_append(notOwningPC_List, "is");
+    PC_List_append(notOwningPC_List, "a");
+    PC_List_append(notOwningPC_List, "test");
 
-    tmpStr1 = List_joinStr(notOwningList, " ");
+    tmpStr1 = PC_List_joinStr(notOwningPC_List, " ");
 
-    Test_assertStrEqual("This is a test", tmpStr1, "wrong join result");
+    PT_Test_assertStrEqual("This is a test", tmpStr1, "wrong join result");
 
-    Test_pass();
+    PT_Test_pass();
 }
 
-TESTMETHOD(insert_item)
+PT_TESTMETHOD(insert_item)
 {
-    List_append(notOwningList, "A");
-    List_append(notOwningList, "B");
+    PC_List_append(notOwningPC_List, "A");
+    PC_List_append(notOwningPC_List, "B");
 
-    List_insert(notOwningList, 1, "or");
+    PC_List_insert(notOwningPC_List, 1, "or");
 
-    Test_assertStrEqual("A", List_get(notOwningList, 0), "unexpected item");
-    Test_assertStrEqual("or", List_get(notOwningList, 1), "unexpected item");
-    Test_assertStrEqual("B", List_get(notOwningList, 2), "unexpected item");
+    PT_Test_assertStrEqual("A", PC_List_get(notOwningPC_List, 0), "unexpected item");
+    PT_Test_assertStrEqual("or", PC_List_get(notOwningPC_List, 1), "unexpected item");
+    PT_Test_assertStrEqual("B", PC_List_get(notOwningPC_List, 2), "unexpected item");
 
-    Test_pass();
+    PT_Test_pass();
 }
 
-TESTMETHOD(set_items)
+PT_TESTMETHOD(set_items)
 {
-    List_append(notOwningList, "A");
-    List_append(notOwningList, "B");
-    List_append(notOwningList, "C");
+    PC_List_append(notOwningPC_List, "A");
+    PC_List_append(notOwningPC_List, "B");
+    PC_List_append(notOwningPC_List, "C");
 
-    List_set(notOwningList, 63, "X");
-    List_set(notOwningList, 1, "Y");
+    PC_List_set(notOwningPC_List, 63, "X");
+    PC_List_set(notOwningPC_List, 1, "Y");
 
-    Test_assertIntEqual(64, List_length(notOwningList), "wrong item count");
+    PT_Test_assertIntEqual(64, PC_List_length(notOwningPC_List), "wrong item count");
 
-    Test_assertStrEqual("A", List_get(notOwningList, 0), "unexpected item");
-    Test_assertStrEqual("Y", List_get(notOwningList, 1), "unexpected item");
-    Test_assertStrEqual("C", List_get(notOwningList, 2), "unexpected item");
-    Test_assertStrEqual("X", List_get(notOwningList, 63), "unexpected item");
+    PT_Test_assertStrEqual("A", PC_List_get(notOwningPC_List, 0), "unexpected item");
+    PT_Test_assertStrEqual("Y", PC_List_get(notOwningPC_List, 1), "unexpected item");
+    PT_Test_assertStrEqual("C", PC_List_get(notOwningPC_List, 2), "unexpected item");
+    PT_Test_assertStrEqual("X", PC_List_get(notOwningPC_List, 63), "unexpected item");
 
-    Test_assertRefEqual(0, List_get(notOwningList, 3), "unset item not null");
-    Test_assertRefEqual(0, List_get(notOwningList, 62), "unset item not null");
+    PT_Test_assertRefEqual(0, PC_List_get(notOwningPC_List, 3), "unset item not null");
+    PT_Test_assertRefEqual(0, PC_List_get(notOwningPC_List, 62), "unset item not null");
 
-    Test_pass();
+    PT_Test_pass();
 }
 
-TESTMETHOD(remove_item)
+PT_TESTMETHOD(remove_item)
 {
     static char *items[] = {"A", "B", "C"};
-    List_append(notOwningList, items[0]);
-    List_append(notOwningList, items[1]);
-    List_append(notOwningList, items[2]);
+    PC_List_append(notOwningPC_List, items[0]);
+    PC_List_append(notOwningPC_List, items[1]);
+    PC_List_append(notOwningPC_List, items[2]);
 
-    List_remove(notOwningList, items[1]);
+    PC_List_remove(notOwningPC_List, items[1]);
 
-    Test_assertIntEqual(2, List_length(notOwningList), "wrong item count");
-    Test_assertStrEqual("A", List_get(notOwningList, 0), "unexpected item");
-    Test_assertStrEqual("C", List_get(notOwningList, 1), "unexpected item");
+    PT_Test_assertIntEqual(2, PC_List_length(notOwningPC_List), "wrong item count");
+    PT_Test_assertStrEqual("A", PC_List_get(notOwningPC_List, 0), "unexpected item");
+    PT_Test_assertStrEqual("C", PC_List_get(notOwningPC_List, 1), "unexpected item");
 
-    Test_pass();
+    PT_Test_pass();
 }
 
 static int stringStartsWithSelector(const void *value, void *arg)
@@ -140,42 +140,42 @@ static int stringStartsWithSelector(const void *value, void *arg)
     return !strncmp(start, (const char *)value, strlen(arg));
 }
 
-TESTMETHOD(remove_matching_item)
+PT_TESTMETHOD(remove_matching_item)
 {
     static char *items[] = {"A", "B", "C"};
-    List_append(notOwningList, items[0]);
-    List_append(notOwningList, items[1]);
-    List_append(notOwningList, items[2]);
+    PC_List_append(notOwningPC_List, items[0]);
+    PC_List_append(notOwningPC_List, items[1]);
+    PC_List_append(notOwningPC_List, items[2]);
 
-    List_removeMatching(notOwningList, stringStartsWithSelector, "B");
+    PC_List_removeMatching(notOwningPC_List, stringStartsWithSelector, "B");
 
-    Test_assertIntEqual(2, List_length(notOwningList), "wrong item count");
-    Test_assertStrEqual("A", List_get(notOwningList, 0), "unexpected item");
-    Test_assertStrEqual("C", List_get(notOwningList, 1), "unexpected item");
+    PT_Test_assertIntEqual(2, PC_List_length(notOwningPC_List), "wrong item count");
+    PT_Test_assertStrEqual("A", PC_List_get(notOwningPC_List, 0), "unexpected item");
+    PT_Test_assertStrEqual("C", PC_List_get(notOwningPC_List, 1), "unexpected item");
 
-    Test_pass();
+    PT_Test_pass();
 }
 
-TESTMETHOD(invalid_index_gives_0)
+PT_TESTMETHOD(invalid_index_gives_0)
 {
-    Test_assertRefEqual(0, List_get(notOwningList, -1), "invalid index did not return 0");
-    Test_assertRefEqual(0, List_get(notOwningList, 0), "invalid index did not return 0");
+    PT_Test_assertRefEqual(0, PC_List_get(notOwningPC_List, -1), "invalid index did not return 0");
+    PT_Test_assertRefEqual(0, PC_List_get(notOwningPC_List, 0), "invalid index did not return 0");
 
-    Test_pass();
+    PT_Test_pass();
 }
 
-TESTMETHOD(select_items)
+PT_TESTMETHOD(select_items)
 {
-    List_append(stringList1, String_copy("y_FOO"));
-    List_append(stringList1, String_copy("n_BAR"));
-    List_append(stringList1, String_copy("y_BAZ"));
+    PC_List_append(stringPC_List1, PC_String_copy("y_FOO"));
+    PC_List_append(stringPC_List1, PC_String_copy("n_BAR"));
+    PC_List_append(stringPC_List1, PC_String_copy("y_BAZ"));
 
-    tmpList1 = List_select(stringList1, stringStartsWithSelector, "y_");
+    tmpPC_List1 = PC_List_select(stringPC_List1, stringStartsWithSelector, "y_");
 
-    Test_assertIntEqual(2, List_length(tmpList1), "wrong item count");
-    Test_assertStrEqual("y_BAZ", List_get(tmpList1, 1), "unexpected item");
+    PT_Test_assertIntEqual(2, PC_List_length(tmpPC_List1), "wrong item count");
+    PT_Test_assertStrEqual("y_BAZ", PC_List_get(tmpPC_List1, 1), "unexpected item");
 
-    Test_pass();
+    PT_Test_pass();
 }
 
 static void *stringToLengthTransform(const void *element, void *arg)
@@ -184,20 +184,20 @@ static void *stringToLengthTransform(const void *element, void *arg)
     return (void *)(uintptr_t)strlen((const char *)element);
 }
 
-TESTMETHOD(transform_list)
+PT_TESTMETHOD(transform_list)
 {
-    List_append(notOwningList, "one");
-    List_append(notOwningList, "two");
-    List_append(notOwningList, "three");
-    List_append(notOwningList, "fourtytwo");
+    PC_List_append(notOwningPC_List, "one");
+    PC_List_append(notOwningPC_List, "two");
+    PC_List_append(notOwningPC_List, "three");
+    PC_List_append(notOwningPC_List, "fourtytwo");
 
-    tmpList1 = List_transform(notOwningList, 0, 0, stringToLengthTransform, 0);
+    tmpPC_List1 = PC_List_transform(notOwningPC_List, 0, 0, stringToLengthTransform, 0);
 
-    Test_assertIntEqual(4, List_length(tmpList1), "wrong item count");
-    Test_assertIntEqual(3, (uintptr_t)List_get(tmpList1, 0), "incorrectly transformed");
-    Test_assertIntEqual(3, (uintptr_t)List_get(tmpList1, 1), "incorrectly transformed");
-    Test_assertIntEqual(5, (uintptr_t)List_get(tmpList1, 2), "incorrectly transformed");
-    Test_assertIntEqual(9, (uintptr_t)List_get(tmpList1, 3), "incorrectly transformed");
+    PT_Test_assertIntEqual(4, PC_List_length(tmpPC_List1), "wrong item count");
+    PT_Test_assertIntEqual(3, (uintptr_t)PC_List_get(tmpPC_List1, 0), "incorrectly transformed");
+    PT_Test_assertIntEqual(3, (uintptr_t)PC_List_get(tmpPC_List1, 1), "incorrectly transformed");
+    PT_Test_assertIntEqual(5, (uintptr_t)PC_List_get(tmpPC_List1, 2), "incorrectly transformed");
+    PT_Test_assertIntEqual(9, (uintptr_t)PC_List_get(tmpPC_List1, 3), "incorrectly transformed");
 
-    Test_pass();
+    PT_Test_pass();
 }

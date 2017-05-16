@@ -5,49 +5,50 @@
 
 #include <pocas/core/decl.h>
 
-typedef struct List List;
-typedef struct ListIterator ListIterator;
-typedef void (*ListElementDeleter)(void *element);
-typedef void *(*ListElementCloner)(const void *element);
-typedef size_t (*ListElementSize)(const void *element);
-typedef void *(*ListElementTransform)(const void *element, void *args);
-typedef int (*ListElementSelector)(const void *element, void *args);
+C_CLASS_DECL(PC_List);
+C_CLASS_DECL(PC_ListIterator);
 
-DECLEXPORT List *List_create(size_t capacity, ListElementDeleter deleter,
-                             ListElementCloner cloner);
-DECLEXPORT List *List_createStr(size_t capacity);
-DECLEXPORT void List_append(List *self, void *item);
-DECLEXPORT void List_set(List *self, size_t index, void *item);
-DECLEXPORT void List_insert(List *self, size_t index, void *item);
-DECLEXPORT void List_remove(List *self, void *item);
-DECLEXPORT void List_removeAt(List *self, size_t index);
-DECLEXPORT void List_removeMatching(List *self, ListElementSelector selector,
+typedef void (*PC_ListElementDeleter)(void *element);
+typedef void *(*PC_ListElementCloner)(const void *element);
+typedef size_t (*PC_ListElementSize)(const void *element);
+typedef void *(*PC_ListElementTransform)(const void *element, void *args);
+typedef int (*PC_ListElementSelector)(const void *element, void *args);
+
+DECLEXPORT PC_List *PC_List_create(size_t capacity, PC_ListElementDeleter deleter,
+                             PC_ListElementCloner cloner);
+DECLEXPORT PC_List *PC_List_createStr(size_t capacity);
+DECLEXPORT void PC_List_append(PC_List *self, void *item);
+DECLEXPORT void PC_List_set(PC_List *self, size_t index, void *item);
+DECLEXPORT void PC_List_insert(PC_List *self, size_t index, void *item);
+DECLEXPORT void PC_List_remove(PC_List *self, void *item);
+DECLEXPORT void PC_List_removeAt(PC_List *self, size_t index);
+DECLEXPORT void PC_List_removeMatching(PC_List *self, PC_ListElementSelector selector,
                                     void *selectArgs);
-DECLEXPORT void *List_get(const List *self, size_t index);
-DECLEXPORT char *List_getStr(const List *self, size_t index);
-DECLEXPORT size_t List_length(const List *self);
-DECLEXPORT void List_clear(List *self);
-DECLEXPORT List *List_clone(const List *self);
-DECLEXPORT void *List_join(const List *self, ListElementSize getElementSize,
+DECLEXPORT void *PC_List_get(const PC_List *self, size_t index);
+DECLEXPORT char *PC_List_getStr(const PC_List *self, size_t index);
+DECLEXPORT size_t PC_List_length(const PC_List *self);
+DECLEXPORT void PC_List_clear(PC_List *self);
+DECLEXPORT PC_List *PC_List_clone(const PC_List *self);
+DECLEXPORT void *PC_List_join(const PC_List *self, PC_ListElementSize getElementSize,
                            const void *delim, size_t delimSize,
                            size_t *resultSize,
                            size_t reserveStart, size_t reserveEnd);
-DECLEXPORT char *List_joinStr(const List *self, const char *delim);
-DECLEXPORT List *List_transform(const List *self, ListElementDeleter deleter,
-                                ListElementCloner cloner,
-                                ListElementTransform transformElement,
+DECLEXPORT char *PC_List_joinStr(const PC_List *self, const char *delim);
+DECLEXPORT PC_List *PC_List_transform(const PC_List *self, PC_ListElementDeleter deleter,
+                                PC_ListElementCloner cloner,
+                                PC_ListElementTransform transformElement,
                                 void *transformArgs);
-DECLEXPORT List *List_transformSameType(const List *self,
-                                   ListElementTransform transformElement,
+DECLEXPORT PC_List *PC_List_transformSameType(const PC_List *self,
+                                   PC_ListElementTransform transformElement,
                                    void *transformArgs);
-DECLEXPORT List *List_concat(const List *self, const List *append);
-DECLEXPORT List *List_select(const List *self, ListElementSelector selector,
+DECLEXPORT PC_List *PC_List_concat(const PC_List *self, const PC_List *append);
+DECLEXPORT PC_List *PC_List_select(const PC_List *self, PC_ListElementSelector selector,
                              void *selectArgs);
-DECLEXPORT ListIterator *List_iterator(const List *self);
-DECLEXPORT int ListIterator_moveNext(ListIterator *self);
-DECLEXPORT void *ListIterator_current(const ListIterator *self);
-DECLEXPORT char *ListIterator_currentStr(const ListIterator *self);
-DECLEXPORT void ListIterator_destroy(ListIterator *self);
-DECLEXPORT void List_destroy(List *self);
+DECLEXPORT PC_ListIterator *PC_List_iterator(const PC_List *self);
+DECLEXPORT int PC_ListIterator_moveNext(PC_ListIterator *self);
+DECLEXPORT void *PC_ListIterator_current(const PC_ListIterator *self);
+DECLEXPORT char *PC_ListIterator_currentStr(const PC_ListIterator *self);
+DECLEXPORT void PC_ListIterator_destroy(PC_ListIterator *self);
+DECLEXPORT void PC_List_destroy(PC_List *self);
 
 #endif

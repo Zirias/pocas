@@ -9,133 +9,133 @@
 #include <pocas/gui/command.h>
 #include <pocas/gui/menu.h>
 
-struct Menu
+struct PG_Menu
 {
     GuiClass gc;
-    List *items;
+    PC_List *items;
 };
 
-struct MenuItem
+struct PG_MenuItem
 {
     GuiClass gc;
     char *text;
-    Command *command;
-    Event *selected;
-    Menu *subMenu;
+    PG_Command *command;
+    PC_Event *selected;
+    PG_Menu *subPG_Menu;
 };
 
 static void deleteItem(void *item)
 {
-    MenuItem_destroy(item);
+    PG_MenuItem_destroy(item);
 }
 
-SOEXPORT Menu *Menu_create()
+SOEXPORT PG_Menu *PG_Menu_create()
 {
-    Menu *self = malloc(sizeof(Menu));
+    PG_Menu *self = malloc(sizeof(PG_Menu));
     GCINIT(self);
-    self->items = List_create(0, deleteItem, 0);
+    self->items = PC_List_create(0, deleteItem, 0);
 
-    const Backend *b = Backend_current();
+    const PG_Backend *b = PG_Backend_current();
     if (b->backendApi.menu.create) b->backendApi.menu.create(self);
     return self;
 }
 
-SOEXPORT ListIterator *Menu_items(const Menu *self)
+SOEXPORT PC_ListIterator *PG_Menu_items(const PG_Menu *self)
 {
-    return List_iterator(self->items);
+    return PC_List_iterator(self->items);
 }
 
-SOEXPORT void Menu_addItem(Menu *self, MenuItem *item)
+SOEXPORT void PG_Menu_addItem(PG_Menu *self, PG_MenuItem *item)
 {
-    List_append(self->items, item);
+    PC_List_append(self->items, item);
 
-    const Backend *b = Backend_current();
+    const PG_Backend *b = PG_Backend_current();
     if (b->backendApi.menu.addItem) b->backendApi.menu.addItem(self, item);
 }
 
-SOEXPORT void Menu_removeItem(Menu *self, MenuItem *item)
+SOEXPORT void PG_Menu_removeItem(PG_Menu *self, PG_MenuItem *item)
 {
-    List_remove(self->items, item);
+    PC_List_remove(self->items, item);
 
-    const Backend *b = Backend_current();
+    const PG_Backend *b = PG_Backend_current();
     if (b->backendApi.menu.removeItem) b->backendApi.menu.removeItem(self, item);
 }
 
-SOEXPORT void Menu_destroy(Menu *self)
+SOEXPORT void PG_Menu_destroy(PG_Menu *self)
 {
     if (!self) return;
-    List_destroy(self->items);
-    const Backend *b = Backend_current();
+    PC_List_destroy(self->items);
+    const PG_Backend *b = PG_Backend_current();
     if (b->backendApi.menu.destroy) b->backendApi.menu.destroy(self);
     free(self);
 }
 
-SOEXPORT MenuItem *MenuItem_create(const char *text)
+SOEXPORT PG_MenuItem *PG_MenuItem_create(const char *text)
 {
-    MenuItem *self = malloc(sizeof(MenuItem));
+    PG_MenuItem *self = malloc(sizeof(PG_MenuItem));
     GCINIT(self);
-    self->text = String_copy(text);
+    self->text = PC_String_copy(text);
     self->command = 0;
-    self->subMenu = 0;
-    self->selected = Event_create("selected");
-    const Backend *b = Backend_current();
+    self->subPG_Menu = 0;
+    self->selected = PC_Event_create("selected");
+    const PG_Backend *b = PG_Backend_current();
     if (b->backendApi.menuItem.create) b->backendApi.menuItem.create(self);
     return self;
 }
 
-SOEXPORT const char *MenuItem_text(const MenuItem *self)
+SOEXPORT const char *PG_MenuItem_text(const PG_MenuItem *self)
 {
     return self->text;
 }
 
-SOEXPORT void MenuItem_setText(MenuItem *self, const char *text)
+SOEXPORT void PG_MenuItem_setText(PG_MenuItem *self, const char *text)
 {
     free(self->text);
-    self->text = String_copy(text);
+    self->text = PC_String_copy(text);
 }
 
-SOEXPORT Command *MenuItem_command(const MenuItem *self)
+SOEXPORT PG_Command *PG_MenuItem_command(const PG_MenuItem *self)
 {
     return self->command;
 }
 
-SOEXPORT void MenuItem_setCommand(MenuItem *self, Command *command)
+SOEXPORT void PG_MenuItem_setCommand(PG_MenuItem *self, PG_Command *command)
 {
     self->command = command;
 }
 
-SOEXPORT void MenuItem_select(MenuItem *self)
+SOEXPORT void PG_MenuItem_select(PG_MenuItem *self)
 {
-    EventArgs args = EventArgs_init(self->selected, self, 0);
-    Event_raise(self->selected, &args);
+    PC_EventArgs args = PC_EventArgs_init(self->selected, self, 0);
+    PC_Event_raise(self->selected, &args);
     if (!args.handled && self->command)
     {
-        Command_invoke(self->command);
+        PG_Command_invoke(self->command);
     }
 }
 
-SOEXPORT Event * MenuItem_selectedEvent(const MenuItem *self)
+SOEXPORT PC_Event * PG_MenuItem_selectedEvent(const PG_MenuItem *self)
 {
     return self->selected;
 }
 
-SOEXPORT Menu *MenuItem_subMenu(const MenuItem *self)
+SOEXPORT PG_Menu *PG_MenuItem_subMenu(const PG_MenuItem *self)
 {
-    return self->subMenu;
+    return self->subPG_Menu;
 }
 
-SOEXPORT void MenuItem_setSubMenu(MenuItem *self, Menu *subMenu)
+SOEXPORT void PG_MenuItem_setSubMenu(PG_MenuItem *self, PG_Menu *subPG_Menu)
 {
-    self->subMenu = subMenu;
+    self->subPG_Menu = subPG_Menu;
 }
 
-SOEXPORT void MenuItem_destroy(MenuItem *self)
+SOEXPORT void PG_MenuItem_destroy(PG_MenuItem *self)
 {
     if (!self) return;
     free(self->text);
-    Menu_destroy(self->subMenu);
-    Event_destroy(self->selected);
-    const Backend *b = Backend_current();
+    PG_Menu_destroy(self->subPG_Menu);
+    PC_Event_destroy(self->selected);
+    const PG_Backend *b = PG_Backend_current();
     if (b->backendApi.menuItem.destroy) b->backendApi.menuItem.destroy(self);
     free(self);
 }

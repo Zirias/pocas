@@ -3,9 +3,12 @@
 
 #include "testresult_internal.h"
 
-typedef struct List List;
-typedef struct TestClass TestClass;
-typedef struct TestCase TestCase;
+#include <pocas/test/decl.h>
+
+C_CLASS_DECL(PC_List);
+
+C_CLASS_DECL(TestClass);
+C_CLASS_DECL(TestCase);
 
 typedef void (*TestCaseResultHandler)(
         const TestCase *testCase, const TestResult *result, void *args);
@@ -16,7 +19,7 @@ int TestCase_enabled(const TestCase *self);
 void TestCase_setEnabled(TestCase *self, int enabled);
 
 void TestCase_run(TestCase *self, const char *gdbPath);
-void TestCase_evaluate(TestCase *self, int exitCode, List *output);
+void TestCase_evaluate(TestCase *self, int exitCode, PC_List *output);
 
 const TestResult *TestCase_result(const TestCase *self);
 void TestCase_setResultHandler(TestCase *self,
