@@ -10,7 +10,8 @@ class Bqt_Control : public QObject
     Q_OBJECT
 
 public:
-    virtual void setShown(int shown);
+    virtual void setShown(bool shown);
+    virtual void setEnabled(bool enabled);
     virtual void setParent(QWidget *parent) = 0;
     virtual void setGeometry(const QRect& rect);
     virtual QWidget *widget() = 0;

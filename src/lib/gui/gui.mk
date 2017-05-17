@@ -22,6 +22,7 @@ ifeq ($(filter $(WITH_DEFAULT_GUI_BACKEND),$(AVAILABLE_GUI_BACKENDS)),)
 $(error WITH_DEFAULT_GUI_BACKEND=$(WITH_DEFAULT_GUI_BACKEND) unknown, \
 available backends are: $(AVAILABLE_GUI_BACKENDS))
 endif
+WITH_GUI_$(call toupper,$(WITH_DEFAULT_GUI_BACKEND)):= 1
 endif
 
 ifeq ($(WITH_GUI_WINAPI),1)

@@ -27,7 +27,7 @@ static PG_Backend backend_qt = {
             .setContainer = Bqt_Control_setContainer,
             .setBounds = Bqt_Control_setBounds,
             .setShown = Bqt_Control_setShown,
-            .setEnabled = 0,
+            .setEnabled = Bqt_Control_setEnabled,
             .focus = 0,
         },
         .window = {
@@ -55,9 +55,9 @@ static PG_Backend backend_qt = {
             .destroy = Bqt_Label_destroy
         },
         .button = {
-            .create = 0,
-            .setText = 0,
-            .destroy = 0,
+            .create = Bqt_Button_create,
+            .setText = Bqt_Button_setText,
+            .destroy = Bqt_Button_destroy,
         },
         .textBox = {
             .create = 0,
@@ -69,4 +69,3 @@ static PG_Backend backend_qt = {
 };
 
 SOEXPORT PG_Backend *PG_qtBackend = &backend_qt;
-

@@ -11,7 +11,7 @@ SOLOCAL Bqt_Control::Bqt_Control()
     Bqt_Backend_init();
 }
 
-SOLOCAL void Bqt_Control::setShown(int shown)
+SOLOCAL void Bqt_Control::setShown(bool shown)
 {
     QWidget *w = widget();
     if (!w) return;
@@ -28,6 +28,13 @@ SOLOCAL void Bqt_Control::setShown(int shown)
     }
 }
 
+SOLOCAL void Bqt_Control::setEnabled(bool enabled)
+{
+    QWidget *w = widget();
+    if (!w) return;
+    w->setEnabled(enabled);
+}
+
 SOLOCAL void Bqt_Control::setGeometry(const QRect &rect)
 {
     QWidget *w = widget();
@@ -40,6 +47,13 @@ SOLOCAL_CDECL void Bqt_Control_setShown(void *control, int shown)
     Bqt_Control *bc = (Bqt_Control *)
             PG_qtBackend->privateApi->backendObject(control);
     if (bc) bc->setShown(shown);
+}
+
+SOLOCAL_CDECL void Bqt_Control_setEnabled(void *control, int enabled)
+{
+    Bqt_Control *bc = (Bqt_Control *)
+            PG_qtBackend->privateApi->backendObject(control);
+    if (bc) bc->setEnabled(enabled);
 }
 
 SOLOCAL_CDECL void Bqt_Control_setContainer(void *control, void *container)

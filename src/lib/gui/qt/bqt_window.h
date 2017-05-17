@@ -13,7 +13,7 @@ class Bqt_Window : public Bqt_Control
 
 public:
     Bqt_Window(PG_Window *w, Bqt_Window *parent);
-    virtual void setShown(int shown);
+    virtual void setShown(bool shown);
     virtual void setParent(QWidget *parent);
     virtual QWidget *widget();
 

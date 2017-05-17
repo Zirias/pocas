@@ -10,7 +10,8 @@
 SOLOCAL int Bqt_Window::m_nWindows = 0;
 
 SOLOCAL Bqt_Window::Bqt_Window(PG_Window *w, Bqt_Window *parent)
-    : m_qw(parent ? parent->widget() : 0, Qt::Window), m_w(w), m_parent(parent), m_filterClosing(true)
+    : m_qw(parent ? parent->widget() : 0, parent ? Qt::Dialog : Qt::Window),
+      m_w(w), m_parent(parent), m_filterClosing(true)
 {
     const PG_PrivateApi *api = PG_qtBackend->privateApi;
     m_qw.installEventFilter(&m_closeFilter);
@@ -22,12 +23,10 @@ SOLOCAL Bqt_Window::Bqt_Window(PG_Window *w, Bqt_Window *parent)
     {
         connect(m_parent, SIGNAL(closing()), this, SLOT(close()));
     }
-    PG_Bounds wb = { 0, 0, (unsigned)m_qw.width(), (unsigned )m_qw.height() };
-    api->container.setBounds(m_w, &wb);
     ++m_nWindows;
 }
 
-SOLOCAL void Bqt_Window::setShown(int shown)
+SOLOCAL void Bqt_Window::setShown(bool shown)
 {
     if (shown) m_qw.show();
     else m_qw.hide();
@@ -45,12 +44,22 @@ SOLOCAL QWidget *Bqt_Window::widget()
 
 SOLOCAL void Bqt_Window::onWindowEvent(Bqt_EventFilter::FilterArgs *args)
 {
-    if (args->event->type() == QEvent::Close)
+    const PG_PrivateApi *api = PG_qtBackend->privateApi;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wswitch"
+    switch (args->event->type())
     {
-        if (!m_filterClosing) return;
+    case QEvent::Close:
+        if (!m_filterClosing) break;
         args->filter = true;
-        PG_qtBackend->privateApi->window.close(m_w);
+        api->window.close(m_w);
+        break;
+    case QEvent::Resize:
+        PG_Bounds wb = { 0, 0, (unsigned)m_qw.width(), (unsigned )m_qw.height() };
+        api->container.setBounds(m_w, &wb);
+        break;
     }
+#pragma GCC diagnostic pop
 }
 
 SOLOCAL void Bqt_Window::close()
