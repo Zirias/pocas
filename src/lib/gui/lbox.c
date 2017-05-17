@@ -177,6 +177,7 @@ SOEXPORT void PG_LBox_removeControl(PG_LBox *self, void *control)
     PC_List_remove(self->controls, control);
     PG_Bounds b;
     PG_Control_bounds(self, &b);
+    updateContentSize(self);
     updateElementsBounds(self, &b);
 }
 
@@ -188,6 +189,7 @@ SOEXPORT void PG_LBox_addControl(PG_LBox *self, void *control)
     PC_List_append(self->elements, lboxElementCreator(self, control));
     PG_Bounds b;
     PG_Control_bounds(self, &b);
+    updateContentSize(self);
     updateElementsBounds(self, &b);
 }
 

@@ -1,5 +1,6 @@
 #include <pocas/core/event.h>
 #include <pocas/core/eventloop.h>
+#include <pocas/gui/bounds.h>
 
 #include <QEvent>
 
@@ -9,7 +10,7 @@
 SOLOCAL int Bqt_Window::m_nWindows = 0;
 
 SOLOCAL Bqt_Window::Bqt_Window(PG_Window *w, Bqt_Window *parent)
-    : m_qw(parent ? parent->qw() : 0), m_w(w), m_parent(parent), m_filterClosing(true)
+    : m_qw(parent ? parent->widget() : 0, Qt::Window), m_w(w), m_parent(parent), m_filterClosing(true)
 {
     const PG_PrivateApi *api = PG_qtBackend->privateApi;
     m_qw.installEventFilter(&m_closeFilter);
@@ -21,6 +22,8 @@ SOLOCAL Bqt_Window::Bqt_Window(PG_Window *w, Bqt_Window *parent)
     {
         connect(m_parent, SIGNAL(closing()), this, SLOT(close()));
     }
+    PG_Bounds wb = { 0, 0, (unsigned)m_qw.width(), (unsigned )m_qw.height() };
+    api->container.setBounds(m_w, &wb);
     ++m_nWindows;
 }
 
@@ -28,6 +31,16 @@ SOLOCAL void Bqt_Window::setShown(int shown)
 {
     if (shown) m_qw.show();
     else m_qw.hide();
+}
+
+SOLOCAL void Bqt_Window::setParent(QWidget *parent)
+{
+    m_qw.setParent(parent);
+}
+
+SOLOCAL QWidget *Bqt_Window::widget()
+{
+    return &m_qw;
 }
 
 SOLOCAL void Bqt_Window::onWindowEvent(Bqt_EventFilter::FilterArgs *args)
@@ -62,11 +75,6 @@ SOLOCAL void Bqt_Window::close()
     }
 }
 
-SOLOCAL QWidget *Bqt_Window::qw()
-{
-    return &this->m_qw;
-}
-
 SOLOCAL_CDECL int Bqt_Window_create(PG_Window *w)
 {
     const PG_PrivateApi *api = PG_qtBackend->privateApi;
@@ -85,4 +93,10 @@ SOLOCAL_CDECL void Bqt_Window_close(PG_Window *w)
 {
     Bqt_Window *bw = (Bqt_Window *)PG_qtBackend->privateApi->backendObject(w);
     if (bw) bw->close();
+}
+
+SOLOCAL_CDECL void Bqt_Window_destroy(PG_Window *w)
+{
+    Bqt_Window *bw = (Bqt_Window *)PG_qtBackend->privateApi->backendObject(w);
+    delete bw;
 }

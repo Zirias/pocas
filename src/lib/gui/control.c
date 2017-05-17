@@ -99,7 +99,7 @@ SOEXPORT void PG_Control_bounds(const void *self, PG_Bounds *b)
     memcpy(b, &c->bounds, sizeof(PG_Bounds));
 }
 
-SOEXPORT void PG_Control_setPG_Bounds(void *self, const PG_Bounds *b)
+SOEXPORT void PG_Control_setBounds(void *self, const PG_Bounds *b)
 {
     PG_Control *c = privateApi.controlObject(self);
     memcpy(&c->bounds, b, sizeof(PG_Bounds));

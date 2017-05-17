@@ -24,8 +24,8 @@ static PG_Backend backend_qt = {
     .backendApi = {
         .name = 0,
         .control = {
-            .setContainer = 0,
-            .setBounds = 0,
+            .setContainer = Bqt_Control_setContainer,
+            .setBounds = Bqt_Control_setBounds,
             .setShown = Bqt_Control_setShown,
             .setEnabled = 0,
             .focus = 0,
@@ -34,7 +34,7 @@ static PG_Backend backend_qt = {
             .create = Bqt_Window_create,
             .setMenu = 0,
             .close = Bqt_Window_close,
-            .destroy = 0,
+            .destroy = Bqt_Window_destroy,
         },
         .menu = {
             .create = 0,
@@ -50,9 +50,9 @@ static PG_Backend backend_qt = {
             .show = 0,
         },
         .label = {
-            .create = 0,
-            .setText = 0,
-            .destroy = 0,
+            .create = Bqt_Label_create,
+            .setText = Bqt_Label_setText,
+            .destroy = Bqt_Label_destroy
         },
         .button = {
             .create = 0,
