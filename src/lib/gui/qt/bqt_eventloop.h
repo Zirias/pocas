@@ -1,26 +1,26 @@
 #ifndef BQT_EVENTLOOP_H
 #define BQT_EVENTLOOP_H
 
-#include <QEventLoop>
+#include <QApplication>
 #include <QBasicTimer>
 
-#include "decl.h"
+#include <pocas/gui/backend/qt.h>
 
-class Bqt_EventLoop : QObject
+class Bqt_EventLoop : public QObject
 {
     Q_OBJECT
 
 public:
-    Bqt_EventLoop() {}
+    Bqt_EventLoop();
     int processEvents(int timeout);
 
 protected:
     void timerEvent(QTimerEvent *event);
 
 private:
-    bool timedOut;
-    QEventLoop loop;
-    QBasicTimer timer;
+    bool m_timedOut;
+    QApplication m_app;
+    QBasicTimer m_timer;
 };
 
 #endif

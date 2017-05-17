@@ -4,6 +4,8 @@
 #include <pocas/core/event.h>
 #include <pocas/core/eventloop.h>
 
+#include <pocas/gui/backend.h>
+#include <pocas/gui/backend/qt.h>
 #include <pocas/gui/bounds.h>
 #include <pocas/gui/button.h>
 #include <pocas/gui/container.h>
@@ -133,6 +135,8 @@ static void initChangeDialog(void *selfPtr, PC_EventArgs *args)
 
 SOLOCAL Gui *Gui_create(void)
 {
+    //PG_Backend_setCurrent(PG_qtBackend);
+
     Gui *self = malloc(sizeof(Gui));
     self->disposed = 0;
 

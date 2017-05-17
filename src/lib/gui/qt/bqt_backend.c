@@ -1,6 +1,24 @@
+#include "../c11threads.h"
+
 #include <pocas/gui/private/backend.h>
 
 #include "bqt_backend.h"
+
+struct bdata
+{
+    PC_EventProcessor originalProcessor;
+};
+
+static thread_local struct bdata bdata = {
+    .originalProcessor = 0,
+};
+
+SOLOCAL_CDECL void Bqt_Backend_init(void)
+{
+    if (bdata.originalProcessor) return;
+
+    bdata.originalProcessor = Bqt_EventLoop_install();
+}
 
 static PG_Backend backend_qt = {
     .backendApi = {
@@ -8,20 +26,20 @@ static PG_Backend backend_qt = {
         .control = {
             .setContainer = 0,
             .setBounds = 0,
-            .setShown = 0,
-	    .setEnabled = 0,
-	    .focus = 0,
+            .setShown = Bqt_Control_setShown,
+            .setEnabled = 0,
+            .focus = 0,
         },
         .window = {
             .create = Bqt_Window_create,
             .setMenu = 0,
-            .close = 0,
+            .close = Bqt_Window_close,
             .destroy = 0,
         },
         .menu = {
             .create = 0,
             .addItem = 0,
-	    .removeItem = 0,
+            .removeItem = 0,
             .destroy = 0,
         },
         .menuItem = {

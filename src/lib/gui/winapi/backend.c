@@ -14,7 +14,7 @@
 #include <pocas/gui/private/backend.h>
 #include <pocas/gui/bounds.h>
 
-#include "decl.h"
+#include <pocas/gui/backend/winapi.h>
 
 struct bdata
 {

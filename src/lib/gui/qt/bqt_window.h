@@ -2,17 +2,38 @@
 #define BQT_WINDOW_H
 
 #include <pocas/gui/private/backend.h>
-#include <QWindow>
+#include <QWidget>
 
-class Bqt_Window : QWindow
+#include "bqt_eventfilter.h"
+#include "bqt_control.h"
+
+class Bqt_Window : public Bqt_Control
 {
     Q_OBJECT
 
 public:
-    Bqt_Window(PG_Window *fw);
+    Bqt_Window(PG_Window *w, Bqt_Window *parent);
+    virtual void setShown(int shown);
+
+public slots:
+    void close();
+
+signals:
+    void closing();
+
+protected:
+    QWidget *qw();
+
+private slots:
+    void onWindowEvent(Bqt_EventFilter::FilterArgs *args);
 
 private:
-    PG_Window *w;
+    QWidget m_qw;
+    PG_Window *m_w;
+    Bqt_Window *m_parent;
+    Bqt_EventFilter m_closeFilter;
+    bool m_filterClosing;
+    static int m_nWindows;
 };
 
 #endif

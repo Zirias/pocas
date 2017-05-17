@@ -25,11 +25,12 @@ $(call zinc, qt/qt.mk)
 endif
 
 ifdef WITH_DEFAULT_GUI_BACKEND
-pocasgui_DEPS += $(pocasgui_$(WITH_DEFAULT_GUI_BACKEND)_DEPS)
-pocasgui_LIBS += $(pocasgui_$(WITH_DEFAULT_GUI_BACKEND)_LIBS)
-pocasgui_STATICDEPS += pocasgui_$(WITH_DEFAULT_GUI_BACKEND)
-pocasgui_STATICLIBS += pocasgui_$(WITH_DEFAULT_GUI_BACKEND)
+pocasgui_DEPS += pocasgui_$(WITH_DEFAULT_GUI_BACKEND) $(pocasgui_$(WITH_DEFAULT_GUI_BACKEND)_DEPS)
+pocasgui_LIBS += pocasgui_$(WITH_DEFAULT_GUI_BACKEND) $(pocasgui_$(WITH_DEFAULT_GUI_BACKEND)_LIBS)
+pocasgui_STATICDEPS += $(pocasgui_$(WITH_DEFAULT_GUI_BACKEND)_STATICDEPS)
+pocasgui_STATICLIBS += $(pocasgui_$(WITH_DEFAULT_GUI_BACKEND)_STATICLIBS)
 pocasgui_DEFINES += -DDEFAULT_GUI_BACKEND=$(WITH_DEFAULT_GUI_BACKEND)
+pocasgui_CFLAGS_STATIC += -DSTATIC_POCAS_GUI_$(call toupper,$(WITH_DEFAULT_GUI_BACKEND))
 endif
 
 $(call librules, pocasgui)
