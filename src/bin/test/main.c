@@ -78,6 +78,7 @@ static void consoleResultHandler(const TestCase *testCase,
                 "%s::%s %s\n", classname, testname, message);
         break;
     }
+    fflush(stderr);
 }
 
 static int aggregateResult(int run, int passed, int failed, int unknown)
@@ -98,6 +99,7 @@ static int aggregateResult(int run, int passed, int failed, int unknown)
                 unknown);
     }
     fputc('\n', stderr);
+    fflush(stderr);
     return (passed == run) ? EXIT_SUCCESS : EXIT_FAILURE;
 }
 
@@ -113,6 +115,7 @@ static void consoleClassResultHandler(const TestClass *testClass, void *args)
             PC_Plugin_id(TestClass_plugin(testClass)), run);
 
     aggregateResult(run, passed, failed, unknown);
+    fflush(stderr);
 
     result->run += run;
     result->failed += failed;
@@ -231,6 +234,7 @@ int main(int argc, char **argv)
     if (!testClasses)
     {
         fputs("POCAS Testrunner error: no tests found!\n", stderr);
+        fflush(stderr);
         return EXIT_FAILURE;
     }
 
@@ -272,5 +276,6 @@ usage:
                     "USAGE: %s -p [-o output.c] test.c\n"
                     "to preprocess test.c for compilation.\n",
             argv[0], argv[0]);
+    fflush(stderr);
     return EXIT_FAILURE;
 }

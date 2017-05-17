@@ -88,7 +88,14 @@ SOLOCAL int preproc(const char *inFileName, const char *outFileName)
     }
     fputs("0};\n\n", out);
 
-    if (out != stdout) fclose(out);
+    if (out == stdout)
+    {
+        fflush(out);
+    }
+    else
+    {
+        fclose(out);
+    }
     fclose(in);
     return 1;
 }
