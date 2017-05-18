@@ -878,6 +878,30 @@ static void B_Control_setEnabled(void *self, int enabled)
     }
 }
 
+static void B_Window_showModal(PG_Window *self)
+{
+    const PG_PrivateApi *api = PG_winapiBackend->privateApi;
+    api->control.setShown(self, 1);
+    B_Window *bw = api->backendObject(self);
+    PG_Window *parentWindow = api->window.parent(bw->w);
+    if (parentWindow)
+    {
+        B_Control_setEnabled(parentWindow, 0);
+    }
+}
+
+static void B_Window_hideModal(PG_Window *self)
+{
+    const PG_PrivateApi *api = PG_winapiBackend->privateApi;
+    B_Window *bw = api->backendObject(self);
+    PG_Window *parentWindow = api->window.parent(bw->w);
+    if (parentWindow)
+    {
+        B_Control_setEnabled(parentWindow, 1);
+    }
+    api->control.setShown(self, 0);
+}
+
 static void B_Control_focus(void *self)
 {
     BO *bo = PG_winapiBackend->privateApi->backendObject(self);
@@ -952,6 +976,8 @@ static PG_Backend backend_winapi = {
             .create = B_Window_create,
             .setMenu = B_Window_setMenu,
             .close = B_Window_close,
+            .showModal = B_Window_showModal,
+            .hideModal = B_Window_hideModal,
             .destroy = B_Window_destroy,
         },
         .menu = {

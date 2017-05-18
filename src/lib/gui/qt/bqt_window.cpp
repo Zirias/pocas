@@ -104,6 +104,24 @@ SOLOCAL_CDECL void Bqt_Window_close(PG_Window *w)
     if (bw) bw->close();
 }
 
+SOLOCAL_CDECL void Bqt_Window_showModal(PG_Window *w)
+{
+    const PG_PrivateApi *api = PG_qtBackend->privateApi;
+    Bqt_Window *bw = (Bqt_Window *)api->backendObject(w);
+    if (!bw) return;
+    bw->widget()->setWindowModality(Qt::ApplicationModal);
+    api->control.setShown(w, 1);
+}
+
+SOLOCAL_CDECL void Bqt_Window_hideModal(PG_Window *w)
+{
+    const PG_PrivateApi *api = PG_qtBackend->privateApi;
+    api->control.setShown(w, 0);
+    Bqt_Window *bw = (Bqt_Window *)api->backendObject(w);
+    if (!bw) return;
+    bw->widget()->setWindowModality(Qt::NonModal);
+}
+
 SOLOCAL_CDECL void Bqt_Window_destroy(PG_Window *w)
 {
     Bqt_Window *bw = (Bqt_Window *)PG_qtBackend->privateApi->backendObject(w);

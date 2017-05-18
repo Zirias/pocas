@@ -95,17 +95,41 @@ SOEXPORT void PG_Window_close(PG_Window *self)
     }
 }
 
-SOEXPORT void *PG_Window_showDialog(PG_Window *self)
+SOEXPORT void PG_Window_showModal(PG_Window *self)
+{
+    const PG_Backend *b = PG_Backend_current();
+    if (b->backendApi.window.showModal)
+    {
+        b->backendApi.window.showModal(self);
+    }
+    else
+    {
+        PG_Control_show(self);
+    }
+}
+
+SOEXPORT void PG_Window_hideModal(PG_Window *self)
+{
+    const PG_Backend *b = PG_Backend_current();
+    if (b->backendApi.window.hideModal)
+    {
+        b->backendApi.window.hideModal(self);
+    }
+    else
+    {
+        PG_Control_hide(self);
+    }
+}
+
+SOEXPORT void *PG_Window_executeDialog(PG_Window *self)
 {
     if (!self->parent) return 0;
     self->dialog = 1;
-    PG_Control_show(self);
-    PG_Control_disable(self->parent);
+    PG_Window_showModal(self);
     PC_EventArgs args = PC_EventArgs_init(self->dialogShown, self, 0);
     PC_Event_raise(self->dialogShown, &args);
     while (self->dialog) PC_EventLoop_processEvents(-1);
-    PG_Control_enable(self->parent);
-    PG_Control_hide(self);
+    PG_Window_hideModal(self);
     return self->dialogResult;
 }
 

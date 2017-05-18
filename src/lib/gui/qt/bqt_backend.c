@@ -34,6 +34,8 @@ static PG_Backend backend_qt = {
             .create = Bqt_Window_create,
             .setMenu = 0,
             .close = Bqt_Window_close,
+            .showModal = Bqt_Window_showModal,
+            .hideModal = Bqt_Window_hideModal,
             .destroy = Bqt_Window_destroy,
         },
         .menu = {

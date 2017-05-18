@@ -78,6 +78,7 @@ SOLOCAL const PG_PrivateApi privateApi =
         .container = PG_Control_container,
         .bounds = PG_Control_bounds,
         .shown = PG_Control_shown,
+        .setShown = PG_Control_setShown,
         .setContainer = PG_Control_setContainer,
         .setContentSize = PG_Control_setContentSize,
         .destroy = PG_Control_destroy

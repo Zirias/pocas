@@ -21,6 +21,7 @@ struct PG_IPrivateControl
     void *(*container)(const void *self);
     void (*bounds)(const void *self, PG_Bounds *b);
     int (*shown)(const void *self);
+    void (*setShown)(void *self, int shown);
     void (*setContainer)(void *self, void *container);
     void (*setContentSize)(void *self,
             unsigned int width, unsigned int height);
@@ -102,6 +103,8 @@ struct PG_IBackendWindow
     int (*create)(PG_Window *self);
     void (*setMenu)(PG_Window *self, PG_Menu *menu);
     void (*close)(PG_Window *self);
+    void (*showModal)(PG_Window *self);
+    void (*hideModal)(PG_Window *self);
     void (*destroy)(PG_Window *self);
 };
 

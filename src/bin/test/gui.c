@@ -104,7 +104,7 @@ static void showChangeDialog(void *selfPtr, PC_EventArgs *args)
     Gui *self = selfPtr;
 
     PG_TextBox_setText(self->dlgTextBox, PG_Button_text(self->testButton));
-    const char *text = PG_Window_showDialog(self->changeButtonText);
+    const char *text = PG_Window_executeDialog(self->changeButtonText);
     if (text)
     {
         PG_Button_setText(self->testButton, text);

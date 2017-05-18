@@ -14,6 +14,8 @@ SOLOCAL_CDECL void Bqt_Control_setContainer(void *control, void *container);
 SOLOCAL_CDECL void Bqt_Control_setBounds(void *control, const PG_Bounds *b);
 SOLOCAL_CDECL int Bqt_Window_create(PG_Window *w);
 SOLOCAL_CDECL void Bqt_Window_close(PG_Window *w);
+SOLOCAL_CDECL void Bqt_Window_showModal(PG_Window *w);
+SOLOCAL_CDECL void Bqt_Window_hideModal(PG_Window *w);
 SOLOCAL_CDECL void Bqt_Window_destroy(PG_Window *w);
 SOLOCAL_CDECL int Bqt_Label_create(PG_Label *l);
 SOLOCAL_CDECL void Bqt_Label_setText(PG_Label *l, const char *text);
