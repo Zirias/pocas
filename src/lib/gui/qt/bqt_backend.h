@@ -23,6 +23,8 @@ SOLOCAL_CDECL void Bqt_Label_destroy(PG_Label *l);
 SOLOCAL_CDECL int Bqt_Button_create(PG_Button *b);
 SOLOCAL_CDECL void Bqt_Button_setText(PG_Button *b, const char *text);
 SOLOCAL_CDECL void Bqt_Button_destroy(PG_Button *b);
+SOLOCAL_CDECL PG_MessageBoxButton Bqt_MessageBox_show(const PG_Window *w, const char *title,
+        const char *text, PG_MessageBoxButton buttons, PG_MessageBoxStyle style);
 
 extern PG_Backend *PG_qtBackend;
 

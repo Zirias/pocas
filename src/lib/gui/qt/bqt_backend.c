@@ -49,7 +49,7 @@ static PG_Backend backend_qt = {
             .destroy = 0,
         },
         .messageBox = {
-            .show = 0,
+            .show = Bqt_MessageBox_show,
         },
         .label = {
             .create = Bqt_Label_create,
