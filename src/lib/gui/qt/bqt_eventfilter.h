@@ -21,7 +21,7 @@ public:
     Bqt_EventFilter();
 
 signals:
-    eventOccured(Bqt_EventFilter::FilterArgs *args);
+    void eventOccured(Bqt_EventFilter::FilterArgs *args);
 
 protected:
     virtual bool eventFilter(QObject *obj, QEvent *event);

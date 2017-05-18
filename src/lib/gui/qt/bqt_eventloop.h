@@ -1,8 +1,10 @@
 #ifndef BQT_EVENTLOOP_H
 #define BQT_EVENTLOOP_H
 
-#include <QApplication>
+#include <QObject>
 #include <QBasicTimer>
+
+class QApplication;
 
 #include <pocas/gui/backend/qt.h>
 
@@ -19,8 +21,8 @@ protected:
 
 private:
     bool m_timedOut;
-    QApplication m_app;
     QBasicTimer m_timer;
+    QApplication *m_app;
 };
 
 #endif

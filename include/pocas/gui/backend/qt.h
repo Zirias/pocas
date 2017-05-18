@@ -16,6 +16,6 @@
 #  endif
 #endif
 
-DECLEXPORT extern PG_Backend *PG_qtBackend;
+DECLEXPORT PG_Backend *PG_qtBackend;
 
 #endif

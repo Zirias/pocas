@@ -16,6 +16,6 @@
 #  endif
 #endif
 
-DECLEXPORT extern PG_Backend *PG_winapiBackend;
+DECLEXPORT PG_Backend *PG_winapiBackend;
 
 #endif

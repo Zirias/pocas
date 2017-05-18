@@ -4,6 +4,7 @@
 #include <QObject>
 
 class QWidget;
+class QRect;
 
 class Bqt_Control : public QObject
 {

@@ -1,6 +1,6 @@
 .*.swp
 .*.cfg
-.*.ycm
+.*.pyc
 *.cfg
 *.o
 *.d
