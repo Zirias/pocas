@@ -9,7 +9,7 @@
 #include <pocas/gui/container.h>
 #include <pocas/gui/control.h>
 #include <pocas/gui/extents.h>
-#include <pocas/gui/lbox.h>
+#include <pocas/gui/boxlayout.h>
 #include <pocas/gui/label.h>
 #include <pocas/gui/menu.h>
 #include <pocas/gui/messagebox.h>
@@ -25,8 +25,8 @@ struct Gui
     int disposed;
     PG_Window *mainWindow;
     PG_Menu *mainMenu;
-    PG_LBox *hbox;
-    PG_LBox *vbox;
+    PG_BoxLayout *hbox;
+    PG_BoxLayout *vbox;
     PG_Label *boundsLabel;
     PG_Label *test1Label;
     PG_Label *test2Label;
@@ -36,7 +36,7 @@ struct Gui
     PG_Window *aboutBox;
 
     PG_Window *changeButtonText;
-    PG_LBox *dlgBox;
+    PG_BoxLayout *dlgBox;
     PG_Label *dlgLabel;
     PG_TextBox *dlgTextBox;
     PG_Button *dlgButton;
@@ -154,34 +154,34 @@ SOLOCAL Gui *Gui_create(void)
     self->mainWindow = PG_Window_create(0, "POCAS Test", 480, 160);
     PG_Window_setMenu(self->mainWindow, self->mainMenu);
 
-    self->vbox = PG_LBox_create(PG_BO_Vertical);
-    self->hbox = PG_LBox_create(PG_BO_Horizontal);
+    self->vbox = PG_BoxLayout_create(PG_BO_Vertical);
+    self->hbox = PG_BoxLayout_create(PG_BO_Horizontal);
 
     PG_Extents margin = {2,2,2,2};
 
     self->test1Label = PG_Label_create("(1) This is a test!");
     PG_Control_show(self->test1Label);
     PG_Control_setMargin(self->test1Label, &margin);
-    PG_LBox_addControl(self->hbox, self->test1Label);
+    PG_BoxLayout_addControl(self->hbox, self->test1Label);
     self->testButton = PG_Button_create(PG_BS_Normal, "Change me");
     PG_Control_show(self->testButton);
     PG_Control_setMargin(self->testButton, &margin);
-    PG_LBox_addControl(self->hbox, self->testButton);
+    PG_BoxLayout_addControl(self->hbox, self->testButton);
     self->testTextBox = PG_TextBox_create(PG_TBS_Normal);
     PG_Control_show(self->testTextBox);
     PG_Control_setMargin(self->testTextBox, &margin);
-    PG_LBox_addControl(self->hbox, self->testTextBox);
+    PG_BoxLayout_addControl(self->hbox, self->testTextBox);
     self->test2Label = PG_Label_create("(2) ♫ 42");
     PG_Control_show(self->test2Label);
     PG_Control_setMargin(self->test2Label, &margin);
-    PG_LBox_addControl(self->hbox, self->test2Label);
+    PG_BoxLayout_addControl(self->hbox, self->test2Label);
 
     margin.bottom = 24;
     self->boundsLabel = PG_Label_create(0);
     PG_Control_show(self->boundsLabel);
     PG_Control_setMargin(self->boundsLabel, &margin);
-    PG_LBox_addControl(self->vbox, self->boundsLabel);
-    PG_LBox_addControl(self->vbox, self->hbox);
+    PG_BoxLayout_addControl(self->vbox, self->boundsLabel);
+    PG_BoxLayout_addControl(self->vbox, self->hbox);
 
     PG_Container_setControl(self->mainWindow, self->vbox);
 
@@ -207,20 +207,20 @@ SOLOCAL Gui *Gui_create(void)
             "Change button text", 360, 60);
     margin.bottom = 2;
     margin.left = 4;
-    self->dlgBox = PG_LBox_create(PG_BO_Horizontal);
+    self->dlgBox = PG_BoxLayout_create(PG_BO_Horizontal);
     self->dlgLabel = PG_Label_create("Text:");
     PG_Control_show(self->dlgLabel);
     PG_Control_setMargin(self->dlgLabel, &margin);
-    PG_LBox_addControl(self->dlgBox, self->dlgLabel);
+    PG_BoxLayout_addControl(self->dlgBox, self->dlgLabel);
     self->dlgTextBox = PG_TextBox_create(PG_TBS_Normal);
     PG_Control_show(self->dlgTextBox);
     PG_Control_setMinSize(self->dlgTextBox, 200, 0);
     PG_Control_setMargin(self->dlgTextBox, &margin);
-    PG_LBox_addControl(self->dlgBox, self->dlgTextBox);
+    PG_BoxLayout_addControl(self->dlgBox, self->dlgTextBox);
     self->dlgButton = PG_Button_create(PG_BS_Default, "Apply");
     PG_Control_show(self->dlgButton);
     PG_Control_setMargin(self->dlgButton, &margin);
-    PG_LBox_addControl(self->dlgBox, self->dlgButton);
+    PG_BoxLayout_addControl(self->dlgBox, self->dlgButton);
     PG_Container_setControl(self->changeButtonText, self->dlgBox);
 
     PC_Event_register(PG_Button_clickedEvent(self->dlgButton),
@@ -248,26 +248,26 @@ SOLOCAL void Gui_dispose(Gui *self)
 {
     if (self->disposed) return;
 
-    PG_LBox_removeControl(self->dlgBox, self->dlgButton);
-    PG_LBox_removeControl(self->dlgBox, self->dlgTextBox);
-    PG_LBox_removeControl(self->dlgBox, self->dlgLabel);
+    PG_BoxLayout_removeControl(self->dlgBox, self->dlgButton);
+    PG_BoxLayout_removeControl(self->dlgBox, self->dlgTextBox);
+    PG_BoxLayout_removeControl(self->dlgBox, self->dlgLabel);
     PG_Container_setControl(self->changeButtonText, 0);
 
     PG_Button_destroy(self->dlgButton);
     PG_TextBox_destroy(self->dlgTextBox);
     PG_Label_destroy(self->dlgLabel);
-    PG_LBox_destroy(self->dlgBox);
+    PG_BoxLayout_destroy(self->dlgBox);
 
     PG_Window_destroy(self->changeButtonText);
 
     PG_Window_destroy(self->aboutBox);
 
-    PG_LBox_removeControl(self->hbox, self->test2Label);
-    PG_LBox_removeControl(self->hbox, self->testTextBox);
-    PG_LBox_removeControl(self->hbox, self->testButton);
-    PG_LBox_removeControl(self->hbox, self->test1Label);
-    PG_LBox_removeControl(self->vbox, self->hbox);
-    PG_LBox_removeControl(self->vbox, self->boundsLabel);
+    PG_BoxLayout_removeControl(self->hbox, self->test2Label);
+    PG_BoxLayout_removeControl(self->hbox, self->testTextBox);
+    PG_BoxLayout_removeControl(self->hbox, self->testButton);
+    PG_BoxLayout_removeControl(self->hbox, self->test1Label);
+    PG_BoxLayout_removeControl(self->vbox, self->hbox);
+    PG_BoxLayout_removeControl(self->vbox, self->boundsLabel);
     PG_Container_setControl(self->mainWindow, 0);
 
     PG_TextBox_destroy(self->testTextBox);
@@ -275,8 +275,8 @@ SOLOCAL void Gui_dispose(Gui *self)
     PG_Label_destroy(self->test2Label);
     PG_Label_destroy(self->test1Label);
     PG_Label_destroy(self->boundsLabel);
-    PG_LBox_destroy(self->hbox);
-    PG_LBox_destroy(self->vbox);
+    PG_BoxLayout_destroy(self->hbox);
+    PG_BoxLayout_destroy(self->vbox);
 
     PG_Menu_destroy(self->mainMenu);
     PG_Window_destroy(self->mainWindow);
