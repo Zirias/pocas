@@ -32,21 +32,21 @@ static PG_Backend backend_qt = {
         },
         .window = {
             .create = Bqt_Window_create,
-            .setMenu = 0,
+            .setMenu = Bqt_Window_setMenu,
             .close = Bqt_Window_close,
             .showModal = Bqt_Window_showModal,
             .hideModal = Bqt_Window_hideModal,
             .destroy = Bqt_Window_destroy,
         },
         .menu = {
-            .create = 0,
-            .addItem = 0,
-            .removeItem = 0,
-            .destroy = 0,
+            .create = Bqt_Menu_create,
+            .addItem = Bqt_Menu_addItem,
+            .removeItem = Bqt_Menu_removeItem,
+            .destroy = Bqt_Menu_destroy,
         },
         .menuItem = {
-            .create = 0,
-            .destroy = 0,
+            .create = Bqt_MenuItem_create,
+            .destroy = Bqt_MenuItem_destroy,
         },
         .messageBox = {
             .show = Bqt_MessageBox_show,

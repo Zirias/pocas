@@ -3,15 +3,18 @@
 #include <pocas/gui/bounds.h>
 
 #include <QEvent>
+#include <QMenuBar>
+
+#include "bqt_backend.h"
+#include "bqt_menu.h"
 
 #include "bqt_window.h"
-#include "bqt_backend.h"
 
 SOLOCAL int Bqt_Window::m_nWindows = 0;
 
 SOLOCAL Bqt_Window::Bqt_Window(PG_Window *w, Bqt_Window *parent)
     : m_qw(parent ? parent->widget() : 0, parent ? Qt::Dialog : Qt::Window),
-      m_w(w), m_parent(parent), m_filterClosing(true)
+      m_mainMenu(0), m_w(w), m_parent(parent), m_filterClosing(true)
 {
     const PG_PrivateApi *api = PG_qtBackend->privateApi;
     m_qw.installEventFilter(&m_closeFilter);
@@ -37,6 +40,17 @@ SOLOCAL void Bqt_Window::setParent(QWidget *parent)
     m_qw.setParent(parent);
 }
 
+SOLOCAL void Bqt_Window::setMenu(QMenuBar *menu)
+{
+    delete m_mainMenu;
+    m_mainMenu = menu;
+    if (menu)
+    {
+        menu->setParent(&m_qw);
+    }
+    updateContainerSize();
+}
+
 SOLOCAL QWidget *Bqt_Window::widget()
 {
     return &m_qw;
@@ -55,8 +69,7 @@ SOLOCAL void Bqt_Window::onWindowEvent(Bqt_EventFilter::FilterArgs *args)
         api->window.close(m_w);
         break;
     case QEvent::Resize:
-        PG_Bounds wb = { 0, 0, (unsigned)m_qw.width(), (unsigned )m_qw.height() };
-        api->container.setBounds(m_w, &wb);
+        updateContainerSize();
         break;
     }
 #pragma GCC diagnostic pop
@@ -84,6 +97,33 @@ SOLOCAL void Bqt_Window::close()
     }
 }
 
+
+void Bqt_Window::updateContainerSize()
+{
+    PG_Bounds wb = { 0, 0, (unsigned)m_qw.width(), (unsigned)m_qw.height() };
+    if (m_mainMenu)
+    {
+        QSize hintedMenuSize = m_mainMenu->sizeHint();
+        int menuHeight = hintedMenuSize.height();
+        wb.y += menuHeight;
+        if (menuHeight > (int)wb.height)
+        {
+            wb.height = 0;
+        }
+        else
+        {
+            wb.height -= menuHeight;
+        }
+        m_mainMenu->resize(m_qw.width(), menuHeight);
+    }
+    PG_qtBackend->privateApi->container.setBounds(m_w, &wb);
+}
+
+SOLOCAL Bqt_Window::~Bqt_Window()
+{
+    delete m_mainMenu;
+}
+
 SOLOCAL_CDECL int Bqt_Window_create(PG_Window *w)
 {
     const PG_PrivateApi *api = PG_qtBackend->privateApi;
@@ -96,6 +136,14 @@ SOLOCAL_CDECL int Bqt_Window_create(PG_Window *w)
     Bqt_Window *bw = new Bqt_Window(w, pbw);
     api->setBackendObject(w, bw);
     return 1;
+}
+
+SOLOCAL_CDECL void Bqt_Window_setMenu(PG_Window *w, PG_Menu *menu)
+{
+    const PG_PrivateApi *api = PG_qtBackend->privateApi;
+    Bqt_Window *bw = (Bqt_Window *)api->backendObject(w);
+    Bqt_Menu *bm = (Bqt_Menu *)api->backendObject(menu);
+    bw->setMenu(bm->createMenuBar());
 }
 
 SOLOCAL_CDECL void Bqt_Window_close(PG_Window *w)
