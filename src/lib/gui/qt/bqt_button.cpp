@@ -6,6 +6,7 @@ SOLOCAL Bqt_Button::Bqt_Button(PG_Button *b, const QString& text)
         : m_qb(text), m_b(b)
 {
     const PG_PrivateApi *api = PG_qtBackend->privateApi;
+    if (api->button.style(b) == PG_BS_Default) m_qb.setDefault(true);
     connect(&m_qb, SIGNAL(clicked(bool)), this, SLOT(onClick(bool)));
     QSize minSize = m_qb.minimumSizeHint();
     api->control.setContentSize(b, minSize.width(), minSize.height());

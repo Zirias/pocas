@@ -12,6 +12,7 @@ SOLOCAL_CDECL void Bqt_Control_setShown(void *control, int shown);
 SOLOCAL_CDECL void Bqt_Control_setEnabled(void *control, int enabled);
 SOLOCAL_CDECL void Bqt_Control_setContainer(void *control, void *container);
 SOLOCAL_CDECL void Bqt_Control_setBounds(void *control, const PG_Bounds *b);
+SOLOCAL_CDECL void Bqt_Control_focus(void *control);
 SOLOCAL_CDECL int Bqt_Window_create(PG_Window *w);
 SOLOCAL_CDECL void Bqt_Window_setMenu(PG_Window *w, PG_Menu *menu);
 SOLOCAL_CDECL void Bqt_Window_close(PG_Window *w);
@@ -24,6 +25,9 @@ SOLOCAL_CDECL void Bqt_Label_destroy(PG_Label *l);
 SOLOCAL_CDECL int Bqt_Button_create(PG_Button *b);
 SOLOCAL_CDECL void Bqt_Button_setText(PG_Button *b, const char *text);
 SOLOCAL_CDECL void Bqt_Button_destroy(PG_Button *b);
+SOLOCAL_CDECL int Bqt_TextBox_create(PG_TextBox *tb, PG_TextBox_textChanged changed);
+SOLOCAL_CDECL void Bqt_TextBox_setText(PG_TextBox *tb, const char *text);
+SOLOCAL_CDECL void Bqt_TextBox_destroy(PG_TextBox *tb);
 SOLOCAL_CDECL PG_MessageBoxButton Bqt_MessageBox_show(const PG_Window *w, const char *title,
         const char *text, PG_MessageBoxButton buttons, PG_MessageBoxStyle style);
 SOLOCAL_CDECL int Bqt_MenuItem_create(PG_MenuItem *mi);

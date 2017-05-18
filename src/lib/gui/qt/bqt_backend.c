@@ -28,7 +28,7 @@ static PG_Backend backend_qt = {
             .setBounds = Bqt_Control_setBounds,
             .setShown = Bqt_Control_setShown,
             .setEnabled = Bqt_Control_setEnabled,
-            .focus = 0,
+            .focus = Bqt_Control_focus,
         },
         .window = {
             .create = Bqt_Window_create,
@@ -62,9 +62,9 @@ static PG_Backend backend_qt = {
             .destroy = Bqt_Button_destroy,
         },
         .textBox = {
-            .create = 0,
-            .setText = 0,
-            .destroy = 0,
+            .create = Bqt_TextBox_create,
+            .setText = Bqt_TextBox_setText,
+            .destroy = Bqt_TextBox_destroy,
         },
     },
     .privateApi = 0,

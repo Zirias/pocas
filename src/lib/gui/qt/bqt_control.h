@@ -14,6 +14,7 @@ public:
     virtual void setEnabled(bool enabled);
     virtual void setParent(QWidget *parent) = 0;
     virtual void setGeometry(const QRect& rect);
+    virtual void focus();
     virtual QWidget *widget() = 0;
 
 protected:

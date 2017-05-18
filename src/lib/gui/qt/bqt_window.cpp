@@ -2,8 +2,11 @@
 #include <pocas/core/eventloop.h>
 #include <pocas/gui/bounds.h>
 
+#include <QApplication>
 #include <QEvent>
+#include <QKeyEvent>
 #include <QMenuBar>
+#include <QPushButton>
 
 #include "bqt_backend.h"
 #include "bqt_menu.h"
@@ -70,6 +73,35 @@ SOLOCAL void Bqt_Window::onWindowEvent(Bqt_EventFilter::FilterArgs *args)
         break;
     case QEvent::Resize:
         updateContainerSize();
+        break;
+    case QEvent::KeyPress:
+        QKeyEvent *ke = static_cast<QKeyEvent *>(args->event);
+        if (ke->key() == Qt::Key_Enter || ke->key() == Qt::Key_Return)
+        {
+            QWidget *focused = QApplication::focusWidget();
+            if (focused)
+            {
+                QPushButton *focusedButton = dynamic_cast<QPushButton *>(focused);
+                if (focusedButton)
+                {
+                    args->filter = true;
+                    focusedButton->click();
+                    break;
+                }
+            }
+            for (int i = 0; i < m_qw.children().length(); ++i)
+            {
+                QPushButton *button = dynamic_cast<QPushButton *>(m_qw.children().at(i));
+                if (button)
+                {
+                    if (button->isDefault())
+                    {
+                        args->filter = true;
+                        button->click();
+                    }
+                }
+            }
+        }
         break;
     }
 #pragma GCC diagnostic pop

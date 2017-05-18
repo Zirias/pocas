@@ -42,6 +42,13 @@ SOLOCAL void Bqt_Control::setGeometry(const QRect &rect)
     w->setGeometry(rect);
 }
 
+SOLOCAL void Bqt_Control::focus()
+{
+    QWidget *w = widget();
+    if (!w) return;
+    w->setFocus();
+}
+
 SOLOCAL_CDECL void Bqt_Control_setShown(void *control, int shown)
 {
     Bqt_Control *bc = (Bqt_Control *)
@@ -84,4 +91,10 @@ SOLOCAL_CDECL void Bqt_Control_setBounds(void *control, const PG_Bounds *b)
 {
     Bqt_Control *c = (Bqt_Control *)PG_qtBackend->privateApi->backendObject(control);
     if (c) c->setGeometry(QRect(b->x, b->y, b->width, b->height));
+}
+
+SOLOCAL_CDECL void Bqt_Control_focus(void *control)
+{
+    Bqt_Control *c = (Bqt_Control *)PG_qtBackend->privateApi->backendObject(control);
+    if (c) c->focus();
 }
