@@ -24,6 +24,12 @@ SOLOCAL void Bqt_MenuItem::setText(const QString &text)
     m_text = text;
 }
 
+SOLOCAL void Bqt_MenuItem::triggered(bool checked)
+{
+    (void)checked;
+    PG_qtBackend->privateApi->menuItem.select(m_mi);
+}
+
 SOLOCAL_CDECL int Bqt_MenuItem_create(PG_MenuItem *mi)
 {
     const PG_PrivateApi *api = PG_qtBackend->privateApi;

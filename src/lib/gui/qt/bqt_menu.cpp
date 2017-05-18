@@ -33,7 +33,9 @@ SOLOCAL QMenu *Bqt_Menu::createMenu(const QString &text)
         }
         else
         {
-            menu->addAction(item->text());
+            QAction *act = menu->addAction(item->text());
+            QObject::connect(act, SIGNAL(triggered(bool)),
+                    item, SLOT(triggered(bool)));
         }
     }
     return menu;
