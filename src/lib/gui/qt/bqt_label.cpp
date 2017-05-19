@@ -7,6 +7,13 @@ SOLOCAL Bqt_Label::Bqt_Label(PG_Label *l, const QString& text)
     const PG_PrivateApi *api = PG_qtBackend->privateApi;
     QSize minSize = m_ql.minimumSizeHint();
     api->control.setContentSize(l, minSize.width(), minSize.height());
+    PG_LabelStyle style = api->label.style(l);
+    Qt::Alignment align = 0;
+    if (style & PG_LS_AlignBottom) align |= Qt::AlignBottom;
+    if (style & PG_LS_AlignRight) align |= Qt::AlignRight;
+    if (style & PG_LS_HCenter) align |= Qt::AlignHCenter;
+    if (style & PG_LS_VCenter) align |= Qt::AlignVCenter;
+    m_ql.setAlignment(align);
 }
 
 SOLOCAL void Bqt_Label::setParent(QWidget *parent)

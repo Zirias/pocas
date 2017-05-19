@@ -18,7 +18,7 @@ C_ENUM_DECL(PG_LabelStyle);
 
 #ifndef POCAS_GUI_PRIVATE
 
-DECLEXPORT PG_Label *PG_Label_create(const char *text, PG_LabelStyle style);
+DECLEXPORT PG_Label *PG_Label_create(PG_LabelStyle style, const char *text);
 DECLEXPORT PG_LabelStyle PG_Label_style(const PG_Label *self);
 DECLEXPORT const char *PG_Label_text(const PG_Label *self);
 DECLEXPORT void PG_Label_setText(PG_Label *self, const char *text);

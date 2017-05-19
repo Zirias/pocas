@@ -149,7 +149,7 @@ SOLOCAL Gui *Gui_create(void)
 
     PG_Extents margin = {2,2,2,2};
 
-    self->test1Label = PG_Label_create("(1) This is a test!", PG_LS_Normal);
+    self->test1Label = PG_Label_create(PG_LS_Center, "(1) This is a test!");
     PG_Control_show(self->test1Label);
     PG_Control_setMargin(self->test1Label, &margin);
     PG_BoxLayout_addControl(self->hbox, self->test1Label);
@@ -161,12 +161,12 @@ SOLOCAL Gui *Gui_create(void)
     PG_Control_show(self->testTextBox);
     PG_Control_setMargin(self->testTextBox, &margin);
     PG_BoxLayout_addControl(self->hbox, self->testTextBox);
-    self->test2Label = PG_Label_create("(2) ♫ 42", PG_LS_Normal);
+    self->test2Label = PG_Label_create(PG_LS_Center, "(2) ♫ 42");
     PG_Control_show(self->test2Label);
     PG_Control_setMargin(self->test2Label, &margin);
     PG_BoxLayout_addControl(self->hbox, self->test2Label);
 
-    self->boundsLabel = PG_Label_create(0, PG_LS_Normal);
+    self->boundsLabel = PG_Label_create(PG_LS_AlignRight|PG_LS_VCenter, 0);
     PG_Control_show(self->boundsLabel);
     PG_Control_setMargin(self->boundsLabel, &margin);
     PG_Control_setMinSize(self->boundsLabel, 0, 40);
@@ -198,7 +198,7 @@ SOLOCAL Gui *Gui_create(void)
     margin.bottom = 2;
     margin.left = 4;
     self->dlgBox = PG_BoxLayout_create(PG_BO_Horizontal, 1);
-    self->dlgLabel = PG_Label_create("Text:", PG_LS_Normal);
+    self->dlgLabel = PG_Label_create(PG_LS_Center, "Text:");
     PG_Control_show(self->dlgLabel);
     PG_Control_setMargin(self->dlgLabel, &margin);
     PG_BoxLayout_addControl(self->dlgBox, self->dlgLabel);

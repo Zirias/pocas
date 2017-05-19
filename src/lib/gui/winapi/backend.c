@@ -792,7 +792,20 @@ static int createTextControlWindow(void *control, HMENU id)
     {
     case BT_Label:
         wc = L"Static";
-        style = SS_CENTER|SS_CENTERIMAGE;
+        PG_LabelStyle ls = api->label.style(control);
+        if (ls & PG_LS_AlignRight)
+        {
+            style |= SS_RIGHT;
+        }
+        if (ls & PG_LS_HCenter)
+        {
+            style |= SS_CENTER;
+        }
+        if (ls & PG_LS_VCenter)
+        {
+            style |= SS_CENTERIMAGE;
+        }
+        if (!style) style = SS_SIMPLE;
         break;
     case BT_Button:
         wc = L"Button";

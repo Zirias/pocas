@@ -14,7 +14,7 @@ struct PG_Label
     char *text;
 };
 
-SOEXPORT PG_Label *PG_Label_create(const char *text, PG_LabelStyle style)
+SOEXPORT PG_Label *PG_Label_create(PG_LabelStyle style, const char *text)
 {
     PG_Label *self = malloc(sizeof(PG_Label));
     GCINIT(self);
