@@ -154,8 +154,8 @@ SOLOCAL Gui *Gui_create(void)
     self->mainWindow = PG_Window_create(0, "POCAS Test", 480, 160);
     PG_Window_setMenu(self->mainWindow, self->mainMenu);
 
-    self->vbox = PG_BoxLayout_create(PG_BO_Vertical);
-    self->hbox = PG_BoxLayout_create(PG_BO_Horizontal);
+    self->vbox = PG_BoxLayout_create(PG_BO_Vertical, 1);
+    self->hbox = PG_BoxLayout_create(PG_BO_Horizontal, 1);
 
     PG_Extents margin = {2,2,2,2};
 
@@ -207,7 +207,7 @@ SOLOCAL Gui *Gui_create(void)
             "Change button text", 360, 60);
     margin.bottom = 2;
     margin.left = 4;
-    self->dlgBox = PG_BoxLayout_create(PG_BO_Horizontal);
+    self->dlgBox = PG_BoxLayout_create(PG_BO_Horizontal, 1);
     self->dlgLabel = PG_Label_create("Text:");
     PG_Control_show(self->dlgLabel);
     PG_Control_setMargin(self->dlgLabel, &margin);

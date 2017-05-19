@@ -15,6 +15,7 @@ struct PG_BoxLayout
 {
     GuiClass gc;
     PG_BoxOrientation orientation;
+    int expand;
     PC_List *elements;
     PC_List *controls;
 };
@@ -38,13 +39,27 @@ static void updateElementsBounds(PG_BoxLayout *self, PG_Bounds *b)
         GuiClass *lbe = PC_ListIterator_current(ei);
         void *control = PG_Container_control(lbe);
         PG_Control_margin(control, &em);
-        eb.width = PG_Control_minWidth(control) + em.left + em.right;
+        if (self->orientation == PG_BO_Vertical && self->expand)
+        {
+            eb.width = PG_Control_minWidth(self);
+        }
+        else
+        {
+            eb.width = PG_Control_minWidth(control) + em.left + em.right;
+        }
         if (eb.x + eb.width > b->x + b->width)
         {
             if (eb.x >= b->x + b->width) eb.width = 0;
             else eb.width = b->x + b->width - eb.x;
         }
-        eb.height = PG_Control_minHeight(control) + em.top + em.bottom;
+        if (self->orientation == PG_BO_Horizontal && self->expand)
+        {
+            eb.height = PG_Control_minHeight(self);
+        }
+        else
+        {
+            eb.height = PG_Control_minHeight(control) + em.top + em.bottom;
+        }
         if (eb.y + eb.height > b->y + b->height)
         {
             if (eb.y >= b->y + b->height) eb.height = 0;
@@ -151,12 +166,13 @@ static void onResized(void *selfPtr, PC_EventArgs *args)
     updateElementsBounds(self, b);
 }
 
-SOEXPORT PG_BoxLayout *PG_BoxLayout_create(PG_BoxOrientation orientation)
+SOEXPORT PG_BoxLayout *PG_BoxLayout_create(PG_BoxOrientation orientation, int expand)
 {
     PG_BoxLayout *self = malloc(sizeof(PG_BoxLayout));
     GCINIT(self);
     privateApi.control.create(self);
     self->orientation = orientation;
+    self->expand = expand;
     self->elements = PC_List_create(0, boxElementDeleter, 0);
     self->controls = PC_List_create(0, 0, 0);
     PC_Event_register(PG_Control_containerChangedEvent(self),
