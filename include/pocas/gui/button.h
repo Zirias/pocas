@@ -16,6 +16,8 @@ enum PG_ButtonStyle
 };
 C_ENUM_DECL(PG_ButtonStyle);
 
+#ifndef POCAS_GUI_PRIVATE
+
 DECLEXPORT PG_Button *PG_Button_create(PG_ButtonStyle style, const char *text);
 DECLEXPORT PG_ButtonStyle PG_Button_style(const PG_Button *self);
 DECLEXPORT const char *PG_Button_text(const PG_Button *self);
@@ -25,5 +27,7 @@ DECLEXPORT void PG_Button_setCommand(PG_Button *self, PG_Command *command);
 DECLEXPORT void PG_Button_click(PG_Button *self);
 DECLEXPORT PC_Event *PG_Button_clickedEvent(const PG_Button *self);
 DECLEXPORT void PG_Button_destroy(PG_Button *self);
+
+#endif
 
 #endif

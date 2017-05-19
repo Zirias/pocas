@@ -4,9 +4,11 @@
 #include <pocas/core/event.h>
 #include <pocas/core/string.h>
 
-#include "internal.h"
+#include <pocas/gui/backend.h>
 #include <pocas/gui/control.h>
 #include <pocas/gui/textbox.h>
+
+#include "internal.h"
 
 struct PG_TextBox
 {

@@ -29,7 +29,11 @@ enum PG_MessageBoxStyle
 };
 C_ENUM_DECL(PG_MessageBoxStyle);
 
+#ifndef POCAS_GUI_PRIVATE
+
 DECLEXPORT PG_MessageBoxButton PG_MessageBox_show(const PG_Window *w, const char *title,
         const char *text, PG_MessageBoxButton buttons, PG_MessageBoxStyle style);
+
+#endif
 
 #endif

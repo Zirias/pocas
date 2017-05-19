@@ -2,8 +2,9 @@
 
 #include <pocas/core/event.h>
 
-#include "internal.h"
 #include <pocas/gui/command.h>
+
+#include "internal.h"
 
 struct PG_Command
 {

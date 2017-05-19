@@ -3,9 +3,6 @@
 
 #include <QWidget>
 
-#include <pocas/gui/bounds.h>
-#include <pocas/gui/backend/qt.h>
-
 SOLOCAL Bqt_Control::Bqt_Control()
 {
     Bqt_Backend_init();

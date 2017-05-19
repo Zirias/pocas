@@ -1,5 +1,4 @@
 #include "bqt_button.h"
-
 #include "bqt_backend.h"
 
 SOLOCAL Bqt_Button::Bqt_Button(PG_Button *b, const QString& text)

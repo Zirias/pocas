@@ -1,5 +1,4 @@
 #include "bqt_textbox.h"
-
 #include "bqt_backend.h"
 
 #define textBoxWidth 100

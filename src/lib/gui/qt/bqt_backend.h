@@ -2,8 +2,8 @@
 #define BQT_BACKEND_H
 
 #include <pocas/core/eventloop.h>
-#include <pocas/gui/private/backend.h>
 
+#include <pocas/gui/private/backend.h>
 #include <pocas/gui/backend/qt.h>
 
 SOLOCAL_CDECL PC_EventProcessor Bqt_EventLoop_install();

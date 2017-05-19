@@ -3,12 +3,14 @@
 #include <pocas/core/event.h>
 #include <pocas/core/string.h>
 
-#include "internal.h"
+#include <pocas/gui/backend.h>
 #include <pocas/gui/control.h>
 #include <pocas/gui/command.h>
 #include <pocas/gui/extents.h>
 
 #include <pocas/gui/button.h>
+
+#include "internal.h"
 
 struct PG_Button
 {

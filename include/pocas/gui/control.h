@@ -32,7 +32,7 @@ enum PG_ControlAlignment
 };
 C_ENUM_DECL(PG_ControlAlignment);
 
-#define PG_MIN_AUTO 0
+#ifndef POCAS_GUI_PRIVATE
 
 DECLEXPORT PG_ControlDockMode PG_Control_dockMode(const void *self);
 DECLEXPORT void PG_Control_setDockMode(void *self, PG_ControlDockMode mode);
@@ -65,5 +65,7 @@ DECLEXPORT PC_Event *PG_Control_resizedEvent(const void *self);
 DECLEXPORT PC_Event *PG_Control_shownChangedEvent(const void *self);
 DECLEXPORT PC_Event *PG_Control_containerChangedEvent(const void *self);
 DECLEXPORT PC_Event *PG_Control_minSizeChangedEvent(const void *self);
+
+#endif
 
 #endif

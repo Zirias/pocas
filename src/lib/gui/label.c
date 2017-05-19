@@ -3,24 +3,32 @@
 
 #include <pocas/core/string.h>
 
-#include "internal.h"
+#include <pocas/gui/backend.h>
 #include <pocas/gui/label.h>
+#include "internal.h"
 
 struct PG_Label
 {
     GuiClass gc;
+    PG_LabelStyle style;
     char *text;
 };
 
-SOEXPORT PG_Label *PG_Label_create(const char *text)
+SOEXPORT PG_Label *PG_Label_create(const char *text, PG_LabelStyle style)
 {
     PG_Label *self = malloc(sizeof(PG_Label));
     GCINIT(self);
     privateApi.control.create(self);
+    self->style = style;
     self->text = text ? PC_String_copy(text) : 0;
     const PG_Backend *b = PG_Backend_current();
     if (b->backendApi.label.create) b->backendApi.label.create(self);
     return self;
+}
+
+SOEXPORT PG_LabelStyle PG_Label_style(const PG_Label *self)
+{
+    return self->style;
 }
 
 SOEXPORT const char *PG_Label_text(const PG_Label *self)

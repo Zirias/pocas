@@ -12,7 +12,11 @@ struct PG_Bounds
     unsigned int height;
 };
 
+#ifndef POCAS_GUI_PRIVATE
+
 DECLEXPORT int PG_Bounds_equals(const PG_Bounds *self, const PG_Bounds *other);
 DECLEXPORT void PG_Bounds_fitInto(PG_Bounds *self, const PG_Bounds *into);
+
+#endif
 
 #endif

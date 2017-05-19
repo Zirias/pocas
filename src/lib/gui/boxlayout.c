@@ -4,12 +4,13 @@
 #include <pocas/core/event.h>
 #include <pocas/core/list.h>
 
-#include "internal.h"
 #include <pocas/gui/bounds.h>
 #include <pocas/gui/container.h>
 #include <pocas/gui/control.h>
 #include <pocas/gui/extents.h>
 #include <pocas/gui/boxlayout.h>
+
+#include "internal.h"
 
 struct PG_BoxLayout
 {

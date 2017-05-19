@@ -1,15 +1,10 @@
 #include <string.h>
 
-#include <pocas/gui/private/backend.h>
+#include <pocas/gui.h>
 
-#include <pocas/gui/window.h>
-#include <pocas/gui/menu.h>
-#include <pocas/gui/label.h>
-#include <pocas/gui/button.h>
-
-#include "internal.h"
 #include "control_internal.h"
 #include "container_internal.h"
+#include "internal.h"
 
 #ifdef DEFAULT_GUI_BACKEND
 #define BACKENDPTR(x) PG_ ## x ## Backend
@@ -110,6 +105,7 @@ SOLOCAL const PG_PrivateApi privateApi =
 
     .label =
     {
+        .style = PG_Label_style,
         .text = PG_Label_text
     },
 

@@ -3,11 +3,12 @@
 
 #include <pocas/core/event.h>
 
-#include <pocas/gui/extents.h>
+#include <pocas/gui/backend.h>
 #include <pocas/gui/bounds.h>
 #include <pocas/gui/container.h>
-#include "internal.h"
+#include <pocas/gui/extents.h>
 #include "control_internal.h"
+#include "internal.h"
 
 typedef struct PG_Control
 {

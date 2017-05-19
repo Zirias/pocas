@@ -9,6 +9,8 @@ C_CLASS_DECL(PG_Menu);
 
 C_CLASS_DECL(PG_Window);
 
+#ifndef POCAS_GUI_PRIVATE
+
 DECLEXPORT PG_Window *PG_Window_create(PG_Window *parent, const char *title, int width, int height);
 DECLEXPORT PG_Window *PG_Window_parent(const PG_Window *self);
 DECLEXPORT const char *PG_Window_title(const PG_Window *self);
@@ -26,5 +28,7 @@ DECLEXPORT PC_Event *PG_Window_closingEvent(const PG_Window *self);
 DECLEXPORT void PG_Window_destroy(PG_Window *self);
 
 DECLEXPORT PC_Event *PG_Window_lastWindowClosedEvent(void);
+
+#endif
 
 #endif

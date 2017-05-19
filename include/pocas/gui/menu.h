@@ -11,6 +11,8 @@ C_CLASS_DECL(PG_Command);
 C_CLASS_DECL(PG_Menu);
 C_CLASS_DECL(PG_MenuItem);
 
+#ifndef POCAS_GUI_PRIVATE
+
 DECLEXPORT PG_Menu *PG_Menu_create(void);
 DECLEXPORT PC_ListIterator *PG_Menu_items(const PG_Menu *self);
 DECLEXPORT void PG_Menu_addItem(PG_Menu *self, PG_MenuItem *item);
@@ -27,5 +29,7 @@ DECLEXPORT PC_Event *PG_MenuItem_selectedEvent(const PG_MenuItem *self);
 DECLEXPORT PG_Menu *PG_MenuItem_subMenu(const PG_MenuItem *self);
 DECLEXPORT void PG_MenuItem_setSubMenu(PG_MenuItem *self, PG_Menu *subMenu);
 DECLEXPORT void PG_MenuItem_destroy(PG_MenuItem *self);
+
+#endif
 
 #endif

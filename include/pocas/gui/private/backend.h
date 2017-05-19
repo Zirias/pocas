@@ -1,18 +1,8 @@
 #ifndef POCAS_GUI_PRIVATE_BACKEND_H
 #define POCAS_GUI_PRIVATE_BACKEND_H
 
-#include <pocas/gui/backend.h>
-#include <pocas/gui/button.h>
-#include <pocas/gui/messagebox.h>
-
-C_CLASS_DECL(PG_Bounds);
-C_CLASS_DECL(PC_Event);
-C_CLASS_DECL(PG_Window);
-C_CLASS_DECL(PG_Menu);
-C_CLASS_DECL(PG_MenuItem);
-C_CLASS_DECL(PG_Command);
-C_CLASS_DECL(PG_Label);
-C_CLASS_DECL(PG_TextBox);
+#define POCAS_GUI_PRIVATE
+#include <pocas/gui.h>
 
 C_CLASS_DECL(PG_IPrivateControl);
 struct PG_IPrivateControl
@@ -58,6 +48,7 @@ struct PG_IPrivateMenuItem
 C_CLASS_DECL(PG_IPrivateLabel);
 struct PG_IPrivateLabel
 {
+    PG_LabelStyle (*style)(const PG_Label *self);
     const char *(*text)(const PG_Label *self);
 };
 

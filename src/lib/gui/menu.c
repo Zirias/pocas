@@ -4,10 +4,11 @@
 #include <pocas/core/list.h>
 #include <pocas/core/string.h>
 
-#include "internal.h"
-
+#include <pocas/gui/backend.h>
 #include <pocas/gui/command.h>
 #include <pocas/gui/menu.h>
+
+#include "internal.h"
 
 struct PG_Menu
 {

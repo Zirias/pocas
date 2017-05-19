@@ -12,8 +12,6 @@
 #include <pocas/core/hashtable.h>
 
 #include <pocas/gui/private/backend.h>
-#include <pocas/gui/bounds.h>
-
 #include <pocas/gui/backend/winapi.h>
 
 struct bdata

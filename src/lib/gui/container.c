@@ -4,8 +4,8 @@
 #include <pocas/core/event.h>
 
 #include <pocas/gui/bounds.h>
-#include "internal.h"
 #include "container_internal.h"
+#include "internal.h"
 
 typedef struct PG_Container
 {

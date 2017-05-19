@@ -4,17 +4,7 @@
 #include <pocas/core/event.h>
 #include <pocas/core/eventloop.h>
 
-#include <pocas/gui/bounds.h>
-#include <pocas/gui/button.h>
-#include <pocas/gui/container.h>
-#include <pocas/gui/control.h>
-#include <pocas/gui/extents.h>
-#include <pocas/gui/boxlayout.h>
-#include <pocas/gui/label.h>
-#include <pocas/gui/menu.h>
-#include <pocas/gui/messagebox.h>
-#include <pocas/gui/window.h>
-#include <pocas/gui/textbox.h>
+#include <pocas/gui.h>
 
 #include <pocas/test/decl.h>
 
@@ -159,7 +149,7 @@ SOLOCAL Gui *Gui_create(void)
 
     PG_Extents margin = {2,2,2,2};
 
-    self->test1Label = PG_Label_create("(1) This is a test!");
+    self->test1Label = PG_Label_create("(1) This is a test!", PG_LS_Normal);
     PG_Control_show(self->test1Label);
     PG_Control_setMargin(self->test1Label, &margin);
     PG_BoxLayout_addControl(self->hbox, self->test1Label);
@@ -171,15 +161,15 @@ SOLOCAL Gui *Gui_create(void)
     PG_Control_show(self->testTextBox);
     PG_Control_setMargin(self->testTextBox, &margin);
     PG_BoxLayout_addControl(self->hbox, self->testTextBox);
-    self->test2Label = PG_Label_create("(2) ♫ 42");
+    self->test2Label = PG_Label_create("(2) ♫ 42", PG_LS_Normal);
     PG_Control_show(self->test2Label);
     PG_Control_setMargin(self->test2Label, &margin);
     PG_BoxLayout_addControl(self->hbox, self->test2Label);
 
-    margin.bottom = 24;
-    self->boundsLabel = PG_Label_create(0);
+    self->boundsLabel = PG_Label_create(0, PG_LS_Normal);
     PG_Control_show(self->boundsLabel);
     PG_Control_setMargin(self->boundsLabel, &margin);
+    PG_Control_setMinSize(self->boundsLabel, 0, 40);
     PG_BoxLayout_addControl(self->vbox, self->boundsLabel);
     PG_BoxLayout_addControl(self->vbox, self->hbox);
 
@@ -208,7 +198,7 @@ SOLOCAL Gui *Gui_create(void)
     margin.bottom = 2;
     margin.left = 4;
     self->dlgBox = PG_BoxLayout_create(PG_BO_Horizontal, 1);
-    self->dlgLabel = PG_Label_create("Text:");
+    self->dlgLabel = PG_Label_create("Text:", PG_LS_Normal);
     PG_Control_show(self->dlgLabel);
     PG_Control_setMargin(self->dlgLabel, &margin);
     PG_BoxLayout_addControl(self->dlgBox, self->dlgLabel);

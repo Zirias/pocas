@@ -6,11 +6,12 @@
 #include <pocas/core/eventloop.h>
 #include <pocas/core/string.h>
 
-#include "internal.h"
-
+#include <pocas/gui/backend.h>
 #include <pocas/gui/control.h>
 #include <pocas/gui/menu.h>
 #include <pocas/gui/window.h>
+
+#include "internal.h"
 
 struct PG_Window
 {

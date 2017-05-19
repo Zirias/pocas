@@ -1,5 +1,4 @@
 #include "bqt_label.h"
-
 #include "bqt_backend.h"
 
 SOLOCAL Bqt_Label::Bqt_Label(PG_Label *l, const QString& text)

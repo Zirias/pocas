@@ -1,6 +1,7 @@
-#include "internal.h"
-
 #include <pocas/gui/messagebox.h>
+
+#include <pocas/gui/backend.h>
+#include "internal.h"
 
 SOEXPORT PG_MessageBoxButton PG_MessageBox_show(const PG_Window *w, const char *title,
         const char *text, PG_MessageBoxButton buttons, PG_MessageBoxStyle style)

@@ -1,6 +1,5 @@
 #include <pocas/core/event.h>
 #include <pocas/core/eventloop.h>
-#include <pocas/gui/bounds.h>
 
 #include <QApplication>
 #include <QEvent>
