@@ -9,10 +9,12 @@
 
 #ifdef __cplusplus
 #  define pocaslibs___cdecl extern "C"
+#  define DECLDATA
 #  define C_CLASS_DECL(t) struct t
 #  define C_ENUM_DECL(t) enum t
 #else
 #  define pocaslibs___cdecl
+#  define DECLDATA extern
 #  define C_CLASS_DECL(t) typedef struct t t
 #  define C_ENUM_DECL(t) typedef enum t t
 #endif

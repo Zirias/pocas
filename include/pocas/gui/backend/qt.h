@@ -6,7 +6,7 @@
 #ifdef _WIN32
 #  undef DECLEXPORT
 #  ifdef BUILDING_POCAS_GUI_QT
-#    define DECLEXPORT __declspec(dllexport)
+#    define DECLEXPORT pocaslibs___cdecl __declspec(dllexport)
 #  else
 #    ifdef STATIC_POCAS_GUI_QT
 #      define DECLEXPORT pocaslibs___cdecl
@@ -16,6 +16,6 @@
 #  endif
 #endif
 
-DECLEXPORT PG_Backend *PG_qtBackend;
+DECLDATA DECLEXPORT PG_Backend *PG_qtBackend;
 
 #endif

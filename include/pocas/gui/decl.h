@@ -3,7 +3,7 @@
 #ifdef _WIN32
 #  undef DECLEXPORT
 #  ifdef BUILDING_POCAS_GUI
-#    define DECLEXPORT __declspec(dllexport)
+#    define DECLEXPORT pocaslibs___cdecl __declspec(dllexport)
 #  else
 #    ifdef STATIC_POCAS_GUI
 #      define DECLEXPORT pocaslibs___cdecl
