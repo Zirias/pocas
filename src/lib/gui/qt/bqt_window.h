@@ -39,6 +39,7 @@ private:
     Bqt_Window *m_parent;
     Bqt_EventFilter m_closeFilter;
     bool m_filterClosing;
+    bool m_wasShown;
     static int m_nWindows;
 };
 

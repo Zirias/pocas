@@ -16,7 +16,8 @@ SOLOCAL int Bqt_Window::m_nWindows = 0;
 
 SOLOCAL Bqt_Window::Bqt_Window(PG_Window *w, Bqt_Window *parent)
     : m_qw(parent ? parent->widget() : 0, parent ? Qt::Dialog : Qt::Window),
-      m_mainMenu(0), m_w(w), m_parent(parent), m_filterClosing(true)
+      m_mainMenu(0), m_w(w), m_parent(parent), m_filterClosing(true),
+      m_wasShown(false)
 {
     const PG_PrivateApi *api = PG_qtBackend->privateApi;
     m_qw.installEventFilter(&m_closeFilter);
@@ -33,8 +34,24 @@ SOLOCAL Bqt_Window::Bqt_Window(PG_Window *w, Bqt_Window *parent)
 
 SOLOCAL void Bqt_Window::setShown(bool shown)
 {
-    if (shown) m_qw.show();
-    else m_qw.hide();
+    if (shown)
+    {
+	if (!m_wasShown)
+	{
+	    QWidget *pw = m_qw.parentWidget();
+	    if (pw)
+	    {
+		m_qw.move(pw->window()->frameGeometry().topLeft() +
+			pw->window()->rect().center() - m_qw.rect().center());
+	    }
+	    m_wasShown = true;
+	}
+	m_qw.show();
+    }
+    else
+    {
+	m_qw.hide();
+    }
 }
 
 SOLOCAL void Bqt_Window::setParent(QWidget *parent)
