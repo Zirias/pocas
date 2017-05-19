@@ -33,7 +33,7 @@ SOLOCAL void Bqt_MenuItem::triggered(bool checked)
 SOLOCAL_CDECL int Bqt_MenuItem_create(PG_MenuItem *mi)
 {
     const PG_PrivateApi *api = PG_qtBackend->privateApi;
-    QString text(api->menuItem.text(mi));
+    QString text = QString::fromUtf8(api->menuItem.text(mi));
     Bqt_MenuItem *bmi = new Bqt_MenuItem(mi, text);
     api->setBackendObject(mi, bmi);
     return 1;

@@ -42,7 +42,7 @@ SOLOCAL void Bqt_Button::onClick(bool checked)
 SOLOCAL_CDECL int Bqt_Button_create(PG_Button *b)
 {
     const PG_PrivateApi *api = PG_qtBackend->privateApi;
-    QString text(api->button.text(b));
+    QString text = QString::fromUtf8(api->button.text(b));
     Bqt_Button *bb = new Bqt_Button(b, text);
     api->setBackendObject(b, bb);
     return 1;
@@ -51,7 +51,7 @@ SOLOCAL_CDECL int Bqt_Button_create(PG_Button *b)
 SOLOCAL_CDECL void Bqt_Button_setText(PG_Button *b, const char *text)
 {
     Bqt_Button *bb = (Bqt_Button *)PG_qtBackend->privateApi->backendObject(b);
-    bb->setText(QString(text));
+    bb->setText(QString::fromUtf8(text));
 }
 
 SOLOCAL_CDECL void Bqt_Button_destroy(PG_Button *b)

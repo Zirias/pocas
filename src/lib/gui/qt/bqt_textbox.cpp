@@ -53,7 +53,7 @@ SOLOCAL_CDECL int Bqt_TextBox_create(PG_TextBox *tb, PG_TextBox_textChanged chan
 SOLOCAL_CDECL void Bqt_TextBox_setText(PG_TextBox *tb, const char *text)
 {
     Bqt_TextBox *btb = (Bqt_TextBox *)PG_qtBackend->privateApi->backendObject(tb);
-    btb->setText(text);
+    btb->setText(QString::fromUtf8(text));
 }
 
 SOLOCAL_CDECL void Bqt_TextBox_destroy(PG_TextBox *tb)

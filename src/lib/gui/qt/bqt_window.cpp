@@ -21,7 +21,7 @@ SOLOCAL Bqt_Window::Bqt_Window(PG_Window *w, Bqt_Window *parent)
 {
     const PG_PrivateApi *api = PG_qtBackend->privateApi;
     m_qw.installEventFilter(&m_closeFilter);
-    m_qw.setWindowTitle(QString(api->window.title(w)));
+    m_qw.setWindowTitle(QString::fromUtf8(api->window.title(w)));
     m_qw.resize(api->window.width(w), api->window.height(w));
     connect(&m_closeFilter, SIGNAL(eventOccured(Bqt_EventFilter::FilterArgs*)),
             this, SLOT(onWindowEvent(Bqt_EventFilter::FilterArgs*)));

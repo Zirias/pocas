@@ -34,7 +34,7 @@ SOLOCAL void Bqt_Label::setText(const QString& text)
 SOLOCAL_CDECL int Bqt_Label_create(PG_Label *l)
 {
     const PG_PrivateApi *api = PG_qtBackend->privateApi;
-    QString text(api->label.text(l));
+    QString text = QString::fromUtf8(api->label.text(l));
     Bqt_Label *bl = new Bqt_Label(l, text);
     api->setBackendObject(l, bl);
     return 1;
@@ -43,7 +43,7 @@ SOLOCAL_CDECL int Bqt_Label_create(PG_Label *l)
 SOLOCAL_CDECL void Bqt_Label_setText(PG_Label *l, const char *text)
 {
     Bqt_Label *bl = (Bqt_Label *)PG_qtBackend->privateApi->backendObject(l);
-    bl->setText(QString(text));
+    bl->setText(QString::fromUtf8(text));
 }
 
 SOLOCAL_CDECL void Bqt_Label_destroy(PG_Label *l)
