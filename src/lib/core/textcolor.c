@@ -37,7 +37,9 @@ SOEXPORT int PC_TextColor_fputs(const char *s, FILE *outStream)
 
 SOEXPORT int PC_TextColor_vfprintf(FILE *outStream, const char *format, va_list ap)
 {
-    size_t bufsize = vsnprintf(0, 0, format, ap) + 1;
+    va_list app;
+    va_copy(app, ap);
+    size_t bufsize = vsnprintf(0, 0, format, app) + 1;
     char *buf = malloc(bufsize);
     if (!buf) return -1;
     int result = vsnprintf(buf, bufsize, format, ap);

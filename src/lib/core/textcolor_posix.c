@@ -31,6 +31,7 @@ static const char *ansi[] =
 static const char *ansiTerms[] =
 {
     "xterm",
+    "rxvt",
     "vt100",
     "linux",
     "screen",
@@ -64,7 +65,7 @@ SOEXPORT void PC_TextColor_use(PC_TextColor color, FILE *outStream)
     int outFd = fileno(outStream);
     struct stat st;
 
-    if (isatty(outStream) && isAnsiTerm())
+    if (isatty(outFd) && isAnsiTerm())
     {
         doColor = 1;
     }
