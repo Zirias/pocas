@@ -179,10 +179,15 @@ int main(int argc, char **argv)
     if (interactive)
     {
         PC_List_destroy(positionalArgs);
+#ifdef NO_GUI
+        fputs("This version of pocastest is built without GUI support.\n", stderr);
+        return EXIT_FAILURE;
+#else
         Gui *gui = Gui_create();
         int rc = Gui_run(gui);
         Gui_destroy(gui);
         return rc;
+#endif
     }
 
     if (preprocess)

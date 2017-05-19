@@ -20,22 +20,32 @@ undefine WITH_DEFAULT_GUI_BACKEND
 else
 ifeq ($(filter $(WITH_DEFAULT_GUI_BACKEND),$(AVAILABLE_GUI_BACKENDS)),)
 $(error WITH_DEFAULT_GUI_BACKEND=$(WITH_DEFAULT_GUI_BACKEND) unknown, \
-available backends are: $(AVAILABLE_GUI_BACKENDS))
+available backends are: $(AVAILABLE_GUI_BACKENDS).)
 endif
 WITH_GUI_$(call toupper,$(WITH_DEFAULT_GUI_BACKEND)):= 1
 endif
 
 ifeq ($(WITH_GUI_WINAPI),1)
 ifneq ($(PLATFORM),win32)
-$(error The winapi gui backend is only available for the win32 platform)
+$(error The winapi gui backend is only available for the win32 platform.)
 endif
 WITH_DEFAULT_GUI_BACKEND ?= winapi
 $(call zinc, winapi/winapi.mk)
+else
+ifeq ($(WITH_DEFAULT_GUI_BACKEND),winapi)
+$(warning Ignoring WITH_DEFAULT_GUI_BACKEND=winapi because WITH_GUI_WINAPI is not set to 1.)
+undefine WITH_DEFAULT_GUI_BACKEND
+endif
 endif
 
 ifeq ($(WITH_GUI_QT),1)
 WITH_DEFAULT_GUI_BACKEND ?= qt
 $(call zinc, qt/qt.mk)
+else
+ifeq ($(WITH_DEFAULT_GUI_BACKEND),qt)
+$(warning Ignoring WITH_DEFAULT_GUI_BACKEND=qt because WITH_GUI_QT is not set to 1.)
+undefine WITH_DEFAULT_GUI_BACKEND
+endif
 endif
 
 ifdef WITH_DEFAULT_GUI_BACKEND
