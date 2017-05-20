@@ -8,3 +8,12 @@ pocascore_V_MAJ:= 0
 pocascore_V_MIN:= 0
 pocascore_V_REV:= 1
 $(call librules, pocascore)
+
+ifeq ($(PLATFORM),posix)
+pocascore_LIBS_STATIC:= dl
+endif
+
+ifeq ($(PLATFORM),win32)
+pocascore_LIBS_STATIC:= pthread
+endif
+
