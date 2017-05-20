@@ -4,7 +4,7 @@ pocastest_DEFINES:= -DBUILDING_POCAS_TEST
 ifeq ($(WITH_DEFAULT_GUI_BACKEND),winapi)
 pocastest_MODULES+= gui
 pocastest_DEFINES+= -DSTATIC_POCAS_CORE -DSTATIC_POCAS_GUI
-pocastest_STATICDEPS:= pocascore pocasgui
+pocastest_STATICDEPS:= pocascore pocasgui $(pocasgui_DEPS)
 pocastest_STATICLIBS:= pocascore pocasgui $(pocascore_LIBS_STATIC)\
 	$(pocasgui_LIBS_STATIC)
 else
