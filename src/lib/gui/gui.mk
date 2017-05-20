@@ -10,6 +10,10 @@ pocasgui_V_MAJ:= 0
 pocasgui_V_MIN:= 0
 pocasgui_V_REV:= 1
 
+ifeq ($(PLATFORM),win32)
+pocasgui_LIBS_STATIC:= pthread
+endif
+
 AVAILABLE_GUI_BACKENDS:= qt
 ifeq ($(PLATFORM),win32)
 AVAILABLE_GUI_BACKENDS+= winapi
@@ -49,9 +53,10 @@ endif
 endif
 
 ifdef WITH_DEFAULT_GUI_BACKEND
-pocasgui_DEPS += pocasgui_$(WITH_DEFAULT_GUI_BACKEND) $(pocasgui_$(WITH_DEFAULT_GUI_BACKEND)_DEPS)
-pocasgui_LIBS += pocasgui_$(WITH_DEFAULT_GUI_BACKEND) $(pocasgui_$(WITH_DEFAULT_GUI_BACKEND)_LIBS)
-pocasgui_STATICDEPS += $(pocasgui_$(WITH_DEFAULT_GUI_BACKEND)_STATICDEPS)
+pocasgui_DEPS += pocasgui_$(WITH_DEFAULT_GUI_BACKEND)
+pocasgui_LIBS += pocasgui_$(WITH_DEFAULT_GUI_BACKEND)
+pocasgui_LIBS_STATIC += pocasgui_$(WITH_DEFAULT_GUI_BACKEND) \
+	$(pocasgui_$(WITH_DEFAULT_GUI_BACKEND)_LIBS_STATIC)
 pocasgui_STATICLIBS += $(pocasgui_$(WITH_DEFAULT_GUI_BACKEND)_STATICLIBS)
 pocasgui_DEFINES += -DDEFAULT_GUI_BACKEND=$(WITH_DEFAULT_GUI_BACKEND)
 pocasgui_CFLAGS_STATIC += -DSTATIC_POCAS_GUI_$(call toupper,$(WITH_DEFAULT_GUI_BACKEND))
