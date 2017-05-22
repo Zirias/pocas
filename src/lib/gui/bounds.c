@@ -1,13 +1,5 @@
 #include <pocas/gui/bounds.h>
 
-SOEXPORT int PG_Bounds_equals(const PG_Bounds *self, const PG_Bounds *other)
-{
-    return (self->height == other->height
-            && self->width == other->width
-            && self->x == other->x
-            && self->y == other->y);
-}
-
 SOEXPORT void PG_Bounds_fitInto(PG_Bounds *self, const PG_Bounds *into)
 {
         if (self->width > into->width)

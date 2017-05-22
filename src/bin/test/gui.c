@@ -147,7 +147,7 @@ SOLOCAL Gui *Gui_create(void)
     self->vbox = PG_BoxLayout_create(PG_BO_Vertical, 1);
     self->hbox = PG_BoxLayout_create(PG_BO_Horizontal, 1);
 
-    PG_Extents margin = {2,2,2,2};
+    PG_Extents margin = PG_Extents_init(2,2,2,2);
 
     self->test1Label = PG_Label_create(PG_LS_Center, "(1) This is a test!");
     PG_Control_show(self->test1Label);
