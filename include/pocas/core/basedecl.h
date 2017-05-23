@@ -11,7 +11,7 @@
 #  define pocaslibs___cdecl extern "C"
 #  define DECLDATA
 #  define C_CLASS_DECL(t) struct t
-#  define C_ENUM_DECL(t) enum t
+#  define C_ENUM_DECL(t) enum t##__cppdecl_dummy { }
 #else
 #  define pocaslibs___cdecl
 #  define DECLDATA extern
