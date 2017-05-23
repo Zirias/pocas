@@ -5,6 +5,7 @@
 
 C_CLASS_DECL(PC_Event);
 
+C_CLASS_DECL(PG_Size);
 C_CLASS_DECL(PG_Bounds);
 C_CLASS_DECL(PG_Extents);
 
@@ -44,10 +45,8 @@ DECLEXPORT void PG_Control_margin(const void *self, PG_Extents *e);
 DECLEXPORT void PG_Control_setMargin(void *self, const PG_Extents *e);
 DECLEXPORT void PG_Control_padding(const void *self, PG_Extents *e);
 DECLEXPORT void PG_Control_setPadding(void *self, const PG_Extents *e);
-DECLEXPORT unsigned int PG_Control_minWidth(const void *self);
-DECLEXPORT unsigned int PG_Control_minHeight(const void *self);
-DECLEXPORT void PG_Control_setMinSize(void *self,
-        unsigned int minWidth, unsigned int minHeight);
+DECLEXPORT void PG_Control_minSize(const void *self, PG_Size *s);
+DECLEXPORT void PG_Control_setMinSize(void *self, const PG_Size *s);
 
 DECLEXPORT int PG_Control_shown(const void *self);
 DECLEXPORT void PG_Control_setShown(void *self, int shown);

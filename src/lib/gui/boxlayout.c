@@ -8,6 +8,8 @@
 #include <pocas/gui/container.h>
 #include <pocas/gui/control.h>
 #include <pocas/gui/extents.h>
+#include <pocas/gui/size.h>
+
 #include <pocas/gui/boxlayout.h>
 
 #include "internal.h"
@@ -34,19 +36,22 @@ static void updateElementsBounds(PG_BoxLayout *self, PG_Bounds *b)
     eb.x = b->x;
     eb.y = b->y;
     PG_Extents em;
+    PG_Size ems, ms;
+    PG_Control_minSize(self, &ms);
     PC_ListIterator *ei = PC_List_iterator(self->elements);
     while (PC_ListIterator_moveNext(ei))
     {
         GuiClass *lbe = PC_ListIterator_current(ei);
         void *control = PG_Container_control(lbe);
         PG_Control_margin(control, &em);
+        PG_Control_minSize(control, &ems);
         if (self->orientation == PG_BO_Vertical && self->expand)
         {
-            eb.width = PG_Control_minWidth(self);
+            eb.width = ms.width;
         }
         else
         {
-            eb.width = PG_Control_minWidth(control) + em.left + em.right;
+            eb.width = ems.width + em.left + em.right;
         }
         if (eb.x + eb.width > b->x + b->width)
         {
@@ -55,11 +60,11 @@ static void updateElementsBounds(PG_BoxLayout *self, PG_Bounds *b)
         }
         if (self->orientation == PG_BO_Horizontal && self->expand)
         {
-            eb.height = PG_Control_minHeight(self);
+            eb.height = ms.height;
         }
         else
         {
-            eb.height = PG_Control_minHeight(control) + em.top + em.bottom;
+            eb.height = ems.height + em.top + em.bottom;
         }
         if (eb.y + eb.height > b->y + b->height)
         {
@@ -81,29 +86,32 @@ static void updateElementsBounds(PG_BoxLayout *self, PG_Bounds *b)
 
 static void updateContentSize(PG_BoxLayout *self)
 {
-    unsigned int minWidth = 0;
-    unsigned int minHeight = 0;
+    PG_Size contentSize = PG_Size_init(0,0);
     PC_ListIterator *ci = PC_List_iterator(self->controls);
     while (PC_ListIterator_moveNext(ci))
     {
         void *c = PC_ListIterator_current(ci);
         PG_Extents cm;
+        PG_Size cs;
         PG_Control_margin(c, &cm);
+        PG_Control_minSize(c, &cs);
         if (self->orientation == PG_BO_Horizontal)
         {
-            minWidth += PG_Control_minWidth(c) + cm.left + cm.right;
-            unsigned int cmh = PG_Control_minHeight(c) + cm.top + cm.bottom;
-            minHeight = cmh > minHeight ? cmh : minHeight;
+            contentSize.width += cs.width + cm.left + cm.right;
+            int cmh = cs.height + cm.top + cm.bottom;
+            contentSize.height = cmh > contentSize.height
+                    ? cmh : contentSize.height;
         }
         else
         {
-            minHeight += PG_Control_minHeight(c) + cm.top + cm.bottom;
-            unsigned int cmw = PG_Control_minWidth(c) + cm.left + cm.right;
-            minWidth = cmw > minWidth ? cmw : minWidth;
+            contentSize.height += cs.height + cm.top + cm.bottom;
+            int cmw = cs.width + cm.left + cm.right;
+            contentSize.width = cmw > contentSize.width
+                    ? cmw : contentSize.width;
         }
     }
     PC_ListIterator_destroy(ci);
-    privateApi.control.setContentSize(self, minWidth, minHeight);
+    privateApi.control.setContentSize(self, &contentSize);
 }
 
 static void onElementMinSizeChanged(void *selfPtr, PC_EventArgs *args)
@@ -162,9 +170,11 @@ static void onContainerChanged(void *selfPtr, PC_EventArgs *args)
 
 static void onResized(void *selfPtr, PC_EventArgs *args)
 {
+    (void)args;
     PG_BoxLayout *self = selfPtr;
-    PG_Bounds *b = args->evInfo;
-    updateElementsBounds(self, b);
+    PG_Bounds b;
+    PG_Control_bounds(self, &b);
+    updateElementsBounds(self, &b);
 }
 
 SOEXPORT PG_BoxLayout *PG_BoxLayout_create(PG_BoxOrientation orientation, int expand)

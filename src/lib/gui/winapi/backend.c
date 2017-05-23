@@ -483,27 +483,29 @@ static PG_MessageBoxButton B_MessageBox_show(const PG_Window *w, const char *tit
 static void BOTXT_measure(void *self)
 {
     BOTXT *bt = PG_winapiBackend->privateApi->backendObject(self);
-    SIZE size;
+    PG_Size size;
     if (bt->bo.t == BT_Button)
     {
-        size.cx = bdata.buttonWidth;
-        size.cy = bdata.textControlHeight;
+        size.width = bdata.buttonWidth;
+        size.height = bdata.textControlHeight;
     }
     else if (bt->text)
     {
+        SIZE waSize;
         HDC dc = GetDC(bt->bo.w);
         HGDIOBJ oldFont = SelectObject(dc, (HGDIOBJ) bdata.messageFont);
-        GetTextExtentExPointW(dc, bt->text, wcslen(bt->text), 0, 0, 0, &size);
+        GetTextExtentExPointW(dc, bt->text, wcslen(bt->text), 0, 0, 0, &waSize);
         SelectObject(dc, oldFont);
         ReleaseDC(bt->bo.w, dc);
+        size.width = (int) waSize.cx;
+        size.height = (int) waSize.cy;
     }
     else
     {
-        size.cx = 0;
-        size.cy = 0;
+        size.width = 0;
+        size.height = 0;
     }
-    PG_winapiBackend->privateApi->control.setContentSize(self,
-            size.cx, size.cy);
+    PG_winapiBackend->privateApi->control.setContentSize(self, &size);
 }
 
 static void BOTXT_updateText(void *self, const char *text)
@@ -656,8 +658,8 @@ static int B_TextBox_create(PG_TextBox *self, PG_TextBox_textChanged changed)
     bt->changed = changed;
     PG_winapiBackend->privateApi->setBackendObject(self, bt);
     bt->id = registerControl((BO *)bt);
-    PG_winapiBackend->privateApi->control.setContentSize(
-                self, textBoxWidth, bdata.textControlHeight);
+    PG_Size size = PG_Size_init(textBoxWidth, bdata.textControlHeight);
+    PG_winapiBackend->privateApi->control.setContentSize(self, &size);
     return 1;
 }
 

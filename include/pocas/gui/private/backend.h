@@ -13,8 +13,7 @@ struct PG_IPrivateControl
     int (*shown)(const void *self);
     void (*setShown)(void *self, int shown);
     void (*setContainer)(void *self, void *container);
-    void (*setContentSize)(void *self,
-            unsigned int width, unsigned int height);
+    void (*setContentSize)(void *self, const PG_Size *s);
     void (*destroy)(void *self);
 };
 

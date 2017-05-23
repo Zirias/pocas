@@ -12,6 +12,8 @@
 #include <pocas/gui/label.h>
 #include <pocas/gui/menu.h>
 #include <pocas/gui/messagebox.h>
+#include <pocas/gui/point.h>
+#include <pocas/gui/size.h>
 #include <pocas/gui/textbox.h>
 #include <pocas/gui/window.h>
 

@@ -7,6 +7,7 @@
 #include <pocas/gui/bounds.h>
 #include <pocas/gui/container.h>
 #include <pocas/gui/extents.h>
+#include <pocas/gui/size.h>
 #include "control_internal.h"
 #include "internal.h"
 
@@ -19,10 +20,8 @@ typedef struct PG_Control
     PG_Extents padding;
     int shown;
     int enabled;
-    unsigned int minWidth;
-    unsigned int minHeight;
-    unsigned int contentWidth;
-    unsigned int contentHeight;
+    PG_Size minSize;
+    PG_Size contentSize;
     PC_Event *resized;
     PC_Event *shownChanged;
     PC_Event *containerChanged;
@@ -39,6 +38,7 @@ SOLOCAL int PG_Control_create(void *self)
         return 0;
     }
     c->enabled = 1;
+    PG_Size_setInvalid(&c->minSize);
     c->resized = PC_Event_create("resized");
     c->shownChanged = PC_Event_create("shownChanged");
     c->containerChanged = PC_Event_create("containerChanged");
@@ -103,12 +103,20 @@ SOEXPORT void PG_Control_bounds(const void *self, PG_Bounds *b)
 SOEXPORT void PG_Control_setBounds(void *self, const PG_Bounds *b)
 {
     PG_Control *c = privateApi.controlObject(self);
-    memcpy(&c->bounds, b, sizeof(PG_Bounds));
+    if (PG_Bounds_equals(b, &c->bounds)) return;
     if (c->container)
     {
         PG_Bounds cb;
+        PG_Bounds nb;
         PG_Container_bounds(c->container, &cb);
-        PG_Bounds_fitInto(&c->bounds, &cb);
+        memcpy(&nb, b, sizeof(PG_Bounds));
+        PG_Bounds_fitInto(&nb, &cb);
+        if (PG_Bounds_equals(&nb, &c->bounds)) return;
+        memcpy(&c->bounds, &nb, sizeof(PG_Bounds));
+    }
+    else
+    {
+        memcpy(&c->bounds, b, sizeof(PG_Bounds));
     }
     const PG_Backend *be = PG_Backend_current();
     if (be->backendApi.control.setBounds)
@@ -135,18 +143,14 @@ SOEXPORT void PG_Control_padding(const void *self, PG_Extents *e)
     memcpy(e, &c->padding, sizeof(PG_Extents));
 }
 
-static void fireEventIfMinSizeChanged(void *self,
-        unsigned int width, unsigned int height)
+static void fireEventIfMinSizeChanged(void *self, PG_Size *oldMinSize)
 {
     PG_Control *c = privateApi.controlObject(self);
-    PG_Bounds msb;
-    msb.x = 0;
-    msb.y = 0;
-    msb.width = PG_Control_minWidth(self);
-    msb.height = PG_Control_minHeight(self);
-    if (msb.width != width || msb.height != height)
+    PG_Size newMinSize;
+    PG_Control_minSize(self, &newMinSize);
+    if (!PG_Size_equals(oldMinSize, &newMinSize))
     {
-        PC_EventArgs args = PC_EventArgs_init(c->minSizeChanged, self, &msb);
+        PC_EventArgs args = PC_EventArgs_init(c->minSizeChanged, self, &newMinSize);
         PC_Event_raise(c->minSizeChanged, &args);
     }
 }
@@ -154,46 +158,47 @@ static void fireEventIfMinSizeChanged(void *self,
 SOEXPORT void PG_Control_setPadding(void *self, const PG_Extents *e)
 {
     PG_Control *c = privateApi.controlObject(self);
-    unsigned int currentMinWidth = PG_Control_minWidth(self);
-    unsigned int currentMinHeight = PG_Control_minHeight(self);
+    PG_Size currentMinSize;
+    PG_Control_minSize(self, &currentMinSize);
     memcpy(&c->padding, e, sizeof(PG_Extents));
-    fireEventIfMinSizeChanged(self, currentMinWidth, currentMinHeight);
+    fireEventIfMinSizeChanged(self, &currentMinSize);
 }
 
-SOEXPORT unsigned int PG_Control_minWidth(const void *self)
+SOEXPORT void PG_Control_minSize(const void *self, PG_Size *s)
 {
     PG_Control *c = privateApi.controlObject(self);
-    return c->minWidth ? c->minWidth :
-            (c->contentWidth + c->padding.left + c->padding.right);
+    if (PG_Size_valid(&c->minSize))
+    {
+        memcpy(s, &c->minSize, sizeof(PG_Size));
+    }
+    else if (PG_Size_valid(&c->contentSize))
+    {
+        s->width = c->contentSize.width + c->padding.left + c->padding.right;
+        s->height = c->contentSize.height + c->padding.top + c->padding.bottom;
+    }
+    else
+    {
+        s->width = c->padding.left + c->padding.right;
+        s->height = c->padding.top + c->padding.bottom;
+    }
 }
 
-SOEXPORT unsigned int PG_Control_minHeight(const void *self)
+SOEXPORT void PG_Control_setMinSize(void *self, const PG_Size *s)
 {
     PG_Control *c = privateApi.controlObject(self);
-    return c->minHeight ? c->minHeight :
-            (c->contentHeight + c->padding.top + c->padding.bottom);
+    PG_Size currentMinSize;
+    PG_Control_minSize(self, &currentMinSize);
+    memcpy(&c->minSize, s, sizeof(PG_Size));
+    fireEventIfMinSizeChanged(self, &currentMinSize);
 }
 
-SOEXPORT void PG_Control_setMinSize(void *self,
-        unsigned int minWidth, unsigned int minHeight)
+SOLOCAL void PG_Control_setContentSize(void *self, const PG_Size *s)
 {
     PG_Control *c = privateApi.controlObject(self);
-    unsigned int currentMinWidth = PG_Control_minWidth(self);
-    unsigned int currentMinHeight = PG_Control_minHeight(self);
-    c->minWidth = minWidth;
-    c->minHeight = minHeight;
-    fireEventIfMinSizeChanged(self, currentMinWidth, currentMinHeight);
-}
-
-SOLOCAL void PG_Control_setContentSize(void *self,
-        unsigned int width, unsigned int height)
-{
-    PG_Control *c = privateApi.controlObject(self);
-    unsigned int currentMinWidth = PG_Control_minWidth(self);
-    unsigned int currentMinHeight = PG_Control_minHeight(self);
-    c->contentWidth = width;
-    c->contentHeight = height;
-    fireEventIfMinSizeChanged(self, currentMinWidth, currentMinHeight);
+    PG_Size currentMinSize;
+    PG_Control_minSize(self, &currentMinSize);
+    memcpy(&c->contentSize, s, sizeof(PG_Size));
+    fireEventIfMinSizeChanged(self, &currentMinSize);
 }
 
 SOEXPORT int PG_Control_shown(const void *self)
@@ -240,13 +245,14 @@ SOEXPORT void PG_Control_focus(void *self)
 static void updateBounds(void *self, PG_Bounds *nb)
 {
     PG_Control *c = privateApi.controlObject(self);
+    nb->x += c->margin.left;
+    nb->y += c->margin.top;
+    nb->width = nb->width > c->margin.left + c->margin.right ?
+                nb->width - c->margin.left - c->margin.right : 0;
+    nb->height = nb->height > c->margin.top + c->margin.bottom ?
+                nb->height - c->margin.top - c->margin.bottom : 0;
+    if (PG_Bounds_equals(nb, &c->bounds)) return;
     memcpy(&c->bounds, nb, sizeof(PG_Bounds));
-    c->bounds.x += c->margin.left;
-    c->bounds.y += c->margin.top;
-    c->bounds.width = c->bounds.width > c->margin.left + c->margin.right ?
-                c->bounds.width - c->margin.left - c->margin.right : 0;
-    c->bounds.height = c->bounds.height > c->margin.top + c->margin.bottom ?
-                c->bounds.height - c->margin.top - c->margin.bottom : 0;
     const PG_Backend *b = PG_Backend_current();
     if (b->backendApi.control.setBounds)
         b->backendApi.control.setBounds(self, &c->bounds);
@@ -270,15 +276,17 @@ SOLOCAL void PG_Control_setContainer(void *self, void *container)
                          self, containerResized);
     }
     c->container = container;
-    if (!container) return;
     const PG_Backend *b = PG_Backend_current();
     if (b->backendApi.control.setContainer)
         b->backendApi.control.setContainer(self, container);
-    PC_Event_register(PG_Container_resizedEvent(c->container),
-                   self, containerResized);
-    PG_Bounds cb;
-    PG_Container_bounds(container, &cb);
-    updateBounds(self, &cb);
+    if (c->container)
+    {
+        PC_Event_register(PG_Container_resizedEvent(c->container),
+                       self, containerResized);
+        PG_Bounds cb;
+        PG_Container_bounds(container, &cb);
+        updateBounds(self, &cb);
+    }
     PC_EventArgs args = PC_EventArgs_init(c->containerChanged, self, container);
     PC_Event_raise(c->containerChanged, &args);
 }

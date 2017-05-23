@@ -12,12 +12,21 @@ struct PG_Size
     int height;
 };
 
-#define PG_Size_widthValid(s) ((s)->width > INT_MIN)
-#define PG_Size_heightValid(s) ((s)->height > INT_MIN)
-#define PG_Size_valid(s) (PG_Size_widthValid((s)) && PG_Size_heightValid((s)))
-#define PG_Size_equals(s, other) ((s)->width == (other)->width && (s)->height == (other)->height)
+#define PG_Size_invalidHeight INT_MIN
+#define PG_Size_invalidWidth INT_MIN
+#define PG_Size_invalidSize \
+    {.width=PG_Size_invalidWidth, .height=PG_Size_invalidHeight}
 
-#define PG_Size_init(w, h) {.width=(w), .height=(h)}
-#define PG_Size_invalidSize {INT_MIN, INT_MIN}
+#define PG_Size_widthValid(s) ((s)->width != PG_Size_invalidWidth)
+#define PG_Size_heightValid(s) ((s)->height != PG_Size_invalidHeight)
+#define PG_Size_valid(s) (PG_Size_widthValid((s)) && PG_Size_heightValid((s)))
+#define PG_Size_setInvalid(s) do { \
+    (s)->width = PG_Size_invalidWidth; \
+    (s)->height = PG_Size_invalidHeight; \
+    } while (0)
+#define PG_Size_equals(s, other) \
+    ((s)->width == (other)->width && (s)->height == (other)->height)
+
+#define PG_Size_init(iwidth, iheight) {.width=(iwidth), .height=(iheight)}
 
 #endif

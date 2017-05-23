@@ -166,10 +166,12 @@ SOLOCAL Gui *Gui_create(void)
     PG_Control_setMargin(self->test2Label, &margin);
     PG_BoxLayout_addControl(self->hbox, self->test2Label);
 
+    PG_Size minSize = PG_Size_init(0, 40);
+
     self->boundsLabel = PG_Label_create(PG_LS_AlignRight|PG_LS_VCenter, 0);
     PG_Control_show(self->boundsLabel);
     PG_Control_setMargin(self->boundsLabel, &margin);
-    PG_Control_setMinSize(self->boundsLabel, 0, 40);
+    PG_Control_setMinSize(self->boundsLabel, &minSize);
     PG_BoxLayout_addControl(self->vbox, self->boundsLabel);
     PG_BoxLayout_addControl(self->vbox, self->hbox);
 
@@ -204,7 +206,9 @@ SOLOCAL Gui *Gui_create(void)
     PG_BoxLayout_addControl(self->dlgBox, self->dlgLabel);
     self->dlgTextBox = PG_TextBox_create(PG_TBS_Normal);
     PG_Control_show(self->dlgTextBox);
-    PG_Control_setMinSize(self->dlgTextBox, 200, 0);
+    minSize.width = 200;
+    minSize.height = 0;
+    PG_Control_setMinSize(self->dlgTextBox, &minSize);
     PG_Control_setMargin(self->dlgTextBox, &margin);
     PG_BoxLayout_addControl(self->dlgBox, self->dlgTextBox);
     self->dlgButton = PG_Button_create(PG_BS_Default, "Apply");
