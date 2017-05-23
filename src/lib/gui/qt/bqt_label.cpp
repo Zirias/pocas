@@ -6,7 +6,8 @@ SOLOCAL Bqt_Label::Bqt_Label(PG_Label *l, const QString& text)
 {
     const PG_PrivateApi *api = PG_qtBackend->privateApi;
     QSize minSize = m_ql.minimumSizeHint();
-    api->control.setContentSize(l, minSize.width(), minSize.height());
+    PG_Size pgMinSize = PG_Size_init(minSize.width(), minSize.height());
+    api->control.setContentSize(l, &pgMinSize);
     PG_LabelStyle style = api->label.style(l);
     Qt::Alignment align = 0;
     if (style & PG_LS_AlignBottom) align |= Qt::AlignBottom;
@@ -33,8 +34,8 @@ SOLOCAL void Bqt_Label::setText(const QString& text)
 {
     m_ql.setText(text);
     QSize minSize = m_ql.minimumSizeHint();
-    PG_qtBackend->privateApi->control.setContentSize(
-                m_l, minSize.width(), minSize.height());
+    PG_Size pgMinSize = PG_Size_init(minSize.width(), minSize.height());
+    PG_qtBackend->privateApi->control.setContentSize(m_l, &pgMinSize);
 }
 
 SOLOCAL_CDECL int Bqt_Label_create(PG_Label *l)

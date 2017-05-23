@@ -87,7 +87,11 @@ SOLOCAL_CDECL void Bqt_Control_setContainer(void *control, void *container)
 SOLOCAL_CDECL void Bqt_Control_setBounds(void *control, const PG_Bounds *b)
 {
     Bqt_Control *c = (Bqt_Control *)PG_qtBackend->privateApi->backendObject(control);
-    if (c) c->setGeometry(QRect(b->x, b->y, b->width, b->height));
+    if (c)
+    {
+        c->setGeometry(QRect(b->topLeft.x, b->topLeft.y,
+                b->size.width, b->size.height));
+    }
 }
 
 SOLOCAL_CDECL void Bqt_Control_focus(void *control)

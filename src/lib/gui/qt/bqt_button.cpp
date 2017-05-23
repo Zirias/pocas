@@ -8,7 +8,8 @@ SOLOCAL Bqt_Button::Bqt_Button(PG_Button *b, const QString& text)
     if (api->button.style(b) == PG_BS_Default) m_qb.setDefault(true);
     connect(&m_qb, SIGNAL(clicked(bool)), this, SLOT(onClick(bool)));
     QSize minSize = m_qb.minimumSizeHint();
-    api->control.setContentSize(b, minSize.width(), minSize.height());
+    PG_Size pgMinSize = PG_Size_init(minSize.width(), minSize.height());
+    api->control.setContentSize(b, &pgMinSize);
 }
 
 SOLOCAL void Bqt_Button::setParent(QWidget *parent)
@@ -28,8 +29,8 @@ SOLOCAL void Bqt_Button::setText(const QString& text)
 {
     m_qb.setText(text);
     QSize minSize = m_qb.minimumSizeHint();
-    PG_qtBackend->privateApi->control.setContentSize(
-                m_b, minSize.width(), minSize.height());
+    PG_Size pgMinSize = PG_Size_init(minSize.width(), minSize.height());
+    PG_qtBackend->privateApi->control.setContentSize(m_b, &pgMinSize);
 }
 
 SOLOCAL void Bqt_Button::onClick(bool checked)

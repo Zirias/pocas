@@ -38,8 +38,13 @@ struct PG_Extents
 };
 #endif
 
+#ifdef __cplusplus
+#define PG_Extents_invalidExtents \
+    {PG_Point_invalidPoint, PG_Point_invalidPoint}
+#else
 #define PG_Extents_invalidExtents \
     {.topLeft=PG_Point_invalidPoint, .bottomRight=PG_Point_invalidPoint}
+#endif
 
 #define PG_Extents_valid(e) (PG_Point_valid(&((e)->topLeft)) \
     && PG_Point_valid(&((e)->bottomRight)))
@@ -57,8 +62,14 @@ struct PG_Extents
     (b)->size.height = (e)->bottomRight.y - (e)->topLeft.y; \
     } while (0)
 
+#ifdef __cplusplus
+#define PG_Extents_init(ileft, itop, iright, ibottom) { \
+    PG_Point_init((ileft),(itop)), \
+    PG_Point_init((iright),(ibottom)) }
+#else
 #define PG_Extents_init(ileft, itop, iright, ibottom) { \
     .topLeft=PG_Point_init((ileft),(itop)), \
     .bottomRight=PG_Point_init((iright),(ibottom)) }
+#endif
 
 #endif

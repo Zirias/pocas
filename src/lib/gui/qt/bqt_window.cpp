@@ -148,19 +148,19 @@ SOLOCAL void Bqt_Window::close()
 
 void Bqt_Window::updateContainerSize()
 {
-    PG_Bounds wb = { 0, 0, (unsigned)m_qw.width(), (unsigned)m_qw.height() };
+    PG_Bounds wb = { 0, 0, m_qw.width(), m_qw.height() };
     if (m_mainMenu)
     {
         QSize hintedMenuSize = m_mainMenu->sizeHint();
         int menuHeight = hintedMenuSize.height();
-        wb.y += menuHeight;
-        if (menuHeight > (int)wb.height)
+        wb.topLeft.y += menuHeight;
+        if (menuHeight > wb.size.height)
         {
-            wb.height = 0;
+            wb.size.height = 0;
         }
         else
         {
-            wb.height -= menuHeight;
+            wb.size.height -= menuHeight;
         }
         m_mainMenu->resize(m_qw.width(), menuHeight);
     }

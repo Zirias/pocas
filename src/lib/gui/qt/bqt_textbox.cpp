@@ -10,7 +10,8 @@ SOLOCAL Bqt_TextBox::Bqt_TextBox(PG_TextBox *tb, PG_TextBox_textChanged changed)
     connect(&m_qle, SIGNAL(textChanged(QString)),
             this, SLOT(textChanged(QString)));
     QSize size = m_qle.sizeHint();
-    api->control.setContentSize(tb, textBoxWidth, size.height());
+    PG_Size pgSize = PG_Size_init(textBoxWidth, size.height());
+    api->control.setContentSize(tb, &pgSize);
 }
 
 SOLOCAL void Bqt_TextBox::setParent(QWidget *parent)

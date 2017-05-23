@@ -14,7 +14,11 @@ struct PG_Point
 
 #define PG_Point_invalidX INT_MIN
 #define PG_Point_invalidY INT_MIN
+#ifdef __cplusplus
+#define PG_Point_invalidPoint {PG_Point_invalidX, PG_Point_invalidY}
+#else
 #define PG_Point_invalidPoint {.x=PG_Point_invalidX, .y=PG_Point_invalidY}
+#endif
 
 #define PG_Point_xValid(p) ((p)->x != PG_Point_invalidX)
 #define PG_Point_yValid(p) ((p)->y != PG_Point_invalidY)
@@ -26,6 +30,10 @@ struct PG_Point
 #define PG_Point_equals(p, other) \
     ((p)->x == (other)->x && (p)->y == (other)->y)
 
+#ifdef __cplusplus
+#define PG_Point_init(ix, iy) {(ix), (iy)}
+#else
 #define PG_Point_init(ix, iy) {.x=(ix), .y=(iy)}
+#endif
 
 #endif
