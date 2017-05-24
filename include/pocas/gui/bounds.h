@@ -44,7 +44,7 @@ struct PG_Bounds
     {PG_Point_invalidPoint, PG_Size_invalidSize}
 #else
 #define PG_Bounds_invalidBounds \
-    {.topLeft=PG_Point_invalidPoint, .size=PG_Size_invalidSize}
+    {{{.topLeft=PG_Point_invalidPoint, .size=PG_Size_invalidSize}}}
 #endif
 
 #define PG_Bounds_valid(b) (PG_Point_valid(&((b)->topLeft)) \
@@ -68,9 +68,9 @@ struct PG_Bounds
     PG_Point_init((ix),(iy)), \
     PG_Size_init((iwidth),(iheight)) }
 #else
-#define PG_Bounds_init(ix, iy, iwidth, iheight) { \
+#define PG_Bounds_init(ix, iy, iwidth, iheight) {{{ \
     .topLeft=PG_Point_init((ix),(iy)), \
-    .size=PG_Size_init((iwidth),(iheight)) }
+    .size=PG_Size_init((iwidth),(iheight)) }}}
 #endif
 
 #ifndef POCAS_GUI_PRIVATE

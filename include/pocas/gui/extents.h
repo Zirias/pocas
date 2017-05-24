@@ -43,7 +43,7 @@ struct PG_Extents
     {PG_Point_invalidPoint, PG_Point_invalidPoint}
 #else
 #define PG_Extents_invalidExtents \
-    {.topLeft=PG_Point_invalidPoint, .bottomRight=PG_Point_invalidPoint}
+    {{{.topLeft=PG_Point_invalidPoint, .bottomRight=PG_Point_invalidPoint}}}
 #endif
 
 #define PG_Extents_valid(e) (PG_Point_valid(&((e)->topLeft)) \
@@ -67,9 +67,9 @@ struct PG_Extents
     PG_Point_init((ileft),(itop)), \
     PG_Point_init((iright),(ibottom)) }
 #else
-#define PG_Extents_init(ileft, itop, iright, ibottom) { \
+#define PG_Extents_init(ileft, itop, iright, ibottom) {{{ \
     .topLeft=PG_Point_init((ileft),(itop)), \
-    .bottomRight=PG_Point_init((iright),(ibottom)) }
+    .bottomRight=PG_Point_init((iright),(ibottom)) }}}
 #endif
 
 #endif
