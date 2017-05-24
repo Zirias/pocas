@@ -166,6 +166,9 @@ static void onContainerChanged(void *selfPtr, PC_EventArgs *args)
         privateApi.control.setContainer(control, container);
     }
     PC_ListIterator_destroy(ci);
+    PG_Bounds b;
+    PG_Control_bounds(self, &b);
+    updateElementsBounds(self, &b);
 }
 
 static void onResized(void *selfPtr, PC_EventArgs *args)
