@@ -42,4 +42,7 @@ pocasgui_qt_PREPROCFLAGS= -p.
 pocasgui_qt_V_MAJ:= 0
 pocasgui_qt_V_MIN:= 0
 pocasgui_qt_V_REV:= 1
+pocasgui_qt_HEADERS_INSTALL:= qt
+pocasgui_qt_HEADERDIR:= include/pocas/gui/backend
+pocasgui_qt_HEADERTGTDIR:= $(includedir)/pocas/gui/backend
 $(call librules, pocasgui_qt)

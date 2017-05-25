@@ -63,4 +63,11 @@ pocasgui_CFLAGS_STATIC += -DSTATIC_POCAS_GUI_$(call toupper,$(WITH_DEFAULT_GUI_B
 pocasgui_LDFLAGS_STATIC += $(pocasgui_$(WITH_DEFAULT_GUI_BACKEND)_LDFLAGS)
 endif
 
+pocasgui_HEADERS_INSTALL:= gui/decl gui/private/backend gui/backend \
+        gui/bounds gui/boxlayout gui/button gui/command gui/container \
+        gui/control gui/extents gui/label gui/menu gui/messagebox gui/point \
+        gui/size gui/textbox gui/window gui
+pocasgui_HEADERDIR:= include/pocas
+pocasgui_HEADERTGTDIR:= $(includedir)/pocas
+
 $(call librules, pocasgui)
