@@ -13,9 +13,15 @@ pocastest_MODULES+= gui
 pocastest_DEPS:= pocascore pocasgui
 pocastest_LIBS:= pocascore pocasgui
 else
+ifeq ($(PLATFORM),win32)
 pocastest_DEFINES+= -DSTATIC_POCAS_CORE -DNO_GUI
 pocastest_STATICDEPS:= pocascore
-pocastest_STATICLIBS:= pocascore
+pocastest_STATICLIBS:= pocascore $(pocascore_LIBS_STATIC)
+else
+pocastest_DEFINES+= -DNO_GUI
+pocastest_DEPS:= pocascore
+pocastest_LIBS:= pocascore
+endif
 endif
 endif
 pocastest_posix_LDFLAGS:= -Wl,-E

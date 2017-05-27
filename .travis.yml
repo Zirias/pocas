@@ -1,0 +1,10 @@
+language: c
+before_install:
+  - echo "deb http://old-releases.ubuntu.com/ubuntu/ utopic main universe" | sudo tee -a /etc/apt/sources.list
+  - sudo apt-get update -qq
+  - sudo apt-get install make/utopic
+compiler: clang
+script: make -j8 WITH_GUI_QT=0 check
+dist: trusty
+sudo: required
+

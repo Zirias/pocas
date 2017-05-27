@@ -29,7 +29,8 @@ PT_TESTMETHOD(test_expected_crash)
     PT_Test_expectCrash();
 
     // crash intentionally
-    int c = *((int *)0);
+    int *volatile nptr = 0;
+    int c = *nptr;
     printf("%d", c); // to prevent optimizing away the crash
 }
 

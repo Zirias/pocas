@@ -16,10 +16,6 @@ pocascore_HEADERDIR:= include/pocas
 pocascore_HEADERTGTDIR:= $(includedir)/pocas
 $(call librules, pocascore)
 
-ifeq ($(PLATFORM),posix)
-pocascore_LIBS_STATIC:= dl
-endif
-
 ifeq ($(PLATFORM),win32)
 pocascore_LIBS_STATIC:= pthread
 endif
