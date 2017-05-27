@@ -1,4 +1,4 @@
-#include <stdio.h>
+#include <stdlib.h>
 
 #include <pocas/test/test.h>
 
@@ -29,9 +29,7 @@ PT_TESTMETHOD(test_expected_crash)
     PT_Test_expectCrash();
 
     // crash intentionally
-    int *volatile nptr = 0;
-    int c = *nptr;
-    printf("%d", c); // to prevent optimizing away the crash
+    abort();
 }
 
 PT_TESTMETHOD(test_assert_not_null)
