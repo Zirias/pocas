@@ -81,7 +81,7 @@ SOLOCAL int preproc(const char *inFileName, const char *outFileName)
 
     PC_ListIterator *i = PC_List_iterator(testMethods);
     fputs("\n\n// pocastest -p generated:\n\n#include <pocas/test/test.h>\n\n"
-          "SOEXPORT const char *pocastest__methods[] = {", out);
+          "TEST_SOEXPORT const char *pocastest__methods[] = {", out);
     while (PC_ListIterator_moveNext(i))
     {
         fprintf(out, "\"%s\",",(char *)PC_ListIterator_current(i));

@@ -7,13 +7,13 @@
 C_CLASS_DECL(PT_TestMethod);
 
 #define PT_TESTINIT() \
-    SOEXPORT void pocastest__init(__attribute__((unused)) PT_TestMethod *pocastest__self)
+    TEST_SOEXPORT void pocastest__init(__attribute__((unused)) PT_TestMethod *pocastest__self)
 
 #define PT_TESTMETHOD(name) \
-    SOEXPORT void pocastest__method_##name(__attribute__((unused)) PT_TestMethod *pocastest__self)
+    TEST_SOEXPORT void pocastest__method_##name(__attribute__((unused)) PT_TestMethod *pocastest__self)
 
 #define PT_TESTDONE() \
-    SOEXPORT void pocastest__done(__attribute__((unused)) PT_TestMethod *pocastest__self)
+    TEST_SOEXPORT void pocastest__done(__attribute__((unused)) PT_TestMethod *pocastest__self)
 
 #define PT_Test_assertNotNull(pointer, message) \
     i_Test__assertNotNull(pocastest__self, __FILE__, __LINE__, #pointer, pointer, message)

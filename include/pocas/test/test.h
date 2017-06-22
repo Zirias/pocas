@@ -6,6 +6,6 @@
 #include <pocas/test/method.h>
 
 #define PT_TESTCLASS(name) \
-    SOEXPORT const char *pocastest__id = #name
+    TEST_SOEXPORT const char *pocastest__id = #name
 
 #endif
